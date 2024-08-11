@@ -1,6 +1,6 @@
 # Hephaestus.jl
 
-`Hephaestus.jl` is an auto-differentiable structural analysis solver written in the Julia programming language.
+`Hephaestus.jl` is an auto-differentiable structural analysis package purely written in the Julia programming language.
 
 ## Roadmap
 
@@ -12,3 +12,7 @@
   - [ ] Truss element
   - [ ] Beam-column element (Euler-Bernoulli)
   - [ ] Beam-column element (Timoshenko)
+
+## Acknowledgements
+
+The design of the package is inspired by `OpenSeesPy`, `PyNite`, and `MASTAN2`.
