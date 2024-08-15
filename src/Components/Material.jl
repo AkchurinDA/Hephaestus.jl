@@ -3,19 +3,12 @@ struct Material{T <: Real}
     ID::Integer
     "Elastic modulus."
     E::T
-    "Poisson's ratio."
-    v::T
-    "Shear modulus."
-    G::T
 
-    function Material(ID::Integer, E::Real, v::Real)
-        # Compute the shear modulus:
-        G = E / (2 * (1 + v))
-
+    function Material(ID::Integer, E::Real)
         # Promote the material properties to the same common type:
-        MaterialProperties = promote(E, v, G)
+        material_properties = promote(E)
 
         # Construct the material:
-        return new{eltype(MaterialProperties)}(ID, MaterialProperties...)
+        return new{eltype(material_properties)}(ID, material_properties...)
     end
 end

@@ -3,18 +3,14 @@ struct Section{T<:Real}
     ID::Integer
     "Gross cross-sectional area."
     A::T
-    "Moment of inertia about the z-axis."
-    I_zz::T
-    "Moment of inertia about the y-axis."
-    I_yy::T
-    "Polar moment of inertia."
-    J::T
+    "Moment of inertia about the local z-axis."
+    I::T
 
-    function Section(ID::Integer, A::Real, I_zz::Real, I_yy::Real, J::Real)
+    function Section(ID::Integer, A::Real, I::Real)
         # Promote the section properties to the same common type:
-        SectionProperties = promote(A, I_zz, I_yy, J)
+        section_properties = promote(A, I)
 
         # Construct the section:
-        return new{eltype(SectionProperties)}(ID, SectionProperties...)
+        return new{eltype(section_properties)}(ID, section_properties...)
     end
 end

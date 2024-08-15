@@ -28,7 +28,7 @@ include("Components/Element.jl")
     _num_elements::Integer = 0
 end
 
-function addnode!(model::Model, ID::Integer, X::Real, Y::Real, Z::Real)
+function addnode!(model::Model, ID::Integer, x::Real, y::Real)
     # Check if the node ID is already in use:
     if ID in model._node_IDs
         error("Node ID $ID is already in use.")
@@ -40,14 +40,14 @@ function addnode!(model::Model, ID::Integer, X::Real, Y::Real, Z::Real)
         push!(model._node_IDs, ID)
 
         # Add the node to the model:
-        push!(model.nodes, Node(ID, X, Y, Z))
+        push!(model.nodes, Node(ID, x, y))
     end
 
     # Return the model:
     return model
 end
 
-function addmaterial!(model::Model, ID::Integer, E::Real, v::Real)
+function addmaterial!(model::Model, ID::Integer, E::Real)
     # Check if the material ID is already in use:
     if ID in model._material_IDs
         error("Material ID $ID is already in use.")
@@ -59,14 +59,14 @@ function addmaterial!(model::Model, ID::Integer, E::Real, v::Real)
         push!(model._material_IDs, ID)
 
         # Add the material to the model:
-        push!(model.materials, Material(ID, E, v))
+        push!(model.materials, Material(ID, E))
     end
 
     # Return the model:
     return model
 end
 
-function addsection!(model::Model, ID::Integer, A::Real, I_xx::Real, I_yy::Real, J::Real)
+function addsection!(model::Model, ID::Integer, A::Real, I::Real)
     # Check if the section ID is already in use:
     if ID in model._section_IDs
         error("Section ID $ID is already in use.")
@@ -78,7 +78,7 @@ function addsection!(model::Model, ID::Integer, A::Real, I_xx::Real, I_yy::Real,
         push!(model._section_IDs, ID)
 
         # Add the section to the model:
-        push!(model.sections, Section(ID, A, I_xx, I_yy, J))
+        push!(model.sections, Section(ID, A, I))
     end
 
     # Return the model:

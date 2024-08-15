@@ -1,11 +1,10 @@
 struct Node{T <: Real}
     ID::Integer
-    X::T
-    Y::T
-    Z::T
+    x::T
+    y::T
 
-    function Node(ID::Integer, X::Real, Y::Real, Z::Real)
-        coordinates = promote(X, Y, Z)
+    function Node(ID::Integer, x::Real, y::Real)
+        coordinates = promote(x, y)
 
         return new{eltype(coordinates)}(ID, coordinates...)
     end

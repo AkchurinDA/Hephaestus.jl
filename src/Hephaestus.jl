@@ -10,14 +10,9 @@ import LinearAlgebra
 # TYPES
 # --------------------------------------------------
 include("Model.jl")
-export 
-    Model, 
-    Node,
-    Material, addmaterial!
-    Section, addsection!
-    Element, addelement!
-    addnode!,
-    addmaterial!,
-    addsection!,
-    addelement!
+export Model
+export Node, addnode!
+export Material, addmaterial!
+export Section, addsection!
+export Element, addelement!
 end

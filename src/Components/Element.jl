@@ -4,9 +4,11 @@ struct Element
     node_j::Node
     material::Material
     section::Section
-    L
+    L::Real
+    θ::Real
     k_e_l::SparseArrays.SparseMatrixCSC
-    # k_g_l::SparseArrays.SparseMatrixCSC
+    k_g_l::SparseArrays.SparseMatrixCSC
+    T::SparseArrays.SparseMatrixCSC
     # K_e_l::SparseArrays.SparseMatrixCSC
     # K_g_l::SparseArrays.SparseMatrixCSC
 
@@ -14,75 +16,83 @@ struct Element
         # Compute the length of the element:
         L = _compute_L(node_i, node_j)
 
+        # Compute the orientation of the element:
+        θ = _compute_θ(node_i, node_j)
+
         # Compute the element elastic stiffness matrix in the local coordinate system:
         k_e_l = _compute_k_e_l(material, section, L)
 
         # Compute the element geometric stiffness matrix in the local coordinate system:
+        k_g_l = _compute_k_g_l()
 
         # Compute the transformation matrix:
+        T = _compute_T(θ)
         
         # Compute the element elastic stiffness matrix in the global coordinate system:
 
         # Compute the element geometric stiffness matrix in the global coordinate system:
 
         # Compute the element stiffness matrix in the local coordinate system:
-        return new(ID, node_i, node_j, material, section, L, k_e_l)
+        return new(ID, node_i, node_j, material, section, L, θ, k_e_l, k_g_l, T)
     end
 end
 
-function _compute_L(node_i::Node, node_j::Node)
-    ΔX = node_j.X - node_i.X
-    ΔY = node_j.Y - node_i.Y
-    ΔZ = node_j.Z - node_i.Z
-    L = sqrt(ΔX^2 + ΔY^2 + ΔZ^2)
+function _compute_L(node_i::Node, node_j::Node)::Real
+    x_i = node_i.x
+    y_i = node_i.y
+    x_j = node_j.x
+    y_j = node_j.y
+
+    Δx = x_j - x_i
+    Δy = y_j - y_i
+
+    L = sqrt(Δx ^ 2 + Δy ^ 2)
 
     return L
 end
 
-function _compute_k_e_l(material, section, L)
+function _compute_θ(node_i::Node, node_j::Node)::Real
+    x_i = node_i.x
+    y_i = node_i.y
+    x_j = node_j.x
+    y_j = node_j.y
+
+    Δx = x_j - x_i
+    Δy = y_j - y_i
+
+    θ = atan(Δy, Δx)
+
+    return θ
+end
+
+function _compute_k_e_l(material, section, L)::SparseArrays.SparseMatrixCSC
     # Extract the material properties:
     E = material.E
-    G = material.G
 
     # Extract the section properties:
     A = section.A
-    I_zz = section.I_zz
-    I_yy = section.I_yy
-    J = section.J
+    I = section.I
 
     # Compute the element stiffness matrix in the local coordinate system:
-    k_e_l = SparseArrays.spzeros(12, 12)
-    @inline k_e_l[[1, 7], [1, 7]] = (E * A / L) * [+1 -1; -1 +1]
-    @inline k_e_l[[2, 6, 8, 12], [2, 6, 8, 12]] = (E * I_zz / L ^ 3) * [+12 +6 * L -12 +6 * L; +6 * L +4 * L ^ 2 -6 * L +2 * L ^ 2; -12 -6 * L +12 -6 * L; +6 * L +2 * L ^ 2 -6 * L +4 * L ^ 2]
-    @inline k_e_l[[3, 5, 9, 11], [3, 5, 9, 11]] = (E * I_yy / L ^ 3) * [+12 -6 * L -12 -6 * L; -6 * L +4 * L ^ 2 +6 * L +2 * L ^ 2; -12 +6 * L +12 +6 * L; -6 * L +2 * L ^ 2 +6 * L +4 * L ^ 2]
-    @inline k_e_l[[4, 10], [4, 10]] = (G * J / L) * [+1 -1; -1 +1]
+    k_e_l = SparseArrays.spzeros(6, 6)
+    @inline k_e_l[[1, 4], [1, 4]] = (E * A / L) * [+1 -1; -1 +1]
+    @inline k_e_l[[2, 3, 5, 6], [2, 3, 5, 6]] = (E * I / L ^ 3) * [+12 +6 * L -12 +6 * L; +6 * L +4 * L ^ 2 -6 * L +2 * L ^ 2; -12 -6 * L +12 -6 * L; +6 * L +2 * L ^ 2 -6 * L +4 * L ^ 2]
 
     # Return the element stiffness matrix in the local coordinate system:
     return k_e_l
 end
 
-function _compute_k_g_l()
+function _compute_k_g_l()::SparseArrays.SparseMatrixCSC
     # Compute the element stiffness matrix in the local coordinate system:
-    k_g_l = SparseArrays.spzeros(12, 12)
+    k_g_l = SparseArrays.spzeros(6, 6)
 
     # Return the element stiffness matrix in the local coordinate system:
     return k_g_l
 end
 
-function _compute_T(node_i, node_j, L)
-    # Extract the nodal coordinates:
-    x_i = node_i.X
-    y_i = node_i.Y
-    z_i = node_i.Z
-    x_j = node_j.X
-    y_j = node_j.Y
-    z_j = node_j.Z
-
-    # Compute the directional cosines:
-    γ_11 = (x_j - x_i) / L
-    γ_12 = (y_j - y_i) / L
-    γ_13 = (z_j - z_i) / L
-    # TODO
+function _compute_T(θ)::SparseArrays.SparseMatrixCSC
+    # Compute the transformation matrix:
+    T = SparseArrays.spzeros(6, 6)
 
     # Return the transformation matrix:
     return T
