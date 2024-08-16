@@ -1,18 +1,18 @@
 module Hephaestus
-# --------------------------------------------------
-# PREAMBLE
-# --------------------------------------------------
-import StaticArrays
 import SparseArrays
-import LinearAlgebra
-
-# --------------------------------------------------
-# TYPES
-# --------------------------------------------------
-include("Model.jl")
+include("Materials.jl")
+export Material
+include("Sections.jl")
+export Section
+include("Nodes.jl")
+export Node
+include("Elements.jl")
+export Element
+export compute_L
+incline("Model.jl")
 export Model
-export Node, addnode!
-export Material, addmaterial!
-export Section, addsection!
-export Element, addelement!
+include("Stiffnesses.jl")
+export compute_k_e_l, compute_k_g_l
+include("Transformations.jl")
+export compute_T
 end
