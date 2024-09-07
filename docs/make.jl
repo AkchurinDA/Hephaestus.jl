@@ -12,3 +12,6 @@ makedocs(
         CitationBibliography(
             joinpath(@__DIR__, "src", "References.bib"),
             style=:numeric)])
+
+deploydocs(
+    repo = "github.com/AkchurinDA/Hephaestus.jl")
