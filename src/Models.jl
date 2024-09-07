@@ -1,8 +1,3 @@
-abstract type AbstractModel end
+struct Model
 
-@kwdef mutable struct Model
-    materials = []
-    sections  = []
-    nodes     = []
-    elements  = []
 end
