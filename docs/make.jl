@@ -10,10 +10,12 @@ makedocs(
     pages = [
         "Home" => "index.md"
         "Quick Start" => "QuickStart.md"],
+    format = Documenter.HTML(
+            assets = ["assets/Citations.css"]),
     plugins = [
         CitationBibliography(
             joinpath(@__DIR__, "src", "References.bib"),
-            style=:numeric)])
+            style = :numeric)])
 
 deploydocs(
     repo = "github.com/AkchurinDA/Hephaestus.jl")
