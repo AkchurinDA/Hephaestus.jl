@@ -1,4 +1,4 @@
-# Home
+> **The strongest steel is forged by the hottest fires**
 
 ## Description
 

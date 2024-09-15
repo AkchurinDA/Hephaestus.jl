@@ -8,8 +8,9 @@ makedocs(
     sitename = "Hephaestus.jl",
     authors = "Damir Akchurin, AkchurinDA@gmail.com",
     pages = [
-        "Home" => "index.md"
-        "Quick Start" => "QuickStart.md"],
+        "Home" => "index.md",
+        "Manual" => "Manual.md",
+        "API" => "API.md"],
     format = Documenter.HTML(
             assets = ["assets/Citations.css"]),
     plugins = [
