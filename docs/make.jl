@@ -9,8 +9,7 @@ makedocs(
     authors = "Damir Akchurin, AkchurinDA@gmail.com",
     pages = [
         "Home" => "index.md",
-        "Manual" => "Manual.md",
-        "API" => "API.md"],
+        "API"  => "API.md"],
     format = Documenter.HTML(
             assets = ["assets/Citations.css"]),
     plugins = [
