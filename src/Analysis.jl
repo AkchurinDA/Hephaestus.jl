@@ -31,14 +31,26 @@ function solve(model::Model, type::Symbol; log::Bool = true)
     # Assemble the global force vector:
     model.F = _assemble_F(model)
 
-    # Partition the global stiffness matrix:
-    K_ff, K_fs, K_sf, K_ss = _partition_K(model, model.K_e)
-
-    # Partition the global force vector:
-    F_f, F_s = _partition_F(model, model.F)
+    # Partition the DOFs into free and supported:
+    indices_f, indices_s, U_s = _partition_U(model)
 
     # Solve the system of equations:
-    U_f = K_ff \ F_f
+    K_ff = model.K_e[indices_f, indices_f]
+    K_fs = model.K_e[indices_f, indices_s]
+    F_f  = model.F[indices_f]
+    display(K_fs)
+    display(U_s)
+    U_f  = K_ff \ (F_f - K_fs * U_s)
+
+    # Solve for the reactions:
+    K_sf = model.K_e[indices_s, indices_f]
+    K_ss = model.K_e[indices_s, indices_s]
+    F_s = K_sf * U_f + K_ss * U_s
+
+    # Unpartition the global displacement vector:
+    U = _unpartition_U(model, indices_f, indices_s, U_f, U_s)
+
+    return U
 end
 
 function _assemble_K_e(model::Model)
@@ -81,52 +93,98 @@ function _assemble_F(model::Model)
     return F
 end
 
-function _partition_K(model::Model, K::Matrix{<:Real})
+function _partition_U(model::Model)
     # Preallocate:
     indices_f = Int[] # Free DOFs
     indices_s = Int[] # Supported DOFs
 
+    # Preallocate:
+    T   = promote_type([typeof(node.u_x_enforced) for node in values(model.nodes)]...)
+    U_s = T[] # Supported DOFs
+
     # Find the free and supported DOFs:
     for node in values(model.nodes)
         ID_i = node.ID_i
-        node.u_x_supported ? push!(indices_f, 6 * ID_i - 5) : push!(indices_s, 6 * ID_i - 5)
-        node.u_y_supported ? push!(indices_f, 6 * ID_i - 4) : push!(indices_s, 6 * ID_i - 4)
-        node.u_z_supported ? push!(indices_f, 6 * ID_i - 3) : push!(indices_s, 6 * ID_i - 3)
-        node.θ_x_supported ? push!(indices_f, 6 * ID_i - 2) : push!(indices_s, 6 * ID_i - 2)
-        node.θ_y_supported ? push!(indices_f, 6 * ID_i - 1) : push!(indices_s, 6 * ID_i - 1)
-        node.θ_z_supported ? push!(indices_f, 6 * ID_i    ) : push!(indices_s, 6 * ID_i    )
+
+        if !node.u_x_supported && node.u_x_enforced == 0 # If the DOF is free and has no enforced displacement
+            push!(indices_f, 6 * ID_i - 5)
+        elseif node.u_x_enforced != 0 # If the DOF has an enforced displacement
+            push!(indices_s, 6 * ID_i - 5)
+            push!(U_s, node.u_x_enforced)
+        else # If the DOF is supported
+            push!(indices_s, 6 * ID_i - 5)
+            push!(U_s, 0)
+        end
+
+        if !node.u_y_supported && node.u_y_enforced == 0 # If the DOF is free and has no enforced displacement
+            push!(indices_f, 6 * ID_i - 4)
+        elseif node.u_y_enforced != 0 # If the DOF has an enforced displacement
+            push!(indices_s, 6 * ID_i - 4)
+            push!(U_s, node.u_y_enforced)
+        else # If the DOF is supported
+            push!(indices_s, 6 * ID_i - 4)
+            push!(U_s, 0)
+        end
+
+        if !node.u_z_supported && node.u_z_enforced == 0 # If the DOF is free and has no enforced displacement
+            push!(indices_f, 6 * ID_i - 3)
+        elseif node.u_z_enforced != 0 # If the DOF has an enforced displacement
+            push!(indices_s, 6 * ID_i - 3)
+            push!(U_s, node.u_z_enforced)
+        else # If the DOF is supported
+            push!(indices_s, 6 * ID_i - 3)
+            push!(U_s, 0)
+        end
+
+        if !node.θ_x_supported && node.θ_x_enforced == 0 # If the DOF is free and has no enforced displacement
+            push!(indices_f, 6 * ID_i - 2)
+        elseif node.θ_x_enforced != 0 # If the DOF has an enforced displacement
+            push!(indices_s, 6 * ID_i - 2)
+            push!(U_s, node.θ_x_enforced)
+        else # If the DOF is supported
+            push!(indices_s, 6 * ID_i - 2)
+            push!(U_s, 0)
+        end
+
+        if !node.θ_y_supported && node.θ_y_enforced == 0 # If the DOF is free and has no enforced displacement
+            push!(indices_f, 6 * ID_i - 1)
+        elseif node.θ_y_enforced != 0 # If the DOF has an enforced displacement
+            push!(indices_s, 6 * ID_i - 1)
+            push!(U_s, node.θ_y_enforced)
+        else # If the DOF is supported
+            push!(indices_s, 6 * ID_i - 1)
+            push!(U_s, 0)
+        end
+
+        if !node.θ_z_supported && node.θ_z_enforced == 0 # If the DOF is free and has no enforced displacement
+            push!(indices_f, 6 * ID_i)
+        elseif node.θ_z_enforced != 0 # If the DOF has an enforced displacement
+            push!(indices_s, 6 * ID_i)
+            push!(U_s, node.θ_z_enforced)
+        else # If the DOF is supported
+            push!(indices_s, 6 * ID_i)
+            push!(U_s, 0)
+        end
     end
 
-    # Partition the global stiffness matrix:
-    K_ff = K[indices_f, indices_f]
-    K_fs = K[indices_f, indices_s]
-    K_sf = K[indices_s, indices_f]
-    K_ss = K[indices_s, indices_s]
-
-    # Return the partitioned stiffness matrix:
-    return K_ff, K_fs, K_sf, K_ss
+    return indices_f, indices_s, U_s
 end
 
-function _partition_F(model::Model, F::Vector{<:Real})
+function _unpartition_U(model::Model, indices_f::Vector{<:Int}, indices_s::Vector{<:Int}, U_f::Vector{FDT}, U_s::Vector{SDT}) where {FDT<:Real, SDT<:Real}
     # Preallocate:
-    indices_f = Int[] # Free DOFs
-    indices_s = Int[] # Supported DOFs
+    T = promote_type(FDT, SDT)
+    U = zeros(T, 6 * length(model.nodes))
 
-    # Find the free and supported DOFs:
-    for node in values(model.nodes)
-        ID_i = node.ID_i
-        node.u_x_supported ? push!(indices_f, 6 * ID_i - 5) : push!(indices_s, 6 * ID_i - 5)
-        node.u_y_supported ? push!(indices_f, 6 * ID_i - 4) : push!(indices_s, 6 * ID_i - 4)
-        node.u_z_supported ? push!(indices_f, 6 * ID_i - 3) : push!(indices_s, 6 * ID_i - 3)
-        node.θ_x_supported ? push!(indices_f, 6 * ID_i - 2) : push!(indices_s, 6 * ID_i - 2)
-        node.θ_y_supported ? push!(indices_f, 6 * ID_i - 1) : push!(indices_s, 6 * ID_i - 1)
-        node.θ_z_supported ? push!(indices_f, 6 * ID_i    ) : push!(indices_s, 6 * ID_i    )
+    # Assign the free DOFs:
+    for (i, index) in enumerate(indices_f)
+        U[index] = U_f[i]
     end
 
-    # Partition the global force vector:
-    F_f = F[indices_f]
-    F_s = F[indices_s]
+    # Assign the supported DOFs:
+    for (i, index) in enumerate(indices_s)
+        U[index] = U_s[i]
+    end
 
-    # Return the partitioned force vector:
-    return F_f, F_s
+    # Return the unpartitioned global displacement vector:
+    return U
 end

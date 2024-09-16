@@ -54,12 +54,19 @@ mutable struct Node{CT <: Real}
     M_y             ::Real
     "Nodal moment about the global ``z``-axis"
     M_z             ::Real
+    u_x_enforced    ::Real
+    u_y_enforced    ::Real
+    u_z_enforced    ::Real
+    θ_x_enforced    ::Real
+    θ_y_enforced    ::Real
+    θ_z_enforced    ::Real
 
     function Node(ID::Int, x::CT, y::CT, z::CT) where {CT <: Real}        
         new{CT}(ID, nothing,
             x, y, z, 
             fill(0    , 6)...,
             fill(false, 6)...,
+            fill(0    , 6)...,
             fill(0    , 6)...)
     end
 end

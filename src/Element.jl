@@ -145,12 +145,12 @@ function _compute_k_e_l(
     @inbounds k_e_l[6 , 8 ] = -6 * E * I_zz / L^2
     @inbounds k_e_l[6 , 12] = +2 * E * I_zz / L
     @inbounds k_e_l[7 , 7 ] = +E * A / L
-    @inbounds k_e_l[8 , 8 ] = -12 * E * I_zz / L^3
+    @inbounds k_e_l[8 , 8 ] = +12 * E * I_zz / L^3
     @inbounds k_e_l[8 , 12] = -6 * E * I_zz / L^2
     @inbounds k_e_l[9 , 9 ] = +12 * E * I_yy / L^3
     @inbounds k_e_l[9 , 11] = +6 * E * I_yy / L^2
     @inbounds k_e_l[10, 10] = +E * J / (2 * (1 + ν) * L)
-    @inbounds k_e_l[11, 11] = +12 * E * I_yy / L^3
+    @inbounds k_e_l[11, 11] = +4 * E * I_yy / L
     @inbounds k_e_l[12, 12] = +4 * E * I_zz / L
 
     # Compute the components of the element elastic stiffness matrix in its lower triangular part:

@@ -311,7 +311,7 @@ end
 add_nodal_load!(model::Model, ID::Int, 
     F_x::Real, F_y::Real, F_z::Real,
     M_x::Real, M_y::Real, M_z::Real) = 
-add_nodal_load!(model, ID, promote(F_x, F_y, F_z, M_x, M_y, M_z)...)
+    add_nodal_load!(model, ID, promote(F_x, F_y, F_z, M_x, M_y, M_z)...)
 
 """
     del_nodal_load!(model, ID)
@@ -329,6 +329,53 @@ function del_nodal_load!(model::Model, ID::Int)
     model.nodes[ID].M_x = 0
     model.nodes[ID].M_y = 0
     model.nodes[ID].M_z = 0
+
+    # Return the updated model:
+    return model
+end
+
+function add_nodal_disp!(model::Model, ID::Int,
+    u_x_enforced::Real, u_y_enforced::Real, u_z_enforced::Real,
+    θ_x_enforced::Real, θ_y_enforced::Real, θ_z_enforced::Real)
+    # Check if the ID exists:
+    !haskey(model.nodes, ID) && throw(ArgumentError("Node ID $ID does not exist."))
+
+    # Check if the node already has enforced displacements applied to it:
+    if model.nodes[ID].u_x_enforced != 0 || model.nodes[ID].u_y_enforced != 0 || model.nodes[ID].u_z_enforced != 0 || 
+       model.nodes[ID].θ_x_enforced != 0 || model.nodes[ID].θ_y_enforced != 0 || model.nodes[ID].θ_z_enforced != 0
+        @warn "Node with ID = $ID already has enforced displacements applied to it. Overwriting them with the new values."
+    end
+
+    # Add the enforced displacements to the node:
+    model.nodes[ID].u_x_enforced = u_x_enforced
+    model.nodes[ID].u_y_enforced = u_y_enforced
+    model.nodes[ID].u_z_enforced = u_z_enforced
+    model.nodes[ID].θ_x_enforced = θ_x_enforced
+    model.nodes[ID].θ_y_enforced = θ_y_enforced
+    model.nodes[ID].θ_z_enforced = θ_z_enforced
+
+    # Return the updated model:
+    return model
+end
+
+add_nodal_disp!(model::Model, ID::Int, 
+    u_x_enforced::Real, u_y_enforced::Real, u_z_enforced::Real,
+    θ_x_enforced::Real, θ_y_enforced::Real, θ_z_enforced::Real) =
+    add_nodal_disp!(model, ID, promote(u_x_enforced, u_y_enforced, u_z_enforced, θ_x_enforced, θ_y_enforced, θ_z_enforced)...)
+
+function del_nodal_disp!(model::Model, ID::Int,
+    u_x_enforced::NLT, u_y_enforced::NLT, u_z_enforced::NLT,
+    θ_x_enforced::NLT, θ_y_enforced::NLT, θ_z_enforced::NLT) where {NLT <: Real}
+    # Check if the ID exists:
+    !haskey(model.nodes, ID) && throw(ArgumentError("Node ID $ID does not exist."))
+
+    # Set the enforced displacements to zero:
+    model.nodes[ID].u_x_enforced = 0
+    model.nodes[ID].u_y_enforced = 0
+    model.nodes[ID].u_z_enforced = 0
+    model.nodes[ID].θ_x_enforced = 0
+    model.nodes[ID].θ_y_enforced = 0
+    model.nodes[ID].θ_z_enforced = 0
 
     # Return the updated model:
     return model
