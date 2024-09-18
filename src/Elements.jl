@@ -31,6 +31,10 @@ struct Element
     k_e_l       ::Matrix{<:Real}
     "Element elastic stiffness matrix in the GCS"
     k_e_g       ::Matrix{<:Real}
+    "Element geometric stiffness matrix in the LCS (without axial force term ``P``)"
+    k_g_l       ::Matrix{<:Real}
+    "Element geometric stiffness matrix in the GCS (without axial force term ``P``)"
+    k_g_g       ::Matrix{<:Real}
 end
 
 function _compute_L(
@@ -160,39 +164,38 @@ BenchmarkTools.Trial: 10000 samples with 970 evaluations.
 
 function _compute_k_g_l(
     A::SPT, I_zz::SPT, I_yy::SPT,
-    L::ELT,
-    P::ALT) where {SPT<:Real, ELT<:Real, ALT<:Real}
+    L::ELT) where {SPT<:Real, ELT<:Real}
     # Preallocate:
-    T     = float(promote_type(SPT, ELT, ALT))
+    T     = float(promote_type(SPT, ELT))
     k_g_l = zeros(T, 12, 12)
 
     # Compute the components of the element geometric stiffness matrix in its upper triangular part:
-    @inbounds k_g_l[1 , 1 ] = +P / L
-    @inbounds k_g_l[1 , 7 ] = -P / L
-    @inbounds k_g_l[2 , 2 ] = +6 * P / (5 * L)
-    @inbounds k_g_l[2 , 6 ] = +P / 10
-    @inbounds k_g_l[2 , 8 ] = -6 * P / (5 * L)
-    @inbounds k_g_l[2 , 12] = +P / 10
-    @inbounds k_g_l[3 , 3 ] = +6 * P / (5 * L)
-    @inbounds k_g_l[3 , 5 ] = -P / 10
-    @inbounds k_g_l[3 , 9 ] = -6 * P / (5 * L)
-    @inbounds k_g_l[3 , 11] = -P / 10
-    @inbounds k_g_l[4 , 4 ] = +P * (I_zz + I_yy) / (A * L)
-    @inbounds k_g_l[4 , 10] = -P * (I_zz + I_yy) / (A * L)
-    @inbounds k_g_l[5 , 5 ] = +2 * P * L / 15
-    @inbounds k_g_l[5 , 9 ] = +P / 10
-    @inbounds k_g_l[5 , 11] = -P * L / 30
-    @inbounds k_g_l[6 , 6 ] = +2 * P * L / 15
-    @inbounds k_g_l[6 , 8 ] = -P / 10
-    @inbounds k_g_l[6 , 12] = -P * L / 30
-    @inbounds k_g_l[7 , 7 ] = +P / L
-    @inbounds k_g_l[8 , 8 ] = +6 * P / (5 * L)
-    @inbounds k_g_l[8 , 12] = -P / 10
-    @inbounds k_g_l[9 , 9 ] = +6 * P / (5 * L)
-    @inbounds k_g_l[9 , 11] = +P / 10
-    @inbounds k_g_l[10, 10] = +P * (I_zz + I_yy) / (A * L)
-    @inbounds k_g_l[11, 11] = +2 * P * L / 15
-    @inbounds k_g_l[12, 12] = +2 * P * L / 15
+    @inbounds k_g_l[1 , 1 ] = +1 / L
+    @inbounds k_g_l[1 , 7 ] = -1 / L
+    @inbounds k_g_l[2 , 2 ] = +6 / (5 * L)
+    @inbounds k_g_l[2 , 6 ] = +1 / 10
+    @inbounds k_g_l[2 , 8 ] = -6 / (5 * L)
+    @inbounds k_g_l[2 , 12] = +1 / 10
+    @inbounds k_g_l[3 , 3 ] = +6 / (5 * L)
+    @inbounds k_g_l[3 , 5 ] = -1 / 10
+    @inbounds k_g_l[3 , 9 ] = -6 / (5 * L)
+    @inbounds k_g_l[3 , 11] = -1 / 10
+    @inbounds k_g_l[4 , 4 ] = +(I_zz + I_yy) / (A * L)
+    @inbounds k_g_l[4 , 10] = -(I_zz + I_yy) / (A * L)
+    @inbounds k_g_l[5 , 5 ] = +2 * L / 15
+    @inbounds k_g_l[5 , 9 ] = +1 / 10
+    @inbounds k_g_l[5 , 11] = -L / 30
+    @inbounds k_g_l[6 , 6 ] = +2 * L / 15
+    @inbounds k_g_l[6 , 8 ] = -1 / 10
+    @inbounds k_g_l[6 , 12] = -L / 30
+    @inbounds k_g_l[7 , 7 ] = +1 / L
+    @inbounds k_g_l[8 , 8 ] = +6 / (5 * L)
+    @inbounds k_g_l[8 , 12] = -1 / 10
+    @inbounds k_g_l[9 , 9 ] = +6 / (5 * L)
+    @inbounds k_g_l[9 , 11] = +1 / 10
+    @inbounds k_g_l[10, 10] = +(I_zz + I_yy) / (A * L)
+    @inbounds k_g_l[11, 11] = +2 * 1 * L / 15
+    @inbounds k_g_l[12, 12] = +2 * 1 * L / 15
 
     # Compute the components of the element geometric stiffness matrix in its lower triangular part:
     for i in 1:12, j in (i + 1):12
@@ -210,8 +213,7 @@ end
 using BenchmarkTools
 @benchmark _compute_k_g_l(
     10.0, 100.0, 100.0,
-    5000.0,
-    1000.0)
+    5000.0)
 
 BenchmarkTools.Trial: 10000 samples with 970 evaluations.
     Range (min … max):  83.419 ns …  41.634 μs  ┊ GC (min … max): 0.00% … 99.63%

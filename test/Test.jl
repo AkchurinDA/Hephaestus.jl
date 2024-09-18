@@ -1,4 +1,7 @@
 using Hephaestus
+# using FiniteDiff
+# using ForwardDiff
+# using BenchmarkTools
 
 M = Model()
 
@@ -19,11 +22,14 @@ add_element!(M, 3, 3, 4, 1, 1, 0)
 add_element!(M, 4, 4, 5, 1, 1, 0)
 add_element!(M, 5, 5, 6, 1, 1, 0)
 
-add_support!(M, 1, true, true , true, true, true, true )
-add_support!(M, 2, true, false, true, true, true, false)
-add_support!(M, 3, true, false, true, true, true, false)
-add_support!(M, 4, true, false, true, true, true, false)
-add_support!(M, 5, true, false, true, true, true, false)
-add_support!(M, 6, true, false, true, true, true, false)
+add_support!(M, 1, true , true, true, true, true, true )
+add_support!(M, 2, false, true, true, true, true, false)
+add_support!(M, 3, false, true, true, true, true, false)
+add_support!(M, 4, false, true, true, true, true, false)
+add_support!(M, 5, false, true, true, true, true, false)
+add_support!(M, 6, false, true, true, true, true, false)
 
-add_nodal_load!(M, 6, 0, -1000, 0, 0, 0, 0)
+Solution = solve(M, EB())
+
+# @benchmark FiniteDiff.finite_difference_derivative(f, -1000.0)
+# @benchmark ForwardDiff.derivative(f, -1000.0)

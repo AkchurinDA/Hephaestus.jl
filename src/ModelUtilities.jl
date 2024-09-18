@@ -113,11 +113,18 @@ function add_element!(model::Model, tag::Int,
     # Compute the element elastic stiffness matrix in the GCS:
     k_e_g = T' * k_e_l * T
 
+    # Compute the element geometric stiffness matrix in the LCS (without axial force term ``P``):
+    k_g_l = _compute_k_g_l(A, I_zz, I_yy, L)
+
+    # Compute the element geometric stiffness matrix in the GCS (without axial force term ``P``):
+    k_g_g = T' * k_g_l * T
+
     # Remove small values if any:
     map!(x -> abs(x) < eps() ? 0 : x, k_e_g, k_e_g)
+    map!(x -> abs(x) < eps() ? 0 : x, k_g_g, k_g_g)
 
     # Create a new element:
-    element = Element(tag, node_i_ID, node_j_ID, material_ID, section_ID, ω, L, T, k_e_l, k_e_g)
+    element = Element(tag, node_i_ID, node_j_ID, material_ID, section_ID, ω, L, T, k_e_l, k_e_g, k_g_l, k_g_g)
 
     # Add the element to the model:
     model.elements[tag] = element
