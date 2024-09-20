@@ -37,13 +37,13 @@ function Base.show(io::IO, model::Model)
         println(io, styled"{yellow, bold: Empty model.}")
     else
         println(io, styled"{cyan, bold: Model with:}")
-        !isempty(model.nodes            ) && println(io, styled"{cyan: \t $(length(model.nodes            )) \t Nodes          }")
-        !isempty(model.materials        ) && println(io, styled"{cyan: \t $(length(model.materials        )) \t Materials      }")
-        !isempty(model.sections         ) && println(io, styled"{cyan: \t $(length(model.sections         )) \t Sections       }")
-        !isempty(model.elements         ) && println(io, styled"{cyan: \t $(length(model.elements         )) \t Elements       }")
-        !isempty(model.supports         ) && println(io, styled"{cyan: \t $(length(model.supports         )) \t Supported nodes}")
-        !isempty(model.concetrated_loads) && println(io, styled"{cyan: \t $(length(model.concetrated_loads)) \t Loaded nodes   }")
-        !isempty(model.distributed_loads) && println(io, styled"{cyan: \t $(length(model.distributed_loads)) \t Loaded elements}")
+        !isempty(model.nodes             ) && println(io, styled"{cyan: \t $(length(model.nodes             )) \t Nodes          }")
+        !isempty(model.materials         ) && println(io, styled"{cyan: \t $(length(model.materials         )) \t Materials      }")
+        !isempty(model.sections          ) && println(io, styled"{cyan: \t $(length(model.sections          )) \t Sections       }")
+        !isempty(model.elements          ) && println(io, styled"{cyan: \t $(length(model.elements          )) \t Elements       }")
+        !isempty(model.supports          ) && println(io, styled"{cyan: \t $(length(model.supports          )) \t Supported nodes}")
+        !isempty(model.concentrated_loads) && println(io, styled"{cyan: \t $(length(model.concentrated_loads)) \t Loaded nodes   }")
+        !isempty(model.distributed_loads ) && println(io, styled"{cyan: \t $(length(model.distributed_loads )) \t Loaded elements}")
     end
 end
 
@@ -141,6 +141,7 @@ function add_element!(model::Model, ID::Int, node_i_ID::Int, node_j_ID::Int, mat
 
     # Compute the element's elastic stiffness matrix in the global coordinate system:
     k_e_g = T' * k_e_l * T
+    map!(x -> abs(x) < 1E-12 ? 0 : x, k_e_g, k_e_g)
 
     # Compute the condensed element's elastic stiffness matrix in its local coordinate system:
     # k_e_l_c = _compute_k_e_l_c(k_e_l)
@@ -152,6 +153,7 @@ function add_element!(model::Model, ID::Int, node_i_ID::Int, node_j_ID::Int, mat
 
     # Compute the element's geometric stiffness matrix in the global coordinate system:
     k_g_g = T' * k_g_l * T
+    map!(x -> abs(x) < 1E-12 ? 0 : x, k_g_g, k_g_g)
 
     # Compute the condensed element's geometric stiffness matrix in its local coordinate system:
     # k_g_l_c = _compute_k_g_l_c(k_g_l)
@@ -206,7 +208,7 @@ function add_concentrated_load!(model::Model, ID::Int, F_x::Real, F_y::Real, F_z
     return model
 end
 
-function add_distributed_load!(model::Model, ID::Int, w_x::Real, w_y::Real, w_z::Real; CS::Symbol = :local)
+function add_distributed_load!(model::Model, ID::Int, w_x::Real, w_y::Real, w_z::Real; cs::Symbol = :local)
     # Check if the element exists in the model:
     if !haskey(model.elements, ID)
         throw(ArgumentError("Element with ID = $(ID) does not exist in the model."))
@@ -218,14 +220,29 @@ function add_distributed_load!(model::Model, ID::Int, w_x::Real, w_y::Real, w_z:
     end
 
     # Add the distributed loads to the model:
-    if CS == :local # If the distributed loads are provided in the local coordinate system of the element
+    if cs == :local # If the distributed loads are provided in the local coordinate system of the element
         # Extract the information of the element:
         L = model.elements[ID].L
         T = model.elements[ID].T
 
         # Add the distributed loads to the model:
         model.distributed_loads[ID] = [w_x, w_y, w_z]
-    elseif CS == :global # If the distributed loads are provided in the global coordinate system
+
+        # Compute the element fixed-end forces in the element's local coordinate system:
+        p_l = _compute_p_l(
+            w_x, w_y, w_z, 
+            L)
+
+        # Transform the element fixed-end forces to the global coordinate system:
+        p_g = T * p_l
+
+        # Remove small values if any:
+        map!(x -> abs(x) < 1E-12 ? 0 : x, p_g, p_g)
+
+        # Add the element fixed-end forces to the model:
+        model.p_l[ID] = p_l
+        model.p_g[ID] = p_g
+    elseif cs == :global # If the distributed loads are provided in the global coordinate system
         # Extract the information of the element:
         x_i, y_i, z_i = model.elements[ID].x_i, model.elements[ID].y_i, model.elements[ID].z_i
         x_j, y_j, z_j = model.elements[ID].x_j, model.elements[ID].y_j, model.elements[ID].z_j
@@ -246,28 +263,28 @@ function add_distributed_load!(model::Model, ID::Int, w_x::Real, w_y::Real, w_z:
         r = γ * R
 
         # Resolve the resultants in the local coordinate system of the element into distributed loads:
-        w_x, w_y, w_z = r / L
+        w_x_l, w_y_l, w_z_l = r / L
 
         # Add the distributed loads to the model:
         model.distributed_loads[ID] = [w_x, w_y, w_z]
+
+        # Compute the element fixed-end forces in the element's local coordinate system:
+        p_l = _compute_p_l(
+            w_x_l, w_y_l, w_z_l, 
+            L)
+
+        # Transform the element fixed-end forces to the global coordinate system:
+        p_g = T * p_l
+
+        # Remove small values if any:
+        map!(x -> abs(x) < 1E-12 ? 0 : x, p_g, p_g)
+
+        # Add the element fixed-end forces to the model:
+        model.p_l[ID] = p_l
+        model.p_g[ID] = p_g
     else
         throw(ArgumentError("Coordinate system must be either `:local` or `:global`."))
     end
-
-    # Compute the element fixed-end forces in the element's local coordinate system:
-    p_l = _compute_p_l(
-        w_x, w_y, w_z, 
-        L)
-
-    # Transform the element fixed-end forces to the global coordinate system:
-    p_g = T * p_l
-
-    # Remove small values if any:
-    map!(x -> abs(x) < 1E-12 ? 0 : x, p_g, p_g)
-
-    # Add the element fixed-end forces to the model:
-    model.p_l[ID] = p_l
-    model.p_g[ID] = p_g
 
     # Return the updated model:
     return model

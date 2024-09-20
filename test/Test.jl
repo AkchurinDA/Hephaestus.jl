@@ -29,9 +29,13 @@ add_support!(M, 4, false, false, true, true, true, false)
 add_support!(M, 5, false, false, true, true, true, false)
 add_support!(M, 6, false, false, true, true, true, false)
 
-add_concentrated_load!(M, 6, 0, -1000, 0, 0, 0, 0)
+add_distributed_load!(M, 1, 0, -100, 0, cs = :global)
+add_distributed_load!(M, 2, 0, -100, 0, cs = :global)
+add_distributed_load!(M, 3, 0, -100, 0, cs = :global)
+add_distributed_load!(M, 4, 0, -100, 0, cs = :global)
+add_distributed_load!(M, 5, 0, -100, 0, cs = :global)
 
-U_f = solve(M, O1EAnalysis())
+Solution = solve(M, O1EAnalysis())
 
 # @benchmark FiniteDiff.finite_difference_derivative(f, -1000.0)
 # @benchmark ForwardDiff.derivative(f, -1000.0)
