@@ -25,3 +25,7 @@ pkg> add Hephaestus
 ## Help and Support
 
 For assistance with the package, please raise an issue on the [GitHub Issues](https://github.com/AkchurinDA/Hephaestus.jl/issues) page. Please use the appropriate labels to indicate the specific functionality you are inquiring about. Alternatively, contact the author directly at [AkchurinDA@gmail.com](mailto:AkchurinDA@gmail.com?subject=Hephaestus.jl).
+
+## Acknowledgements
+
+The design of the package is inspired by [`OpenSeesPy`](https://github.com/zhuminjie/OpenSeesPy), [`PyNite`](https://github.com/JWock82/Pynite), and [`MASTAN2`](https://www.mastan2.com).
