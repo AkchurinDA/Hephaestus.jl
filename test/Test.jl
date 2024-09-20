@@ -16,11 +16,11 @@ add_material!(M, 1, 29000, 0.3, 0.000284)
 
 add_section!(M, 1, 5, 1000, 1000, 10)
 
-add_element!(M, 1, 1, 2, 1, 1, 0)
-add_element!(M, 2, 2, 3, 1, 1, 0)
-add_element!(M, 3, 3, 4, 1, 1, 0)
-add_element!(M, 4, 4, 5, 1, 1, 0)
-add_element!(M, 5, 5, 6, 1, 1, 0)
+add_element!(M, 1, 1, 2, 1, 1)
+add_element!(M, 2, 2, 3, 1, 1)
+add_element!(M, 3, 3, 4, 1, 1)
+add_element!(M, 4, 4, 5, 1, 1)
+add_element!(M, 5, 5, 6, 1, 1)
 
 add_support!(M, 1, true , true, true, true, true, true )
 add_support!(M, 2, false, true, true, true, true, false)
@@ -29,7 +29,7 @@ add_support!(M, 4, false, true, true, true, true, false)
 add_support!(M, 5, false, true, true, true, true, false)
 add_support!(M, 6, false, true, true, true, true, false)
 
-Solution = solve(M, EB())
+add_concetrated_load!(M, 6, 0, -1000, 0, 0, 0, 0)
 
 # @benchmark FiniteDiff.finite_difference_derivative(f, -1000.0)
 # @benchmark ForwardDiff.derivative(f, -1000.0)

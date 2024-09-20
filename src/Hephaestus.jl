@@ -1,19 +1,13 @@
 module Hephaestus
-using OrderedCollections
 using StyledStrings
+using OrderedCollections
 using DocStringExtensions
-using LinearAlgebra
 
 include("Nodes.jl")
 include("Materials.jl")
 include("Sections.jl")
 include("Elements.jl")
 include("Models.jl")
-include("ModelUtilities.jl")
-include("Analyses/Analyses.jl")
-export Model
-export add_node!, add_material!, add_section!, add_element!, add_support!, add_nodal_load!
-export del_node!, del_material!, del_section!, del_element!, del_support!, add_nodal_load!
-export O1E, O2E, EB
-export solve
+export Node, Material, Section, Element, Model
+export add_node!, add_material!, add_section!, add_element!, add_support!, add_concetrated_load!, add_distributed_load!
 end

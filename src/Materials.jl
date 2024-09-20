@@ -1,8 +1,20 @@
+"""
+    Material
+
+A type that represents a material in the finite element model of a structure.
+
+# Fields
+$(FIELDS)
+"""
 struct Material{MPT<:Real}
-    tag ::Int
+    "Unique identifier of the material provided by the user"
+    ID  ::Int
+    "Young's modulus of the material, ``E``"
     E   ::MPT
+    "Poisson's ratio of the material, ``\\nu``"
     ν   ::MPT
+    "Density of the material, ``\\rho``"
     ρ   ::MPT
 end
 
-Material(tag::Int, E::Real, ν::Real, ρ::Real) = Material(tag, promote(E, ν, ρ)...)
+Material(ID::Int, E::Real, ν::Real, ρ::Real) = Material(ID, promote(E, ν, ρ)...)

@@ -1,62 +1,87 @@
 """
-    struct Element
+    Element
 
+A type that represents an element in the finite element model of a structure.
+
+This type should never be created directly.
+
+# Fields
 $(FIELDS)
 """
-struct Element
-    # -------------------------
-    # PROVIDED INFORMATION 
-    # -------------------------
-    "Element tag assigned by the user"
-    tag             ::Int
-    "Tag of the node (i) of the element"
-    node_i_tag      ::Int
-    "Tag of the node (j) of the element"
-    node_j_tag      ::Int
-    "Tag of the material of the element"
-    material_tag    ::Int
-    "Tag of the section of the element"
-    section_tag     ::Int
-    "Angle that defines the orientation of the element"
-    ω               ::Real
+struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
+    # MAIN ELEMENT INFORMATION:
+    "Unique identifier of the element provided by the user"
+    ID          ::Int
+    "Unique identifier of the node ``i`` of the element provided by the user"
+    node_i_ID   ::Int
+    "Unique identifier of the node ``j`` of the element provided by the user"
+    node_j_ID   ::Int
+    "Unique identifier of the material of the element provided by the user"
+    material_ID ::Int
+    "Unique identifier of the section of the element provided by the user"
+    section_ID  ::Int
+    "``x``-coordinate of the node ``i`` of the element, ``x_{i}``"
+    x_i         ::CTI
+    "``y``-coordinate of the node ``i`` of the element, ``y_{i}``"
+    y_i         ::CTI
+    "``z``-coordinate of the node ``i`` of the element, ``z_{i}``"
+    z_i         ::CTI
+    "``x``-coordinate of the node ``j`` of the element, ``x_{j}``"
+    x_j         ::CTJ
+    "``y``-coordinate of the node ``j`` of the element, ``y_{j}``"
+    y_j         ::CTJ
+    "``z``-coordinate of the node ``j`` of the element, ``z_{j}``"
+    z_j         ::CTJ
+    "Young's modulus of the material of the element, ``E``"
+    E           ::MPT
+    "Poisson's ratio of the material of the element, ``\\nu``"
+    ν           ::MPT
+    "Density of the material of the element, ``\\rho``"
+    ρ           ::MPT
+    "Cross-sectional area of the section of the element, ``A``"
+    A           ::SPT
+    "Moment of inertia about the local ``z``-axis of the section of the element, ``I_{zz}``"
+    I_zz        ::SPT
+    "Moment of inertia about the local ``y``-axis of the section of the element, ``I_{yy}``"
+    I_yy        ::SPT
+    "Polar moment of inertia of the section of the element, ``J``"
+    J           ::SPT
+    "Angle that defines the orientation of the local coordinate system of the element, ``\\omega``"
+    ω           ::Real
+    "Releases at the ends of the element"
+    releases    ::Vector{Bool}
 
-    # ------------------------- 
-    # COMPUTED INFORMATION 
-    # -------------------------
-    "Length of the element"
+    # ADDITIONAL ELEMENT INFORMATION THAT CAN BE PRECOMPUTED:
+    "Length of the element, ``L``"
     L           ::Real
-    "Local-to-global transformation matrix of the element"
+    "Local-to-global sub-transformation matrix of the element, ``[\\gamma]``"
+    γ           ::Matrix{<:Real}
+    "Local-to-global transformation matrix of the element, ``[T]``"
     T           ::Matrix{<:Real}
-    "Element elastic stiffness matrix in the LCS"
+    "Element's elastic stiffness matrix in its local coordinate system, ``[k_{e, l}]``"
     k_e_l       ::Matrix{<:Real}
-    "Element elastic stiffness matrix in the GCS"
-    k_e_g       ::Matrix{<:Real}
-    "Element geometric stiffness matrix in the LCS (without axial force term ``P``)"
+    "Element's geometric stiffness matrix in its local coordinate system, ``[k_{g, l}]``"
     k_g_l       ::Matrix{<:Real}
-    "Element geometric stiffness matrix in the GCS (without axial force term ``P``)"
-    k_g_g       ::Matrix{<:Real}
-end
-
-function _compute_L(
-    x_i::CTI, y_i::CTI, z_i::CTI,
-    x_j::CTJ, y_j::CTJ, z_j::CTJ) where {CTI<:Real, CTJ<:Real}
-    # Compute the length of the element:
-    L = sqrt((x_j - x_i) ^ 2 + (y_j - y_i) ^ 2 + (z_j - z_i) ^ 2)
-
-    # Return the length of the element:
-    return L
+    # "Condensed element's elastic stiffness matrix in its local coordinate system, ``[k_{e, l, c}]``"
+    # k_e_l_c     ::Matrix{<:Real}
+    # "Condensed element's geometric stiffness matrix in its local coordinate system, ``[k_{g, l, c}]``"
+    # k_g_l_c     ::Matrix{<:Real}
 end
 
 function _compute_T(
     x_i::CTI, y_i::CTI, z_i::CTI,
     x_j::CTJ, y_j::CTJ, z_j::CTJ,
-    ω::EOT,
-    L::ELT) where {CTI<:Real, CTJ<:Real, EOT<:Real, ELT<:Real}
+    L::Real,
+    ω::Real) where {CTI<:Real, CTJ<:Real}
     # Compute the rotation angles:
+        # ρ - 1st rotation about local z-axis
+        # χ - 2nd rotation about local y-axis
+        # ω - 3rd rotation about local x-axis
     ρ = -atan(z_j - z_i, x_j - x_i)
     χ = π / 2 - acos((y_j - y_i) / L)
 
-    # Construct the sub-rotation matrix:
+    # Construct the sub-transformation matrix:
+        # γ = γ_ω * γ_χ * γ_ρ
     s_ρ, c_ρ = sincos(ρ)
     s_χ, c_χ = sincos(χ)
     s_ω, c_ω = sincos(ω)
@@ -66,7 +91,7 @@ function _compute_T(
         +c_ω * s_ρ + s_ω * s_χ * c_ρ    -s_ω * c_χ    -s_ω * s_χ * s_ρ + c_ω * c_ρ]
 
     # Remove small values if any:
-    map!(x -> abs(x) < eps() ? 0 : x, γ, γ)
+    map!(x -> abs(x) < 1E-12 ? 0 : x, γ, γ)
 
     # Preallocate the transformation matrix and fill it:
     T = zeros(eltype(γ), 12, 12)
@@ -76,28 +101,13 @@ function _compute_T(
     @inbounds T[10:12, 10:12] = γ
 
     # Return the transformation matrix:
-    return T
+    return γ, T
 end
-
-#=
-using BenchmarkTools
-@benchmark _compute_T(
-    0.0   , 0.0, 0.0,
-    5000.0, 0.0, 0.0,
-    π / 4,
-    5000.0)
-
-BenchmarkTools.Trial: 10000 samples with 849 evaluations.
-    Range (min … max):  130.840 ns …  48.280 μs  ┊ GC (min … max): 0.00% … 99.61%
-    Time  (median):     152.925 ns               ┊ GC (median):    0.00%
-    Time  (mean ± σ):   165.996 ns ± 482.508 ns  ┊ GC (mean ± σ):  6.10% ±  8.82%
-    Memory estimate: 1.48 KiB, allocs estimate: 11.
-=#
 
 function _compute_k_e_l(
     E::MPT, ν::MPT,
     A::SPT, I_zz::SPT, I_yy::SPT, J::SPT,
-    L::ELT)::Matrix where {MPT<:Real, SPT<:Real, ELT<:Real}
+    L::ELT) where {MPT<:Real, SPT<:Real, ELT<:Real}
     # Preallocate:
     T     = float(promote_type(MPT, SPT, ELT))
     k_e_l = zeros(T, 12, 12)
@@ -142,30 +152,16 @@ function _compute_k_e_l(
     end
 
     # Remove small values if any:
-    map!(x -> abs(x) < eps() ? 0 : x, k_e_l, k_e_l)
+    map!(x -> abs(x) < 1E-12 ? 0 : x, k_e_l, k_e_l)
     
     # Return the element stiffness matrix:
     return k_e_l
 end
 
-#=
-using BenchmarkTools
-@benchmark _compute_k_e_l(
-    29000.0, 0.3, 
-    10.0, 100.0, 100.0, 5.0,
-    5000.0)
-
-BenchmarkTools.Trial: 10000 samples with 970 evaluations.
-    Range (min … max):  83.977 ns …  42.370 μs  ┊ GC (min … max): 0.00% … 99.59%
-    Time  (median):     89.820 ns               ┊ GC (median):    0.00%
-    Time  (mean ± σ):   98.868 ns ± 423.162 ns  ┊ GC (mean ± σ):  6.48% ±  7.01%    
-    Memory estimate: 1.22 KiB, allocs estimate: 1.
-=#
-
 function _compute_k_g_l(
     A::SPT, I_zz::SPT, I_yy::SPT,
     L::ELT) where {SPT<:Real, ELT<:Real}
-    # Preallocate:
+    # # Preallocate:
     T     = float(promote_type(SPT, ELT))
     k_g_l = zeros(T, 12, 12)
 
@@ -203,21 +199,8 @@ function _compute_k_g_l(
     end
 
     # Remove small values if any:
-    map!(x -> abs(x) < eps() ? 0 : x, k_g_l, k_g_l)
+    map!(x -> abs(x) < 1E-12 ? 0 : x, k_g_l, k_g_l)
 
     # Return the element geometric stiffness matrix:
     return k_g_l
 end
-
-#=
-using BenchmarkTools
-@benchmark _compute_k_g_l(
-    10.0, 100.0, 100.0,
-    5000.0)
-
-BenchmarkTools.Trial: 10000 samples with 970 evaluations.
-    Range (min … max):  83.419 ns …  41.634 μs  ┊ GC (min … max): 0.00% … 99.63%
-    Time  (median):     88.360 ns               ┊ GC (median):    0.00%
-    Time  (mean ± σ):   97.372 ns ± 415.815 ns  ┊ GC (mean ± σ):  6.49% ±  7.05%
-    Memory estimate: 1.22 KiB, allocs estimate: 1.
-=#
