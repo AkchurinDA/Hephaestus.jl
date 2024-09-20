@@ -28,6 +28,24 @@ function solve(model::Model, analysis::O1EAnalysis)
     for (i, element) in enumerate(values(model.elements))
         e_ID_mapping[element.ID] = i
     end
+
+    # Assemble the global elastic stiffness matrix:
+    K_e = _assemble_K_e(model, n_ID_mapping)
+
+    # Assemble the global force vector:
+    F = _assemble_F(model, n_ID_mapping)
+
+    # Assemble the global fixed-end force vector:
+    P = _assemble_P(model, n_ID_mapping)
+
+    # Get the partition indices:
+    indices_f, indices_s = _get_partition_indices(model, n_ID_mapping)
+
+    # Solve for the displacements:
+    U_f = K_e[indices_f, indices_f] \ (F[indices_f] - P[indices_f])
+
+    # Return the displacements:
+    return U_f
 end
 
 function _assemble_K_e(model::Model, n_ID_mapping::Dict{Int, Int})
@@ -76,4 +94,74 @@ function _assemble_K_g(model::Model, n_ID_mapping::Dict{Int, Int})
 
     # Return the global geometric stiffness matrix:
     return K_g
+end
+
+function _assemble_F(model::Model, n_ID_mapping::Dict{Int, Int})
+    if isempty(model.concentrated_loads)
+        F = zeros(6 * length(model.nodes))
+    else
+        # Preallocate the global force vector:
+        T = promote_type([eltype(concentrated_load) for concentrated_load in values(model.concentrated_loads)]...)
+        F = zeros(T, 6 * length(model.nodes))
+
+        # Assemble the global force vector:
+        for concentrated_load in model.concentrated_loads
+            # Extract the internal node ID of a node:
+            node_ID_i = n_ID_mapping[concentrated_load.first]
+
+            range_i = (6 * (node_ID_i - 1) + 1):(6 * node_ID_i)
+
+            @inbounds F[range_i] += concentrated_load.second
+        end
+    end
+
+    # Return the global force vector:
+    return F
+end
+
+function _assemble_P(model::Model, n_ID_mapping::Dict{Int, Int})
+    if isempty(model.p_g)
+        P = zeros(6 * length(model.nodes))
+    else
+        # Preallocate the global fixed-end force vector:
+        T = promote_type([eltype(p_g) for p_g in values(model.p_g)]...)
+        P = zeros(T, 6 * length(model.nodes))
+
+        # Assemble the global fixed-end force vector:
+        for p_g in model.p_g
+            # Extract the internal node ID of a node:
+            node_ID_i = n_ID_mapping[p_g.first]
+
+            range_i = (6 * (node_ID_i - 1) + 1):(6 * node_ID_i)
+
+            @inbounds P[range_i] += p_g.second
+        end
+    end
+
+    # Return the global fixed-end force vector:
+    return P
+end
+
+function _get_partition_indices(model::Model, n_ID_mapping::Dict{Int, Int})
+    # Preallocate:
+    indices_f = Int[] # List of free DOFs
+    indices_s = Int[] # List of supported DOFs
+
+    # Get the partition indices:
+    for node in values(model.nodes)
+        node_tag_i = n_ID_mapping[node.ID]
+
+        if haskey(model.supports, node.ID) # Check if the node's DOFs are fixed
+            for i in 1:6
+                model.supports[node.ID][i] ? push!(indices_s, 6 * (node_tag_i - 1) + i) : push!(indices_f, 6 * (node_tag_i - 1) + i)
+            end
+        else
+            for i in 1:6
+                push!(indices_f, 6 * (node_tag_i - 1) + i)
+            end
+        end
+    end
+
+    # Return the partition indices:
+    return indices_f, indices_s
 end

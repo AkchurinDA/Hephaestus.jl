@@ -22,14 +22,16 @@ add_element!(M, 3, 3, 4, 1, 1)
 add_element!(M, 4, 4, 5, 1, 1)
 add_element!(M, 5, 5, 6, 1, 1)
 
-add_support!(M, 1, true , true, true, true, true, true )
-add_support!(M, 2, false, true, true, true, true, false)
-add_support!(M, 3, false, true, true, true, true, false)
-add_support!(M, 4, false, true, true, true, true, false)
-add_support!(M, 5, false, true, true, true, true, false)
-add_support!(M, 6, false, true, true, true, true, false)
+add_support!(M, 1, true , true , true, true, true, true )
+add_support!(M, 2, false, false, true, true, true, false)
+add_support!(M, 3, false, false, true, true, true, false)
+add_support!(M, 4, false, false, true, true, true, false)
+add_support!(M, 5, false, false, true, true, true, false)
+add_support!(M, 6, false, false, true, true, true, false)
 
-add_concetrated_load!(M, 6, 0, -1000, 0, 0, 0, 0)
+add_concentrated_load!(M, 6, 0, -1000, 0, 0, 0, 0)
+
+U_f = solve(M, O1EAnalysis())
 
 # @benchmark FiniteDiff.finite_difference_derivative(f, -1000.0)
 # @benchmark ForwardDiff.derivative(f, -1000.0)

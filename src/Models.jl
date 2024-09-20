@@ -8,7 +8,7 @@ To create a model, use the [`Model()`](@ref) constructor.
 # Fields
 $(FIELDS)
 """
-@kwdef mutable struct Model
+@kwdef struct Model
     "Dictionary of nodes in the model."
     nodes               ::OrderedDict{Int, Node    } = OrderedDict{Int, Node    }()
     "Dictionary of materials in the model."
@@ -21,10 +21,15 @@ $(FIELDS)
     "Dictionary of supports in the model."
     supports            ::OrderedDict{Int, Vector{Bool}} = OrderedDict{Int, Vector{Bool}}()
 
-    "Dictionary of concetrated loads (acting on nodes) in the model."
-    concetrated_loads   ::OrderedDict{Int, Vector{<:Real}} = OrderedDict{Int, Vector{<:Real}}()
+    "Dictionary of concentrated loads (acting on nodes) in the model."
+    concentrated_loads  ::OrderedDict{Int, Vector{<:Real}} = OrderedDict{Int, Vector{<:Real}}()
     "Dictionary of distributed loads (acting on elements) in the model."
     distributed_loads   ::OrderedDict{Int, Vector{<:Real}} = OrderedDict{Int, Vector{<:Real}}()
+
+    "Dictionary of element fixed-end forces in the element's local coordinate system."
+    p_l                 ::OrderedDict{Int, Vector{<:Real}} = OrderedDict{Int, Vector{<:Real}}()
+    "Dictionary of element fixed-end forces in the global coordinate system."
+    p_g                 ::OrderedDict{Int, Vector{<:Real}} = OrderedDict{Int, Vector{<:Real}}()
 end
 
 function Base.show(io::IO, model::Model)
@@ -134,6 +139,9 @@ function add_element!(model::Model, ID::Int, node_i_ID::Int, node_j_ID::Int, mat
         A, I_zz, I_yy, J, 
         L)
 
+    # Compute the element's elastic stiffness matrix in the global coordinate system:
+    k_e_g = T' * k_e_l * T
+
     # Compute the condensed element's elastic stiffness matrix in its local coordinate system:
     # k_e_l_c = _compute_k_e_l_c(k_e_l)
 
@@ -141,6 +149,9 @@ function add_element!(model::Model, ID::Int, node_i_ID::Int, node_j_ID::Int, mat
     k_g_l = _compute_k_g_l(
         A, I_zz, I_yy, 
         L)
+
+    # Compute the element's geometric stiffness matrix in the global coordinate system:
+    k_g_g = T' * k_g_l * T
 
     # Compute the condensed element's geometric stiffness matrix in its local coordinate system:
     # k_g_l_c = _compute_k_g_l_c(k_g_l)
@@ -153,7 +164,7 @@ function add_element!(model::Model, ID::Int, node_i_ID::Int, node_j_ID::Int, mat
         E, ν, ρ, 
         A, I_zz, I_yy, J, 
         ω, releases, 
-        L, γ, T, k_e_l, k_g_l)
+        L, γ, T, k_e_l, k_g_l, k_e_g, k_g_g)
 
     # Return the updated model:
     return model
@@ -177,19 +188,19 @@ function add_support!(model::Model, ID::Int, u_x::Bool, u_y::Bool, u_z::Bool, θ
     return model
 end
 
-function add_concetrated_load!(model::Model, ID::Int, F_x::Real, F_y::Real, F_z::Real, M_x::Real, M_y::Real, M_z::Real)
+function add_concentrated_load!(model::Model, ID::Int, F_x::Real, F_y::Real, F_z::Real, M_x::Real, M_y::Real, M_z::Real)
     # Check if the node exists in the model:
     if !haskey(model.nodes, ID)
         throw(ArgumentError("Node with ID = $(ID) does not exist in the model."))
     end
 
-    # Check if the concetrated load already exists in the model:
-    if haskey(model.concetrated_loads, ID)
-        @warn "Concetrated loads at node with ID = $(ID) already exist in the model. Overwriting them."
+    # Check if the concentrated load already exists in the model:
+    if haskey(model.concentrated_loads, ID)
+        @warn "Concentrated loads at node with ID = $(ID) already exist in the model. Overwriting them."
     end
 
     # Add the concetrated load to the model:
-    model.concetrated_loads[ID] = [F_x, F_y, F_z, M_x, M_y, M_z]
+    model.concentrated_loads[ID] = [F_x, F_y, F_z, M_x, M_y, M_z]
 
     # Return the updated model:
     return model
@@ -208,6 +219,10 @@ function add_distributed_load!(model::Model, ID::Int, w_x::Real, w_y::Real, w_z:
 
     # Add the distributed loads to the model:
     if CS == :local # If the distributed loads are provided in the local coordinate system of the element
+        # Extract the information of the element:
+        L = model.elements[ID].L
+        T = model.elements[ID].T
+
         # Add the distributed loads to the model:
         model.distributed_loads[ID] = [w_x, w_y, w_z]
     elseif CS == :global # If the distributed loads are provided in the global coordinate system
@@ -216,29 +231,43 @@ function add_distributed_load!(model::Model, ID::Int, w_x::Real, w_y::Real, w_z:
         x_j, y_j, z_j = model.elements[ID].x_j, model.elements[ID].y_j, model.elements[ID].z_j
         L = model.elements[ID].L
         γ = model.elements[ID].γ
-
-        # Compute the length of the element along each axis in the global coordinate system:
-        L_x = abs(x_j - x_i)
-        L_y = abs(y_j - y_i)
-        L_z = abs(z_j - z_i)
+        T = model.elements[ID].T
 
         # Compute the resultants of the distributed loads:
-        R_x = w_x * L_x
-        R_y = w_y * L_y
-        R_z = w_z * L_z
+        Δ_x = x_j - x_i
+        Δ_y = y_j - y_i
+        Δ_z = z_j - z_i
+        R_x = w_x * norm([0, Δ_y, Δ_z])
+        R_y = w_y * norm([Δ_x, 0, Δ_z])
+        R_z = w_z * norm([Δ_x, Δ_y, 0])
         R   = [R_x, R_y, R_z]
 
         # Transform the resultants to the local coordinate system of the element:
-        r = γ \ R
+        r = γ * R
 
         # Resolve the resultants in the local coordinate system of the element into distributed loads:
-        w_xl, w_yl, w_zl = r / L
+        w_x, w_y, w_z = r / L
 
         # Add the distributed loads to the model:
-        model.distributed_loads[ID] = [w_xl, w_yl, w_zl]
+        model.distributed_loads[ID] = [w_x, w_y, w_z]
     else
         throw(ArgumentError("Coordinate system must be either `:local` or `:global`."))
     end
+
+    # Compute the element fixed-end forces in the element's local coordinate system:
+    p_l = _compute_p_l(
+        w_x, w_y, w_z, 
+        L)
+
+    # Transform the element fixed-end forces to the global coordinate system:
+    p_g = T * p_l
+
+    # Remove small values if any:
+    map!(x -> abs(x) < 1E-12 ? 0 : x, p_g, p_g)
+
+    # Add the element fixed-end forces to the model:
+    model.p_l[ID] = p_l
+    model.p_g[ID] = p_g
 
     # Return the updated model:
     return model

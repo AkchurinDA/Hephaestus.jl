@@ -54,14 +54,18 @@ struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
     # ADDITIONAL ELEMENT INFORMATION THAT CAN BE PRECOMPUTED:
     "Length of the element, ``L``"
     L           ::Real
-    "Local-to-global sub-transformation matrix of the element, ``[\\gamma]``"
+    "Global-to-local sub-transformation matrix of the element, ``[\\gamma]``"
     γ           ::Matrix{<:Real}
-    "Local-to-global transformation matrix of the element, ``[T]``"
+    "Global-to-local transformation matrix of the element, ``[T]``"
     T           ::Matrix{<:Real}
     "Element's elastic stiffness matrix in its local coordinate system, ``[k_{e, l}]``"
     k_e_l       ::Matrix{<:Real}
     "Element's geometric stiffness matrix in its local coordinate system, ``[k_{g, l}]``"
     k_g_l       ::Matrix{<:Real}
+    "Element's elastic stiffness matrix in its global coordinate system, ``[k_{e, g}]``"
+    k_e_g       ::Matrix{<:Real}
+    "Element's geometric stiffness matrix in its global coordinate system, ``[k_{g, g}]``"
+    k_g_g       ::Matrix{<:Real}
     # "Condensed element's elastic stiffness matrix in its local coordinate system, ``[k_{e, l, c}]``"
     # k_e_l_c     ::Matrix{<:Real}
     # "Condensed element's geometric stiffness matrix in its local coordinate system, ``[k_{g, l, c}]``"
@@ -203,4 +207,29 @@ function _compute_k_g_l(
 
     # Return the element geometric stiffness matrix:
     return k_g_l
+end
+
+function _compute_p_l(
+    w_x::DLTX, w_y::DLTY, w_z::DLTZ, 
+    L::ELT) where {DLTX<:Real, DLTY<:Real, DLTZ<:Real, ELT<:Real}
+    # Compute the element fixed-end forces:
+    p_l = [
+        -w_x * L / 2     ; # F_x_i
+        -w_y * L / 2     ; # F_y_i
+        -w_z * L / 2     ; # F_z_i
+        0                ; # M_x_i
+        -w_z * L ^ 2 / 12; # M_y_i
+        -w_y * L ^ 2 / 12; # M_z_i
+        +w_x * L / 2     ; # F_x_j
+        -w_y * L / 2     ; # F_y_j
+        -w_z * L / 2     ; # F_z_j
+        0                ; # M_x_j
+        +w_z * L ^ 2 / 12; # M_y_j
+        +w_y * L ^ 2 / 12] # M_z_j
+
+    # Remove small values if any:
+    map!(x -> abs(x) < 1E-12 ? 0 : x, p_l, p_l)
+
+    # Return the element fixed-end forces:
+    return p_l
 end
