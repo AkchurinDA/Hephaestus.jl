@@ -1,9 +1,9 @@
 """
-    Element
+    struct Element
 
 A type that represents an element in the finite element model of a structure.
 
-This type should never be created directly.
+This type should never be called directly by the user.
 
 # Fields
 $(FIELDS)
@@ -48,8 +48,10 @@ struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
     J           ::SPT
     "Angle that defines the orientation of the local coordinate system of the element, ``\\omega``"
     ω           ::Real
-    "Releases at the ends of the element"
-    releases    ::Vector{Bool}
+    "DOF releases at the node ``i`` of the element"
+    releases_i  ::Vector{Bool}
+    "DOF releases at the node ``j`` of the element"
+    releases_j  ::Vector{Bool}
 
     # ADDITIONAL ELEMENT INFORMATION THAT CAN BE PRECOMPUTED:
     "Length of the element, ``L``"
@@ -72,6 +74,11 @@ struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
     # k_g_l_c     ::Matrix{<:Real}
 end
 
+"""
+    _compute_T()
+
+This function computes the global-to-local transformation matrix of an element.
+"""
 function _compute_T(
     x_i::CTI, y_i::CTI, z_i::CTI,
     x_j::CTJ, y_j::CTJ, z_j::CTJ,
@@ -108,6 +115,11 @@ function _compute_T(
     return γ, T
 end
 
+"""
+    _compute_k_e_l()
+
+This function computes the element elastic stiffness matrix in its local coordinate system.
+"""
 function _compute_k_e_l(
     E::MPT, ν::MPT,
     A::SPT, I_zz::SPT, I_yy::SPT, J::SPT,
@@ -162,6 +174,11 @@ function _compute_k_e_l(
     return k_e_l
 end
 
+"""
+    _compute_k_g_l()
+
+This function computes the element geometric stiffness matrix in its local coordinate system (without the axial force term ``P``).
+"""
 function _compute_k_g_l(
     A::SPT, I_zz::SPT, I_yy::SPT,
     L::ELT) where {SPT<:Real, ELT<:Real}
@@ -209,6 +226,11 @@ function _compute_k_g_l(
     return k_g_l
 end
 
+"""
+    _compute_p_l()
+
+This function computes the element fixed-end forces due to applied distributed loads.
+"""
 function _compute_p_l(
     w_x::DLTX, w_y::DLTY, w_z::DLTZ, 
     L::ELT) where {DLTX<:Real, DLTY<:Real, DLTZ<:Real, ELT<:Real}

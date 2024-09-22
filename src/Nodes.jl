@@ -1,7 +1,9 @@
 """
-    Node
+    struct Node
 
 A type that represents a node in the finite element model of a structure.
+
+This type should never be called directly by the user.
 
 # Fields
 $(FIELDS)

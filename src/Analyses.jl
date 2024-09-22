@@ -37,6 +37,11 @@ function solve(model::Model, analysis::O1EAnalysis)
     K_e_sf = K_e[indices_s, indices_f]
     K_e_ss = K_e[indices_s, indices_s]
 
+    # Make sure that the structure is stable before proceeding:
+    if det(K_e_ff) == 0
+        error("Stiffness matrix is singular. The structure is unstable.")
+    end
+
     # Assemble the global force vector:
     F = _assemble_F(model, n_ID_mapping)
     F_f = F[indices_f]

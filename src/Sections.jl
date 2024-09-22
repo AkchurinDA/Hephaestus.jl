@@ -1,7 +1,9 @@
 """
-    Section
+    struct Section
 
 A type that represents a section in the finite element model of a structure.
+
+This type should never be called directly by the user.
 
 # Fields
 $(FIELDS)
@@ -18,4 +20,5 @@ struct Section{SPT<:Real}
     "Polar moment of inertia of the section, ``J``"
     J       ::SPT
 end
+
 Section(ID::Int, A::Real, I_zz::Real, I_yy::Real, J::Real) = Section(ID, promote(A, I_zz, I_yy, J)...)

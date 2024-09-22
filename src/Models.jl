@@ -1,42 +1,42 @@
 """
-    Model
+    struct Model
 
 A type that represents the finite element model of a structure.
 
-To create a model, use the [`Model()`](@ref) constructor.
+To create a new model, use the [`Model()`](@ref) constructor.
 
 # Fields
 $(FIELDS)
 """
 @kwdef struct Model
     "Dictionary of nodes in the model."
-    nodes               ::OrderedDict{Int, Node    } = OrderedDict{Int, Node    }()
+    nodes               ::Dict{Int, Node    } = Dict{Int, Node    }()
     "Dictionary of materials in the model."
-    materials           ::OrderedDict{Int, Material} = OrderedDict{Int, Material}()
+    materials           ::Dict{Int, Material} = Dict{Int, Material}()
     "Dictionary of sections in the model."
-    sections            ::OrderedDict{Int, Section } = OrderedDict{Int, Section }()
+    sections            ::Dict{Int, Section } = Dict{Int, Section }()
     "Dictionary of elements in the model."
-    elements            ::OrderedDict{Int, Element } = OrderedDict{Int, Element }()
+    elements            ::Dict{Int, Element } = Dict{Int, Element }()
 
     "Dictionary of supports in the model."
-    supports            ::OrderedDict{Int, Vector{Bool}} = OrderedDict{Int, Vector{Bool}}()
+    supports            ::Dict{Int, Vector{Bool}} = Dict{Int, Vector{Bool}}()
 
     "Dictionary of concentrated loads (acting on nodes) in the model."
-    concentrated_loads  ::OrderedDict{Int, Vector{<:Real}} = OrderedDict{Int, Vector{<:Real}}()
+    concentrated_loads  ::Dict{Int, Vector{<:Real}} = Dict{Int, Vector{<:Real}}()
     "Dictionary of distributed loads (acting on elements) in the model."
-    distributed_loads   ::OrderedDict{Int, Vector{<:Real}} = OrderedDict{Int, Vector{<:Real}}()
+    distributed_loads   ::Dict{Int, Vector{<:Real}} = Dict{Int, Vector{<:Real}}()
 
     "Dictionary of element fixed-end forces in the element's local coordinate system."
-    p_l                 ::OrderedDict{Int, Vector{<:Real}} = OrderedDict{Int, Vector{<:Real}}()
+    p_l                 ::Dict{Int, Vector{<:Real}} = Dict{Int, Vector{<:Real}}()
     "Dictionary of element fixed-end forces in the global coordinate system."
-    p_g                 ::OrderedDict{Int, Vector{<:Real}} = OrderedDict{Int, Vector{<:Real}}()
+    p_g                 ::Dict{Int, Vector{<:Real}} = Dict{Int, Vector{<:Real}}()
 end
 
 function Base.show(io::IO, model::Model)
     if isempty(model.nodes) && isempty(model.materials) && isempty(model.sections) && isempty(model.elements)
-        println(io, styled"{yellow, bold: Empty model.}")
+        println(io, styled"{yellow, bold: Empty model}")
     else
-        println(io, styled"{cyan, bold: Model with:}")
+        println(io, styled"{cyan, bold: Model with}")
         !isempty(model.nodes             ) && println(io, styled"{cyan: \t $(length(model.nodes             )) \t Nodes          }")
         !isempty(model.materials         ) && println(io, styled"{cyan: \t $(length(model.materials         )) \t Materials      }")
         !isempty(model.sections          ) && println(io, styled"{cyan: \t $(length(model.sections          )) \t Sections       }")
@@ -47,6 +47,11 @@ function Base.show(io::IO, model::Model)
     end
 end
 
+"""
+    add_node!(model, ID, x, y, z)
+
+This function adds a node to the model.
+"""
 function add_node!(model::Model, ID::Int, x::Real, y::Real, z::Real)
     # Check if the node already exists in the model:
     if haskey(model.nodes, ID)
@@ -61,6 +66,11 @@ function add_node!(model::Model, ID::Int, x::Real, y::Real, z::Real)
     return model
 end
 
+"""
+    add_material!(model, ID, E, ν, ρ)
+
+This function adds a material to the model.
+"""
 function add_material!(model::Model, ID::Int, E::Real, ν::Real, ρ::Real)
     # Check if the material already exists in the model:
     if haskey(model.materials, ID)
@@ -75,6 +85,11 @@ function add_material!(model::Model, ID::Int, E::Real, ν::Real, ρ::Real)
     return model
 end
 
+"""
+    add_section!(model, ID, A, I_zz, I_yy, J)
+
+This function adds a section to the model.
+"""
 function add_section!(model::Model, ID::Int, A::Real, I_zz::Real, I_yy::Real, J::Real)
     # Check if the section already exists in the model:
     if haskey(model.sections, ID)
@@ -89,7 +104,18 @@ function add_section!(model::Model, ID::Int, A::Real, I_zz::Real, I_yy::Real, J:
     return model
 end
 
-function add_element!(model::Model, ID::Int, node_i_ID::Int, node_j_ID::Int, material_ID::Int, section_ID::Int; ω::Real = 0, releases::Vector{Bool} = [false, false, false, false, false, false, false, false, false, false, false, false])
+"""
+    add_element!(model, ID, node_i_ID, node_j_ID, material_ID, section_ID; 
+        ω = 0,
+        releases_i = [false, false, false, false, false, false],
+        releases_j = [false, false, false, false, false, false])
+
+This function adds an element to the model.
+"""
+function add_element!(model::Model, ID::Int, node_i_ID::Int, node_j_ID::Int, material_ID::Int, section_ID::Int; 
+    ω::Real = 0, 
+    releases_i::Vector{Bool} = [false, false, false, false, false, false],
+    releases_j::Vector{Bool} = [false, false, false, false, false, false])
     # Check if the element already exists in the model:
     if haskey(model.elements, ID)
         @warn "Element with ID = $(ID) already exists in the model. Overwriting it."
@@ -165,13 +191,18 @@ function add_element!(model::Model, ID::Int, node_i_ID::Int, node_j_ID::Int, mat
         x_j, y_j, z_j, 
         E, ν, ρ, 
         A, I_zz, I_yy, J, 
-        ω, releases, 
+        ω, releases_i, releases_j, 
         L, γ, T, k_e_l, k_g_l, k_e_g, k_g_g)
 
     # Return the updated model:
     return model
 end
 
+"""
+    add_support!(model, ID, u_x, u_y, u_z, θ_x, θ_y, θ_z)
+
+This function adds a support to the model.
+"""
 function add_support!(model::Model, ID::Int, u_x::Bool, u_y::Bool, u_z::Bool, θ_x::Bool, θ_y::Bool, θ_z::Bool)
     # Check if the node exists in the model:
     if !haskey(model.nodes, ID)
@@ -190,6 +221,11 @@ function add_support!(model::Model, ID::Int, u_x::Bool, u_y::Bool, u_z::Bool, θ
     return model
 end
 
+"""
+    add_concentrated_load!(model, ID, F_x, F_y, F_z, M_x, M_y, M_z)
+
+This function adds a concentrated load to the model.
+"""
 function add_concentrated_load!(model::Model, ID::Int, F_x::Real, F_y::Real, F_z::Real, M_x::Real, M_y::Real, M_z::Real)
     # Check if the node exists in the model:
     if !haskey(model.nodes, ID)
@@ -208,6 +244,21 @@ function add_concentrated_load!(model::Model, ID::Int, F_x::Real, F_y::Real, F_z
     return model
 end
 
+"""
+    add_distributed_load!(model, ID, w_x, w_y, w_z;
+        cs = :local)
+
+This function adds a distributed load to the model.
+
+# Arguments
+
+- `model::Model`: The finite element model of a structure.
+- `ID::Int`:      The ID of the element on which the distributed load is applied.
+- `w_x::Real`:    The distributed load in the positive ``x``-direction.
+- `w_y::Real`:    The distributed load in the positive ``y``-direction.
+- `w_z::Real`:    The distributed load in the positive ``z``-direction.
+- `cs::Symbol`:   The coordinate system in which the distributed loads are provided. It can be either `:local` or `:global`.
+"""
 function add_distributed_load!(model::Model, ID::Int, w_x::Real, w_y::Real, w_z::Real; cs::Symbol = :local)
     # Check if the element exists in the model:
     if !haskey(model.elements, ID)

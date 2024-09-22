@@ -1,10 +1,6 @@
 ```@raw html
-<div style = "text-align: center">
-    <img src = "./assets/social-preview.svg" style = "max-width: 75%; border-radius: 40px;"/>
-</div>
+<img src = "./assets/social-preview.svg"/>
 ```
-
----
 
 ## Description
 

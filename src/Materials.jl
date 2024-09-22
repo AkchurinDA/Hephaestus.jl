@@ -1,7 +1,9 @@
 """
-    Material
+    struct Material
 
 A type that represents a material in the finite element model of a structure.
+
+This type should never be called directly by the user.
 
 # Fields
 $(FIELDS)

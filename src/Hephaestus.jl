@@ -1,7 +1,6 @@
 module Hephaestus
 using LinearAlgebra
 using StyledStrings
-using OrderedCollections
 using DocStringExtensions
 
 include("Nodes.jl")

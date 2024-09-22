@@ -1,7 +1,5 @@
 <img src="docs/src/assets/social-preview.svg" alt="Hephaestus.jl">
 
----
-
 ## Description
 
 `Hephaestus.jl` is an auto-differentiable structural analysis package purely written in the Julia programming language.
