@@ -43,7 +43,7 @@ using Test, Hephaestus
         add_support!(M, 10, false, false, true, true, true, false)
         add_support!(M, 11, false, false, true, true, true, false)
 
-        add_concentrated_load!(M, 11, 0, -1000, 0, 0, 0, 0)
+        add_conc_load!(M, 11, 0, -1000, 0, 0, 0, 0)
 
         Solution = solve(M, O1EAnalysis())
 
@@ -106,16 +106,16 @@ using Test, Hephaestus
         add_support!(M, 10, false, false, true, true, true, false)
         add_support!(M, 11, false, false, true, true, true, false)
 
-        add_distributed_load!(M, 1 , 0, -100, 0)
-        add_distributed_load!(M, 2 , 0, -100, 0)
-        add_distributed_load!(M, 3 , 0, -100, 0)
-        add_distributed_load!(M, 4 , 0, -100, 0)
-        add_distributed_load!(M, 5 , 0, -100, 0)
-        add_distributed_load!(M, 6 , 0, -100, 0)
-        add_distributed_load!(M, 7 , 0, -100, 0)
-        add_distributed_load!(M, 8 , 0, -100, 0)
-        add_distributed_load!(M, 9 , 0, -100, 0)
-        add_distributed_load!(M, 10, 0, -100, 0)
+        add_dist_load!(M, 1 , 0, -100, 0)
+        add_dist_load!(M, 2 , 0, -100, 0)
+        add_dist_load!(M, 3 , 0, -100, 0)
+        add_dist_load!(M, 4 , 0, -100, 0)
+        add_dist_load!(M, 5 , 0, -100, 0)
+        add_dist_load!(M, 6 , 0, -100, 0)
+        add_dist_load!(M, 7 , 0, -100, 0)
+        add_dist_load!(M, 8 , 0, -100, 0)
+        add_dist_load!(M, 9 , 0, -100, 0)
+        add_dist_load!(M, 10, 0, -100, 0)
 
         Solution = solve(M, O1EAnalysis())
 

@@ -1,22 +1,13 @@
 """
     struct Material
 
-A type that represents a material in the finite element model of a structure.
-
-This type should never be called directly by the user.
-
-# Fields
-$(FIELDS)
+A type representing a material in the finite element model of a structure of interest.
 """
-struct Material{MPT<:Real}
-    "Unique identifier of the material provided by the user"
-    ID  ::Int
-    "Young's modulus of the material, ``E``"
-    E   ::MPT
-    "Poisson's ratio of the material, ``\\nu``"
-    ν   ::MPT
-    "Density of the material, ``\\rho``"
-    ρ   ::MPT
+struct Material{T<:Real}
+    ID    ::Int
+    E     ::T
+    ν     ::T
+    ρ     ::T
 end
 
 Material(ID::Int, E::Real, ν::Real, ρ::Real) = Material(ID, promote(E, ν, ρ)...)

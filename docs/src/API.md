@@ -12,10 +12,17 @@ Element
 
 ```@docs
 add_node!
+del_node!
 add_material!
+del_material!
 add_section!
+del_section!
 add_element!
+del_element!
 add_support!
-add_concentrated_load!
-add_distributed_load!
+del_support!
+add_conc_load!
+del_conc_load!
+add_dist_load!
+del_dist_load!
 ```
