@@ -1,17 +1,17 @@
 module Hephaestus
-using LinearAlgebra
+using BlockDiagonals
 using StyledStrings
-using DocStringExtensions
 
-include("Nodes.jl")
+include("Nodes.jl"    )
 include("Materials.jl")
-include("Sections.jl")
-include("Elements.jl")
-include("Models.jl")
-include("Analyses.jl")
+include("Sections.jl" )
+include("Elements.jl" )
+include("Models.jl"   )
+include("Utilities.jl")
+include("Analyses/Analyses.jl")
 export Node, Material, Section, Element, Model
-export add_node!, add_material!, add_section!, add_element!, add_support!, add_concentrated_load!, add_distributed_load!
 export O1EAnalysis, O1ECache
-export O2EAnalysis, O2ECache
+export add_node!, add_material!, add_section!, add_element!, add_support!, add_conc_load!, add_dist_load!
+export del_node!, del_material!, del_section!, del_element!, del_support!, del_conc_load!, del_dist_load!
 export solve
 end

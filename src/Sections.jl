@@ -1,24 +1,14 @@
 """
     struct Section
 
-A type that represents a section in the finite element model of a structure.
-
-This type should never be called directly by the user.
-
-# Fields
-$(FIELDS)
+A type representing a section in the finite element model of a structure of interest.
 """
-struct Section{SPT<:Real}
-    "Unique identifier of the section provided by the user"
+struct Section{T<:Real}
     ID      ::Int
-    "Cross-sectional area of the section, ``A``"
-    A       ::SPT
-    "Moment of inertia about the local ``z``-axis of the section, ``I_{zz}``"
-    I_zz    ::SPT
-    "Moment of inertia about the local ``y``-axis of the section, ``I_{yy}``"
-    I_yy    ::SPT
-    "Polar moment of inertia of the section, ``J``"
-    J       ::SPT
+    A       ::T
+    I_zz    ::T
+    I_yy    ::T
+    J       ::T
 end
 
 Section(ID::Int, A::Real, I_zz::Real, I_yy::Real, J::Real) = Section(ID, promote(A, I_zz, I_yy, J)...)
