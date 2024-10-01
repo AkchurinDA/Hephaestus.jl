@@ -1,0 +1,3 @@
+struct Spring
+    
+end

@@ -6,6 +6,12 @@ Node
 Material
 Section
 Element
+O1EAnalysis
+O1ESolutionCache
+O2EAnalysis
+O2ESolutionCache
+EBAnalysis
+EBSolutionCache
 ```
 
 ## Functions
@@ -25,4 +31,7 @@ add_conc_load!
 del_conc_load!
 add_dist_load!
 del_dist_load!
+get_node_u_g
+get_element_u_l
+get_element_f_l
 ```

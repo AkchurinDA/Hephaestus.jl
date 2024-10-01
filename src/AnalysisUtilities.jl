@@ -1,14 +1,9 @@
-abstract type AbstractAnalysisType end
-abstract type AbstractAnalysisCache end
-
-include("O1EAnalysis.jl")
-
-function _get_partition_indices(model::Model, internal_node_IDs::Dict{Int, Int})
+function _get_partitioning_indices(model::Model, internal_node_IDs::Dict{Int, Int})
     # Preallocate:
     indices_f = Int[] # List of free DOFs
     indices_s = Int[] # List of supported DOFs
 
-    # Get the partition indices:
+    # Get the partitioning indices:
     for node in values(model.nodes)
         # Get the internal node ID:
         internal_node_ID = internal_node_IDs[node.ID]
@@ -17,7 +12,7 @@ function _get_partition_indices(model::Model, internal_node_IDs::Dict{Int, Int})
         base_index = 6 * (internal_node_ID - 1)
 
         # Check if the node's DOFs are free or supported:
-        if haskey(model.supports, node.ID) 
+        if haskey(model.supports, node.ID)
             for i in 1:6
                 model.supports[node.ID][i] ? push!(indices_s, base_index + i) : push!(indices_f, base_index + i)
             end
@@ -26,7 +21,7 @@ function _get_partition_indices(model::Model, internal_node_IDs::Dict{Int, Int})
         end
     end
 
-    # Return the partition indices:
+    # Return the partitioning indices:
     return indices_f, indices_s
 end
 
@@ -60,6 +55,35 @@ function _assemble_K_e(model::Model, internal_node_IDs::Dict{Int, Int})
     return K_e
 end
 
+function _assemble_K_g(model::Model, internal_node_IDs::Dict{Int, Int}, P::Vector{<:Real})
+    # Preallocate the global geometric stiffness matrix:
+    T   = float(promote_type(eltype(P), [eltype(element.k_g_g) for element in values(model.elements)]...))
+    K_g = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
+
+    # Assemble the global geometric stiffness matrix:
+    for (i, element) in enumerate(values(model.elements))
+        # Extract the internal node IDs:
+        internal_node_i_ID = internal_node_IDs[element.node_i_ID]
+        internal_node_j_ID = internal_node_IDs[element.node_j_ID]
+
+        # Set the base indices:
+        base_index_i = 6 * (internal_node_i_ID - 1)
+        base_index_j = 6 * (internal_node_j_ID - 1)
+
+        # Set the ranges:
+        range_i = (base_index_i + 1):(base_index_i + 6)
+        range_j = (base_index_j + 1):(base_index_j + 6)
+
+        # Add the element geometric stiffness matrix to the global geometric stiffness matrix:
+        @inbounds K_g[range_i, range_i] += P[i] * element.k_g_g[1:6 , 1:6 ]
+        @inbounds K_g[range_i, range_j] += P[i] * element.k_g_g[1:6 , 7:12]
+        @inbounds K_g[range_j, range_i] += P[i] * element.k_g_g[7:12, 1:6 ]
+        @inbounds K_g[range_j, range_j] += P[i] * element.k_g_g[7:12, 7:12]
+    end
+
+    # Return the global geometric stiffness matrix:
+    return K_g
+end
 
 function _assemble_F(model::Model, internal_node_IDs::Dict{Int, Int})
     if isempty(model.conc_loads)

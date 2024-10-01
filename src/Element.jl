@@ -1,48 +1,120 @@
 """
     struct Element
 
-A type representing an element in the finite element in a structure of interest.
+A type representing an element in the model of a structure of interest.
+
+$(FIELDS)
 """
 struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
-    ID            ::Int
-    node_i_ID     ::Int
-    x_i           ::CTI
-    y_i           ::CTI
-    z_i           ::CTI
-    node_j_ID     ::Int
-    x_j           ::CTJ
-    y_j           ::CTJ
-    z_j           ::CTJ
-    E             ::MPT
-    ν             ::MPT
-    ρ             ::MPT
-    A             ::SPT
-    I_zz          ::SPT
-    I_yy          ::SPT
-    J             ::SPT
-    ω             ::Real
-    releases_i    ::Vector{Bool}
-    releases_j    ::Vector{Bool}
-    L             ::Real
-    γ             ::Matrix{<:Real}
-    T             ::BlockDiagonal{<:Real}
-    k_e_l         ::Matrix{<:Real}
-    k_e_g         ::Matrix{<:Real}
-    k_g_l         ::Matrix{<:Real}
-    k_g_g         ::Matrix{<:Real}
+    "Unique identifier"
+    ID             ::Int
+    "Unique identifier of the node ``i`` of the element"
+    node_i_ID      ::Int
+    "Unique identifier of the node ``j`` of the element"
+    node_j_ID      ::Int
+    "Unique identifier of the material of the element"
+    material_ID    ::Int
+    "Unique identifier of the section of the element"
+    section_ID     ::Int
+    "DOF releases at the node ``i``"
+    releases_i     ::Vector{Bool}
+    "DOF releases at the node ``j``"
+    releases_j     ::Vector{Bool}
+    "Angle that defines the orientation of the element's local coordinate system, ``\\omega``"
+    ω              ::Real
+    "``x``-coordinate of the node ``i``, ``x_{i}``"
+    x_i            ::CTI
+    "``y``-coordinate of the node ``i``, ``y_{i}``"
+    y_i            ::CTI
+    "``z``-coordinate of the node ``i``, ``z_{i}``"
+    z_i            ::CTI
+    "``x``-coordinate of the node ``j``, ``x_{j}``"
+    x_j            ::CTJ
+    "``y``-coordinate of the node ``j``, ``y_{j}``"
+    y_j            ::CTJ
+    "``z``-coordinate of the node ``j``, ``z_{j}``"
+    z_j            ::CTJ
+    "Young's modulus, ``E``"
+    E              ::MPT
+    "Poisson's ratio, ``\\nu``"
+    ν              ::MPT
+    "Density, ``\\rho``"
+    ρ              ::MPT
+    "Cross-sectional area, ``A``"
+    A              ::SPT
+    "Moment of inertia about the local ``z``-axis, ``I_{zz}``"
+    I_zz           ::SPT
+    "Moment of inertia about the local ``y``-axis, ``I_{yy}``"
+    I_yy           ::SPT
+    "Polar moment of inertia about the local ``x``-axis, ``J``"
+    J              ::SPT
+    "Length of the element, ``L``"
+    L              ::Real
+    "Local-to-global sub-transformation matrix, ``\\gamma``"
+    γ              ::Matrix{<:Real}
+    "Local-to-global transformation matrix, ``\\Gamma``"
+    Γ              ::BlockDiagonal{<:Real}
+    "Elastic stiffness matrix in the local coordinate system of the element, ``k_{e, l}``"
+    k_e_l          ::Matrix{<:Real}
+    "Elastic stiffness matrix in the global coordinate system, ``k_{e, g}``"
+    k_e_g          ::Matrix{<:Real}
+    "Geometric stiffness matrix in the local coordinate system of the element, ``k_{g, l}``"
+    k_g_l          ::Matrix{<:Real}
+    "Geometric stiffness matrix in the global coordinate system, ``k_{g, g}``"
+    k_g_g          ::Matrix{<:Real}
+
+    function Element(ID::Int, 
+        node_i_ID::Int, node_j_ID::Int, material_ID::Int, section_ID::Int,
+        releases_i::Vector{Bool}, releases_j::Vector{Bool}, ω::Real,
+        x_i::CTI, y_i::CTI, z_i::CTI, 
+        x_j::CTJ, y_j::CTJ, z_j::CTJ,
+        E::MPT, ν::MPT, ρ::MPT, 
+        A::SPT, I_zz::SPT, I_yy::SPT, J::SPT) where {CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
+        # Compute the length of the element:
+        L = _compute_L(x_i, y_i, z_i, x_j, y_j, z_j)
+
+        # Compute the transformation matrix:
+        γ, Γ = _compute_Γ(x_i, y_i, z_i, x_j, y_j, z_j, L, ω)
+
+        # Compute the element elastic stiffness matrix in its local coordinate system:
+        k_e_l = _compute_k_e_l(E, ν, A, I_zz, I_yy, J, L)
+
+        # Transform the element elastic stiffness matrix to the global coordinate system:
+        k_e_g = Γ' * k_e_l * Γ
+
+        # Remove small values if any:
+        map!(x -> abs(x) < 1E-12 ? 0 : x, k_e_g, k_e_g)
+
+        # Compute the element geometric stiffness matrix in its local coordinate system:
+        k_g_l = _compute_k_g_l(A, I_zz, I_yy, L)
+
+        # Transform the element geometric stiffness matrix to the global coordinate system:
+        k_g_g = Γ' * k_g_l * Γ
+
+        # Remove small values if any:
+        map!(x -> abs(x) < 1E-12 ? 0 : x, k_g_g, k_g_g)
+
+        # Return the element:
+        return new{CTI, CTJ, MPT, SPT}(ID, 
+            node_i_ID, node_j_ID, material_ID, section_ID, 
+            releases_i, releases_j, ω, 
+            x_i, y_i, z_i, 
+            x_j, y_j, z_j, 
+            E, ν, ρ, 
+            A, I_zz, I_yy, J, 
+            L, γ, Γ, k_e_l, k_e_g, k_g_l, k_g_g)
+    end
 end
 
 function _compute_L(
     x_i::CTI, y_i::CTI, z_i::CTI,
     x_j::CTJ, y_j::CTJ, z_j::CTJ) where {CTI<:Real, CTJ<:Real}
-    # Compute the length of the element:
-    L = sqrt((x_j - x_i) ^ 2 + (y_j - y_i) ^ 2 + (z_j - z_i) ^ 2)
+    L = sqrt((x_j - x_i)^2 + (y_j - y_i)^2 + (z_j - z_i)^2)
 
-    # Return the length of the element:
     return L
 end
 
-function _compute_T(
+function _compute_Γ(
     x_i::CTI, y_i::CTI, z_i::CTI,
     x_j::CTJ, y_j::CTJ, z_j::CTJ,
     L::Real,  
@@ -56,18 +128,18 @@ function _compute_T(
     s_χ, c_χ = sincos(χ)
     s_ω, c_ω = sincos(ω)
     γ = [
-        +c_χ * c_ρ                      +s_χ          -c_χ * s_ρ                  
-        +s_ω * s_ρ - c_ω * s_χ * c_ρ    +c_ω * c_χ    +c_ω * s_χ * s_ρ + s_ω * c_ρ
+        +c_χ * c_ρ                      +s_χ          -c_χ * s_ρ                  ;
+        +s_ω * s_ρ - c_ω * s_χ * c_ρ    +c_ω * c_χ    +c_ω * s_χ * s_ρ + s_ω * c_ρ;
         +c_ω * s_ρ + s_ω * s_χ * c_ρ    -s_ω * c_χ    -s_ω * s_χ * s_ρ + c_ω * c_ρ]
 
     # Remove small values if any:
     map!(x -> abs(x) < 1E-12 ? 0 : x, γ, γ)
 
     # Preallocate the transformation matrix and fill it:
-    T = BlockDiagonal([γ, γ, γ, γ])
+    Γ = BlockDiagonal([γ, γ, γ, γ])
 
     # Return the transformation matrices:
-    return γ, T
+    return γ, Γ
 end
 
 function _compute_k_e_l(
@@ -176,17 +248,17 @@ function _compute_p_l(
     L::Real)
     # Compute the element fixed-end force vector in the local coordinate system:
     p_l = [
-        -q_x * L / 2       # F_x_i
-        -q_y * L / 2       # F_y_i
-        -q_z * L / 2       # F_z_i
-        0                  # M_x_i
-        -q_z * L ^ 2 / 12  # M_y_i
-        -q_y * L ^ 2 / 12  # M_z_i
-        +q_x * L / 2       # F_x_j
-        -q_y * L / 2       # F_y_j
-        -q_z * L / 2       # F_z_j
-        0                  # M_x_j
-        +q_z * L ^ 2 / 12  # M_y_j
+        -q_x * L / 2     ; # F_x_i
+        -q_y * L / 2     ; # F_y_i
+        -q_z * L / 2     ; # F_z_i
+        0                ; # M_x_i
+        -q_z * L ^ 2 / 12; # M_y_i
+        -q_y * L ^ 2 / 12; # M_z_i
+        +q_x * L / 2     ; # F_x_j
+        -q_y * L / 2     ; # F_y_j
+        -q_z * L / 2     ; # F_z_j
+        0                ; # M_x_j
+        +q_z * L ^ 2 / 12; # M_y_j
         +q_y * L ^ 2 / 12] # M_z_j
 
     # Remove small values if any:

@@ -1,12 +1,18 @@
 """
     struct Node
 
-A type representing a node in the finite element model of a structure of interest.
+A type representing a node in the model of a structure of interest.
+
+$(FIELDS)
 """
 struct Node{T<:Real}
+    "Unique identifier"
     ID    ::Int
+    "``x``-coordinate"
     x     ::T
+    "``y``-coordinate"
     y     ::T
+    "``z``-coordinate"
     z     ::T
 end
 

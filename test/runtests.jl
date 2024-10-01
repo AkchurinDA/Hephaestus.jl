@@ -1,4 +1,6 @@
-using Test, Hephaestus
+using Test
+using Hephaestus
+using DifferentiationInterface
 
 @testset "1st-Order Elastic Analysis" begin
     @testset "Cantilever Beam - Concentrated Loading" begin

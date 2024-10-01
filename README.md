@@ -40,8 +40,11 @@ The design of the package is inspired by [`OpenSeesPy`](https://github.com/zhumi
 - [ ] Analyses
   - [x] 1nd-order elastic analysis
   - [ ] 2nd-order elastic analysis
-  - [ ] Elastic buckling analysis
+  - [x] Elastic buckling analysis
 - [ ] Elements
   - [ ] Truss element
   - [x] Beam-column element (Euler-Bernoulli)
   - [ ] Beam-column element (Timoshenko)
+- [ ] Utilities
+  - [x] Plotting a model
+  - [ ] Extracting element information (displacement and force vectors in the local coordinate systems) from the solution cache
