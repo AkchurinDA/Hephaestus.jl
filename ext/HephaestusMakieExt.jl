@@ -1,5 +1,11 @@
-MakieCore.@recipe(PlotModel, Model) do scene
-    MakieCore.Attributes(
+module HephaestusMakieExt
+using Hephaestus
+using Makie
+
+import Hephaestus: plotmodel, plotmodel!
+
+Makie.@recipe(PlotModel, Model) do scene
+    Makie.Attributes(
         # Nodes:
         node_color       = :red ,
         node_marker      = :circle,
@@ -23,7 +29,7 @@ MakieCore.@recipe(PlotModel, Model) do scene
         element_label_color  = :black)
 end
 
-function MakieCore.plot!(P::PlotModel)
+function Makie.plot!(P::PlotModel)
     model = P[:Model]
 
     for element in values(model[].elements)
@@ -68,4 +74,7 @@ function MakieCore.plot!(P::PlotModel)
 
     # Return the updated model plot:
     return P
+end
+
+Makie.preferred_axis_type(P::PlotModel) = Makie.Axis3
 end

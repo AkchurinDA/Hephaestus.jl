@@ -12,10 +12,10 @@ StyledStrings = "f489334b-da3d-4c2e-b8f0-e476e12c162b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [weakdeps]
-MakieCore = "20f20a25-4f0e-4fdf-b5d1-57303727442b"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 
 [extensions]
-MakieExt = "MakieCore"
+HephaestusMakieExt = "Makie"
 
 [compat]
 BlockDiagonals = "0.1"

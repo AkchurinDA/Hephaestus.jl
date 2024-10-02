@@ -1,4 +1,5 @@
 using Hephaestus
+using GLMakie
 
 M = Model()
 
@@ -43,4 +44,13 @@ add_support!(M, 11, false, false, true, true, true, false)
 
 add_conc_load!(M, 11, 0, -1, 0, 0, 0, 0)
 
-Solution = solve(M, EBAnalysis())
+plotmodel(M)
+
+begin
+    F = Figure()
+    A = Axis3(F[1, 1])
+    
+    plotmodel!(A, M)
+
+    display(F)
+end
