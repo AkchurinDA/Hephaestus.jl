@@ -21,6 +21,10 @@ export O2EAnalysis, O2EAnalysisCache
 export EBAnalysis, EBSolutionCache
 export solve
 include("AnalysisUtilities.jl")
-include("Plotting.jl")
 export plotmodel, plotmodel!
+
+# define empty functions to 
+function plotmodel end
+function plotmodel! end
+
 end
