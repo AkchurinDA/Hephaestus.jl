@@ -196,7 +196,7 @@ function add_dist_load!(model::Model, ID::Int,
 
     # Extract the information about the element:
     L = model.elements[ID].L
-    T = model.elements[ID].T
+    Γ = model.elements[ID].Γ
 
     # Add the distributed load to the model:
     model.dist_loads[ID] = [q_x, q_y, q_z]
@@ -205,7 +205,7 @@ function add_dist_load!(model::Model, ID::Int,
     p_l = _compute_p_l(q_x, q_y, q_z, L)
 
     # Transform the fixed-end forces to the global coordinate system:
-    p_g = T * p_l
+    p_g = Γ * p_l
 
     # Remove small values if any:
     map!(x -> abs(x) < 1E-12 ? 0 : x, p_g, p_g)

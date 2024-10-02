@@ -138,15 +138,16 @@ function solve(model::Model, analysis::EBAnalysis)
     K_g_ss = K_g[indices_s, indices_s]
 
     # Solve the generalized eigenvalue problem:
-    λ, ϕ = eigen(K_e_ff, -K_g_ff)
+    Λ, ϕ = eigen(K_e_ff, -K_g_ff)
 
-    # Take only the real parts of the eigenvalues:
-    Λ = real.(λ)
+    # Take only the real parts:
+    Λ = real.(Λ)
+    ϕ = real.(ϕ)
 
     # Normalize the eigenvectors:
     Φ = zeros(eltype(ϕ), 6 * length(model.nodes), length(Λ))
     for i in 1:length(Λ)
-        Φ[indices_f, i] = ϕ[:, i] / norm(ϕ[:, i])
+        Φ[indices_f, i] = ϕ[:, i] / maximum(abs.(ϕ[:, i]))
     end
 
     # Return the analysis cache:

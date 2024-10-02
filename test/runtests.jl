@@ -1,8 +1,8 @@
 using Test
 using Hephaestus
-using DifferentiationInterface
+# using DifferentiationInterface, ForwardDiff, ReverseDiff
 
-@testset "1st-Order Elastic Analysis" begin
+@testset "Structural Analysis: 1st-Order Elastic Analysis" begin
     @testset "Cantilever Beam - Concentrated Loading" begin
         M = Model()
 
@@ -138,3 +138,62 @@ using DifferentiationInterface
         @test Solution.U[66] ≈ (-100 * 120 ^ 3) / (6 * 29000 * 1000)
     end
 end
+
+# @testset "Automatic Differentiation: 1st-Order Elastic Analysis" begin
+#     @testset "Cantilever Beam - Concentrated Loading" begin
+#         function f(x)
+#             M = Model()
+
+#             add_node!(M, 1 , 0  * 12, 0, 0)
+#             add_node!(M, 2 , 1  * 12, 0, 0)
+#             add_node!(M, 3 , 2  * 12, 0, 0)
+#             add_node!(M, 4 , 3  * 12, 0, 0)
+#             add_node!(M, 5 , 4  * 12, 0, 0)
+#             add_node!(M, 6 , 5  * 12, 0, 0)
+#             add_node!(M, 7 , 6  * 12, 0, 0)
+#             add_node!(M, 8 , 7  * 12, 0, 0)
+#             add_node!(M, 9 , 8  * 12, 0, 0)
+#             add_node!(M, 10, 9  * 12, 0, 0)
+#             add_node!(M, 11, 10 * 12, 0, 0)
+
+#             add_material!(M, 1, x[1], 0.3, 0.000284)
+
+#             add_section!(M, 1, 5, 1000, 1000, 10)
+
+#             add_element!(M, 1 , 1 , 2 , 1, 1)
+#             add_element!(M, 2 , 2 , 3 , 1, 1)
+#             add_element!(M, 3 , 3 , 4 , 1, 1)
+#             add_element!(M, 4 , 4 , 5 , 1, 1)
+#             add_element!(M, 5 , 5 , 6 , 1, 1)
+#             add_element!(M, 6 , 6 , 7 , 1, 1)
+#             add_element!(M, 7 , 7 , 8 , 1, 1)
+#             add_element!(M, 8 , 8 , 9 , 1, 1)
+#             add_element!(M, 9 , 9 , 10, 1, 1)
+#             add_element!(M, 10, 10, 11, 1, 1)
+
+#             add_support!(M, 1 , true , true , true, true, true, true )
+#             add_support!(M, 2 , false, false, true, true, true, false)
+#             add_support!(M, 3 , false, false, true, true, true, false)
+#             add_support!(M, 4 , false, false, true, true, true, false)
+#             add_support!(M, 5 , false, false, true, true, true, false)
+#             add_support!(M, 6 , false, false, true, true, true, false)
+#             add_support!(M, 7 , false, false, true, true, true, false)
+#             add_support!(M, 8 , false, false, true, true, true, false)
+#             add_support!(M, 9 , false, false, true, true, true, false)
+#             add_support!(M, 10, false, false, true, true, true, false)
+#             add_support!(M, 11, false, false, true, true, true, false)
+
+#             add_conc_load!(M, 11, 0, x[2], 0, 0, 0, 0)
+
+#             Solution = solve(M, O1EAnalysis())
+
+#             Δ = Solution.U[62]
+
+#             return Δ
+#         end
+
+#         # Test reactions at the gradients:
+#         @test DifferentiationInterface.gradient(f, AutoForwardDiff(), [29000.0, -1000.0]) ≈ [-(-1000 * 120 ^ 3) / (3 * 29000 ^ 2 * 1000), (120 ^ 3) / (3 * 29000 * 1000)]
+#         @test DifferentiationInterface.gradient(f, AutoReverseDiff(), [29000.0, -1000.0]) ≈ [-(-1000 * 120 ^ 3) / (3 * 29000 ^ 2 * 1000), (120 ^ 3) / (3 * 29000 * 1000)]
+#     end
+# end

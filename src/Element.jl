@@ -237,7 +237,7 @@ function _compute_k_g_l(
     end
 
     # Remove small values if any:
-    map!(x -> abs(x) < 1E-12 ? 0 : x, k_g_l, k_g_l)
+    # map!(x -> abs(x) < 1E-12 ? 0 : x, k_g_l, k_g_l)
 
     # Return the element geometric stiffness matrix:
     return k_g_l
