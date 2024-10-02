@@ -34,4 +34,6 @@ del_dist_load!
 get_node_u_g
 get_element_u_l
 get_element_f_l
+plotmodel
+plotmodel!
 ```

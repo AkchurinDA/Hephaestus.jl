@@ -1,73 +1,49 @@
-using MakieCore
+"""
+    plotmodel(model::Model, [options])
 
-MakieCore.@recipe(PlotModel, Model) do scene
-    MakieCore.Attributes(
-        # Nodes:
-        node_color       = :red ,
-        node_marker      = :circle,
-        node_markersize  = 6,
-        node_strokecolor = :black,
-        node_strokewidth = 1,
+Plots a model of a structure of interest ([`Model`](@ref)) into a new `Makie.jl` scene.
 
-        # Node labels:
-        label_nodes       = true,
-        align_node_labels = (:center, :bottom),
-        node_label_color  = :red,
+# Plotting Options
 
-        # Elements:
-        element_color     = :black,
-        element_linestyle = :solid,
-        element_linewidth = 1,
-        
-        # Element labels:
-        label_elements       = true,
-        align_element_labels = (:center, :bottom),
-        element_label_color  = :black)
-end
+## Nodes
 
-function MakieCore.plot!(P::PlotModel)
-    model = P[:Model]
+| Option | Description | Default |
+| :--- | :--- | :--- |
+| `node_color` | Color of the nodes | `:red` |
+| `node_marker` | Marker of the nodes | `:circle` |
+| `node_markersize`| Size of the nodes | `6` |
+| `node_strokecolor`| Stroke color of the nodes | `:black` |
+| `node_strokewidth`| Stroke width of the nodes | `1` |
 
-    for element in values(model[].elements)
-        x_i, y_i, z_i = element.x_i, element.y_i, element.z_i
-        x_j, y_j, z_j = element.x_j, element.y_j, element.z_j 
+## Node Labels
 
-        lines!(P, [x_i, x_j], [y_i, y_j], [z_i, z_j], 
-            color     = P[:element_color    ],
-            linestyle = P[:element_linestyle],
-            linewidth = P[:element_linewidth])
+| Option | Description | Default |
+| :--- | :--- | :--- |
+| `label_nodes` | Whether to label the nodes| `true` |
+| `align_node_labels`| Alignment of the node labels | `(:center, :bottom)` |
+| `node_label_color`| Color of the node labels  | `:red` |
 
-        if P[:label_elements][]
-            x_m = (x_i + x_j) / 2
-            y_m = (y_i + y_j) / 2
-            z_m = (z_i + z_j) / 2
+## Elements
 
-            text!(P, [x_m], [y_m], [z_m],
-                text  = string(element.ID),
-                color = P[:element_label_color ],
-                align = P[:align_element_labels])
-        end
-    end
+| Option | Description | Default |
+| :--- | :--- | :--- |
+| `element_color` | Color of the elements | `:black`  |
+| `element_linestyle`| Line style of the elements | `:solid` |
+| `element_linewidth`| Line width of the elements | `1` |
 
-    for node in values(model[].nodes)
-        x, y, z = node.x, node.y, node.z
+## Element Labels
 
-        scatter!(P, [x], [y], [z], 
-            color       = P[:node_color      ],
-            marker      = P[:node_marker     ],
-            markersize  = P[:node_markersize ],
-            strokecolor = P[:node_strokecolor],
-            strokewidth = P[:node_strokewidth],
-            overdraw    = true)
+| Option | Description | Default |
+| :--- | :--- | :--- |
+| `label_elements` | Whether to label the elements | `true` |
+| `align_element_labels`| Alignment of the element labels | `(:center, :bottom)` |
+| `element_label_color`| Color of the element labels | `:black` |
+"""
+function plotmodel  end
 
-        if P[:label_nodes][]
-            text!(P, [x], [y], [z],
-                text  = string(node.ID),
-                color = P[:node_label_color ],
-                align = P[:align_node_labels])
-        end
-    end
+"""
+    plotmodel!(model::Model, [options])
 
-    # Return the updated model plot:
-    return P
-end
+Plots a model of a structure of interest ([`Model`](@ref)) into an existing scene. The plotting options are the same as in [`plotmodel()`](@ref) function.
+"""
+function plotmodel! end

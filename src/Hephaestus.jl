@@ -16,8 +16,8 @@ export add_node!, add_material!, add_section!, add_element!, add_support!, add_c
 export del_node!, del_material!, del_section!, del_element!, del_support!, del_conc_load!, del_dist_load!
 export get_node_u_g, get_element_u_l, get_element_f_l
 include("Analysis.jl")
-export O1EAnalysis, O1EAnalysisCache
-export O2EAnalysis, O2EAnalysisCache
+export O1EAnalysis, O1ESolutionCache
+export O2EAnalysis, O2ESolutionCache
 export EBAnalysis, EBSolutionCache
 export solve
 include("AnalysisUtilities.jl")

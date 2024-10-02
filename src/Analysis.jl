@@ -93,10 +93,20 @@ struct O2ESolutionCache <: AbstractSolutionCache
 
 end
 
+"""
+    struct EBAnalysis
+
+A type that represents the elastic buckling (`EB`) analysis.
+"""
 struct EBAnalysis <: AbstractAnalysisType
 
 end
 
+"""
+    struct EBSolutionCache
+
+A type that stores the results of the elastic buckling analysis.
+"""
 struct EBSolutionCache <: AbstractSolutionCache
     Λ::Vector{<:Real}
     Φ::Matrix{<:Real}
