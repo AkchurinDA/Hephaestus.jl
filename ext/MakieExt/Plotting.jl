@@ -1,5 +1,3 @@
-using MakieCore
-
 MakieCore.@recipe(PlotModel, Model) do scene
     MakieCore.Attributes(
         # Nodes:
