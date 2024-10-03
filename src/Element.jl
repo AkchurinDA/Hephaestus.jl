@@ -62,6 +62,10 @@ struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
     k_g_l          ::Matrix{<:Real}
     "Geometric stiffness matrix in the global coordinate system, ``k_{g, g}``"
     k_g_g          ::Matrix{<:Real}
+    "Mass matrix in the local coordinate system of the element, ``m_{l}``"
+    m_l            ::Matrix{<:Real}
+    "Mass matrix in the global coordinate system, ``m_{g}``"
+    m_g            ::Matrix{<:Real}
 
     function Element(ID::Int, 
         node_i_ID::Int, node_j_ID::Int, material_ID::Int, section_ID::Int,
@@ -94,6 +98,15 @@ struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
         # Remove small values if any:
         map!(x -> abs(x) < 1E-12 ? 0 : x, k_g_g, k_g_g)
 
+        # Compute the element mass matrix in its local coordinate system:
+        m_l = _compute_m_l(ρ, A, J, L)
+
+        # Transform the element mass matrix to the global coordinate system:
+        m_g = Γ' * m_l * Γ
+
+        # Remove small values if any:
+        map!(x -> abs(x) < 1E-12 ? 0 : x, m_g, m_g)
+
         # Return the element:
         return new{CTI, CTJ, MPT, SPT}(ID, 
             node_i_ID, node_j_ID, material_ID, section_ID, 
@@ -102,7 +115,7 @@ struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
             x_j, y_j, z_j, 
             E, ν, ρ, 
             A, I_zz, I_yy, J, 
-            L, γ, Γ, k_e_l, k_e_g, k_g_l, k_g_g)
+            L, γ, Γ, k_e_l, k_e_g, k_g_l, k_g_g, m_l, m_g)
     end
 end
 
@@ -237,10 +250,60 @@ function _compute_k_g_l(
     end
 
     # Remove small values if any:
-    # map!(x -> abs(x) < 1E-12 ? 0 : x, k_g_l, k_g_l)
+    map!(x -> abs(x) < 1E-12 ? 0 : x, k_g_l, k_g_l)
 
     # Return the element geometric stiffness matrix:
     return k_g_l
+end
+
+function _compute_m_l(
+    ρ::MPT,
+    A::SPT, J::SPT,
+    L::EPT) where {MPT<:Real, SPT<:Real, EPT<:Real}
+    # Preallocate:
+    T   = float(promote_type(MPT, SPT, EPT))
+    m_l = zeros(T, 12, 12)
+
+    # Compute the components of the element mass matrix in its upper triangular part:
+    @inbounds m_l[1 , 1 ] = +140
+    @inbounds m_l[1 , 7 ] = +70
+    @inbounds m_l[2 , 2 ] = +156
+    @inbounds m_l[2 , 6 ] = +22 * L
+    @inbounds m_l[2 , 8 ] = +54
+    @inbounds m_l[2 , 12] = -13 * L
+    @inbounds m_l[3 , 3 ] = +156
+    @inbounds m_l[3 , 5 ] = -22 * L
+    @inbounds m_l[3 , 9 ] = +54 
+    @inbounds m_l[3 , 11] = +13 * L
+    @inbounds m_l[4 , 4 ] = +140 * J / A
+    @inbounds m_l[4 , 10] = +70 * J / A
+    @inbounds m_l[5 , 5 ] = +4 * L ^ 2 
+    @inbounds m_l[5 , 9 ] = -13 * L
+    @inbounds m_l[5 , 11] = -3 * L ^ 2
+    @inbounds m_l[6 , 6 ] = +4 * L ^ 2
+    @inbounds m_l[6 , 8 ] = +13 * L
+    @inbounds m_l[6 , 12] = -3 * L ^ 2
+    @inbounds m_l[7 , 7 ] = +140
+    @inbounds m_l[8 , 8 ] = +156
+    @inbounds m_l[8 , 12] = -22 * L
+    @inbounds m_l[9 , 9 ] = +156
+    @inbounds m_l[9 , 11] = +22 * L
+    @inbounds m_l[10, 10] = +140 * J / A
+    @inbounds m_l[11, 11] = +4 * L ^ 2
+    @inbounds m_l[12, 12] = +4 * L ^ 2
+    
+    # Compute the components of the element mass matrix in its lower triangular part:
+    for i in 1:12, j in (i + 1):12
+        @inbounds m_l[j, i] = m_l[i, j]
+    end
+
+    m_l *= (ρ * A * L) / 420
+
+    # Remove small values if any:
+    # map!(x -> abs(x) < 1E-12 ? 0 : x, m_l, m_l)
+
+    # Return the element mass matrix:
+    return m_l
 end
 
 function _compute_p_l(

@@ -1,5 +1,5 @@
 using Hephaestus
-using DifferentiationInterface, ForwardDiff, ReverseDiff, Mooncake, PolyesterForwardDiff
+using DifferentiationInterface, ForwardDiff, ReverseDiff, Enzyme
 
 function f(x)
     M = Model()
@@ -16,7 +16,7 @@ function f(x)
     add_node!(M, 10, 9  * 12, 0, 0)
     add_node!(M, 11, 10 * 12, 0, 0)
 
-    add_material!(M, 1, x[1], x[2], 0.000284)
+    add_material!(M, 1, x, 0.3, 0.000284)
 
     add_section!(M, 1, 5, 1000, 1000, 10)
 
@@ -43,16 +43,15 @@ function f(x)
     add_support!(M, 10, false, false, true, true, true, false)
     add_support!(M, 11, false, false, true, true, true, false)
 
-    add_conc_load!(M, 11, 0, -x[3], 0, 0, 0, 0)
+    add_conc_load!(M, 11, 0, -1000, 0, 0, 0, 0)
 
     Solution = solve(M, O1EAnalysis())
 
     return Solution.U[62]
 end
 
-@time DifferentiationInterface.gradient(f, AutoForwardDiff(), [29000.0, 0.3, 1000.0])
-@time DifferentiationInterface.gradient(f, AutoReverseDiff(), [29000.0, 0.3, 1000.0])
+# DifferentiationInterface.derivative(f, AutoForwardDiff(), 29000.0)
+# DifferentiationInterface.derivative(f, AutoReverseDiff(), 29000.0)
 
-# Notes:
-# - For now, Hephaestus.jl is only compatible with the ForwardDiff.jl and ReverseDiff.jl packages and their direct derivatives.
-
+Enzyme.set_runtime_activity(Reverse)
+DifferentiationInterface.derivative(f, AutoEnzyme()     , 29000.0)
