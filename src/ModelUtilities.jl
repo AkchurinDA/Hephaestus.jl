@@ -208,7 +208,7 @@ function add_dist_load!(model::Model, ID::Int,
     p_g = Γ * p_l
 
     # Remove small values if any:
-    map!(x -> abs(x) < 1E-12 ? 0 : x, p_g, p_g)
+    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, p_g, p_g)
 
     # Add the fixed-end forces to the model:
     model.p_l[ID] = p_l
@@ -452,7 +452,7 @@ function get_node_u_g(solution_cache::AbstractSolutionCache, ID::Int)
     u_g = solution_cache.U[range]
 
     # Remove small values if any:
-    map!(x -> abs(x) < 1E-12 ? 0 : x, u_g, u_g)
+    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, u_g, u_g)
 
     # Return the displacement vector of the node in the global coordinate system:
     return u_g
@@ -478,7 +478,7 @@ function get_element_u_l(model::Model, solution_cache::AbstractSolutionCache, ID
     u_l = Γ * u_g
 
     # Remove small values if any:
-    map!(x -> abs(x) < 1E-12 ? 0 : x, u_l, u_l)
+    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, u_l, u_l)
 
     # Return the element displacement vector in the local coordinate system:
     return u_l
@@ -500,7 +500,7 @@ function get_element_f_l(model::Model, solution_cache::AbstractSolutionCache, ID
     f_l = k_e_l * u_l
 
     # Remove small values if any:
-    map!(x -> abs(x) < 1E-12 ? 0 : x, f_l, f_l)
+    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, f_l, f_l)
 
     # Return the element force vector in the local coordinate system:
     return f_l

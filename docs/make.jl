@@ -8,9 +8,10 @@ makedocs(
     sitename = "Hephaestus.jl",
     authors = "Damir Akchurin, AkchurinDA@gmail.com",
     pages = [
-        "Home"        => "index.md",
-        "Quick Start" => "QuickStart.md",
-        "API"         => "API.md"],
+        "Home"                   => "index.md",
+        "Quick Start"            => "QuickStart.md",
+        "Theoretical Background" => "TheoreticalBackground.md",
+        "API"                    => "API.md"],
     format = Documenter.HTML(
             assets = [
                 "assets/favicon.ico",

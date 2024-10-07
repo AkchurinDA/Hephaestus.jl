@@ -1,4 +1,4 @@
-module HephaestusMakieExt
+module HephaestusMakieExtension
 using Hephaestus
 using Makie
 
@@ -31,16 +31,16 @@ Makie.@recipe(PlotModel, Model) do scene
         element_label_color = :black,
         
         # Supports:
-        show_supports = true,
+        show_supports = false,
         support_color = :green)
 end
 
-Makie.preferred_axis_type(P::PlotModel) = Makie.Axis3
+Makie.preferred_axis_type(::PlotModel) = Makie.Axis3
 
 function Makie.plot!(P::PlotModel)
     model = P[:Model]
 
-    if P[:show_elements][]
+    if P[:show_elements][] && !isempty(model[].elements)
         for element in values(model[].elements)
             x_i, y_i, z_i = element.x_i, element.y_i, element.z_i
             x_j, y_j, z_j = element.x_j, element.y_j, element.z_j 
@@ -63,7 +63,7 @@ function Makie.plot!(P::PlotModel)
         end
     end
 
-    if P[:show_nodes][]
+    if P[:show_nodes][] && !isempty(model[].nodes)
         for node in values(model[].nodes)
             x, y, z = node.x, node.y, node.z
 
@@ -84,46 +84,46 @@ function Makie.plot!(P::PlotModel)
         end
     end
 
-    if P[:show_supports][] && !isempty(model[].supports)
-        largest_dimension_x = maximum([node.x for node in values(model[].nodes)])
-        largest_dimension_y = maximum([node.y for node in values(model[].nodes)])
-        largest_dimension_z = maximum([node.z for node in values(model[].nodes)])
-        largest_dimension   = maximum([largest_dimension_x, largest_dimension_y, largest_dimension_z])
-        support_size        = largest_dimension / 10
+    # if P[:show_supports][] && !isempty(model[].supports)
+    #     largest_dimension_x = maximum([node.x for node in values(model[].nodes)])
+    #     largest_dimension_y = maximum([node.y for node in values(model[].nodes)])
+    #     largest_dimension_z = maximum([node.z for node in values(model[].nodes)])
+    #     largest_dimension   = maximum([largest_dimension_x, largest_dimension_y, largest_dimension_z])
+    #     support_size        = largest_dimension / 10
 
-        for (ID, support) in model[].supports
-            x, y, z = model[].nodes[ID].x, model[].nodes[ID].y, model[].nodes[ID].z
+    #     for (ID, support) in model[].supports
+    #         x, y, z = model[].nodes[ID].x, model[].nodes[ID].y, model[].nodes[ID].z
 
-            u_x, u_y, u_z = support[1], support[2], support[3]
+    #         u_x, u_y, u_z = support[1], support[2], support[3]
 
-            if u_x
-                arrows!(P, [x], [y], [z],
-                    [support_size], [0], [0],
-                    color     = P[:support_color],
-                    linewidth = 0.05,
-                    arrowsize = Vec3f(0.25, 0.25, 0.5),
-                    shading   = NoShading)
-            end
+    #         if u_x
+    #             arrows!(P, [x], [y], [z],
+    #                 [support_size], [0], [0],
+    #                 color     = P[:support_color],
+    #                 linewidth = 0.1,
+    #                 arrowsize = Vec3f(0.25, 0.25, 0.5),
+    #                 shading   = NoShading)
+    #         end
 
-            if u_y
-                arrows!(P, [x], [y], [z],
-                    [0], [support_size], [0],
-                    color     = P[:support_color],
-                    linewidth = 0.05,
-                    arrowsize = Vec3f(0.25, 0.25, 0.5),
-                    shading   = NoShading)
-            end
+    #         if u_y
+    #             arrows!(P, [x], [y], [z],
+    #                 [0], [support_size], [0],
+    #                 color     = P[:support_color],
+    #                 linewidth = 0.1,
+    #                 arrowsize = Vec3f(0.25, 0.25, 0.5),
+    #                 shading   = NoShading)
+    #         end
 
-            if u_z
-                arrows!(P, [x], [y], [z],
-                    [0], [0], [support_size],
-                    color     = P[:support_color],
-                    linewidth = 0.05,
-                    arrowsize = Vec3f(0.25, 0.25, 0.5),
-                    shading   = NoShading)
-            end
-        end
-    end
+    #         if u_z
+    #             arrows!(P, [x], [y], [z],
+    #                 [0], [0], [support_size],
+    #                 color     = P[:support_color],
+    #                 linewidth = 0.1,
+    #                 arrowsize = Vec3f(0.25, 0.25, 0.5),
+    #                 shading   = NoShading)
+    #         end
+    #     end
+    # end
 
     # Return the updated model plot:
     return P

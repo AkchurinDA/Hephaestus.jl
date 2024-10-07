@@ -18,8 +18,8 @@ export get_node_u_g, get_element_u_l, get_element_f_l
 include("Analysis.jl")
 export O1EAnalysis, O1ESolutionCache # 1st-order elastic analysis
 export O2EAnalysis, O2ESolutionCache # 2nd-order elastic analysis
-export EBAnalysis, EBSolutionCache # Elastic buckling analysis
-export FVAnalysis, FVSolutionCache # Free-vibration analysis
+export EBAnalysis, EBSolutionCache   # Elastic buckling analysis
+export FVAnalysis, FVSolutionCache   # Free vibration analysis
 export solve
 include("AnalysisUtilities.jl")
 include("Plotting.jl")

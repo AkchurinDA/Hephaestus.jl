@@ -13,11 +13,11 @@ end
 A type that stores the results of the 1st-order elastic analysis.
 """
 struct O1ESolutionCache <: AbstractSolutionCache
-    K_e                 ::Matrix{<:Real}
-    F                   ::Vector{<:Real}
-    P                   ::Vector{<:Real}
-    U                   ::Vector{<:Real}
-    R                   ::Vector{<:Real}
+    K_e                 ::AbstractMatrix{<:Real}
+    F                   ::AbstractVector{<:Real}
+    P                   ::AbstractVector{<:Real}
+    U                   ::AbstractVector{<:Real}
+    R                   ::AbstractVector{<:Real}
 
     internal_node_IDs   ::Dict{Int, Int}
     indices_f           ::Vector{Int}
@@ -108,8 +108,8 @@ end
 A type that stores the results of the elastic buckling analysis.
 """
 struct EBSolutionCache <: AbstractSolutionCache
-    Λ::Vector{<:Real}
-    Φ::Matrix{<:Real}
+    Λ::AbstractVector{<:Real}
+    Φ::AbstractMatrix{<:Real}
 end
 
 # TODO: 
@@ -162,8 +162,8 @@ struct FVAnalysis <: AbstractAnalysisType
 end
 
 struct FVSolutionCache <: AbstractSolutionCache
-    Ω::Vector{<:Real}
-    Φ::Matrix{<:Real}
+    Ω::AbstractVector{<:Real}
+    Φ::AbstractMatrix{<:Real}
 end
 
 function solve(model::Model, analysis::FVAnalysis)
