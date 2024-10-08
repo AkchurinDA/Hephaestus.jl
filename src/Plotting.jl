@@ -48,7 +48,7 @@ Plots a model of a structure of interest ([`Model`](@ref)) into a new `Makie.jl`
 | `show_supports` | Whether to show the supports | `true`   |
 | `support_color` | Color of the supports        | `:green` |
 """
-function plotmodel  end
+function plotmodel end
 
 """
     plotmodel!(model::Model, [options])
@@ -56,3 +56,7 @@ function plotmodel  end
 Plots a model of a structure of interest ([`Model`](@ref)) into an existing scene. The plotting options are the same as in [`plotmodel()`](@ref) function.
 """
 function plotmodel! end
+
+function plotsolution end
+
+function plotsolution! end

@@ -24,4 +24,5 @@ export solve
 include("AnalysisUtilities.jl")
 include("Plotting.jl")
 export plotmodel, plotmodel!
+export plotsolution, plotsolution!
 end

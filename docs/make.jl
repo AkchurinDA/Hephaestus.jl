@@ -15,7 +15,8 @@ makedocs(
     format = Documenter.HTML(
             assets = [
                 "assets/favicon.ico",
-                "assets/Citations.css"]),
+                "assets/Citations.css",
+                "assets/Custom.css"]),
     plugins = [
         CitationBibliography(
             joinpath(@__DIR__, "src", "References.bib"),
