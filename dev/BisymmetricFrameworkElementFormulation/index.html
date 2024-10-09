@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Bisymmetric Framework Element Formulation · Hephaestus.jl</title><meta name="title" content="Bisymmetric Framework Element Formulation · Hephaestus.jl"/><meta property="og:title" content="Bisymmetric Framework Element Formulation · Hephaestus.jl"/><meta property="twitter:title" content="Bisymmetric Framework Element Formulation · Hephaestus.jl"/><meta name="description" content="Documentation for Hephaestus.jl."/><meta property="og:description" content="Documentation for Hephaestus.jl."/><meta property="twitter:description" content="Documentation for Hephaestus.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/favicon.ico" rel="icon" type="image/x-icon"/><link href="../assets/Citations.css" rel="stylesheet" type="text/css"/><link href="../assets/Custom.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.svg" alt="Hephaestus.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">Hephaestus.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../QuickStart/">Quick Start</a></li><li><span class="tocitem">Theoretical Background</span><ul><li class="is-active"><a class="tocitem" href>Bisymmetric Framework Element Formulation</a><ul class="internal"><li><a class="tocitem" href="#Description"><span>Description</span></a></li><li><a class="tocitem" href="#Elastic-Stiffness-Matrix"><span>Elastic Stiffness Matrix</span></a></li><li><a class="tocitem" href="#Geometric-Stiffness-Matrix"><span>Geometric Stiffness Matrix</span></a></li><li><a class="tocitem" href="#Mass-Matrix"><span>Mass Matrix</span></a></li></ul></li><li><a class="tocitem" href="../CoordinateTransformation/">Coordinate Transformation</a></li><li><a class="tocitem" href="../AnalysesTypes/">Analyses Types</a></li></ul></li><li><a class="tocitem" href="../API/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Theoretical Background</a></li><li class="is-active"><a href>Bisymmetric Framework Element Formulation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Bisymmetric Framework Element Formulation</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/AkchurinDA/Hephaestus.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/AkchurinDA/Hephaestus.jl/blob/main/docs/src/BisymmetricFrameworkElementFormulation.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h2 id="Description"><a class="docs-heading-anchor" href="#Description">Description</a><a id="Description-1"></a><a class="docs-heading-anchor-permalink" href="#Description" title="Permalink"></a></h2><h2 id="Elastic-Stiffness-Matrix"><a class="docs-heading-anchor" href="#Elastic-Stiffness-Matrix">Elastic Stiffness Matrix</a><a id="Elastic-Stiffness-Matrix-1"></a><a class="docs-heading-anchor-permalink" href="#Elastic-Stiffness-Matrix" title="Permalink"></a></h2><p>The element elastic stiffness matrix in the local coordinate system is given by:</p><p class="math-container">\[[\mathbf{k}_{e}^{e}]
+= E
+\begin{bmatrix}
+    +\dfrac{A}{L} &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 
+    -\dfrac{A}{L} &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+    0 &amp; +\dfrac{12 I_{zz}}{L^{3}} &amp; 0 &amp; 0 &amp; 0 &amp; +\dfrac{6 I_{zz}}{L^{2}} &amp;
+    0 &amp; -\dfrac{12 I_{zz}}{L^{3}} &amp; 0 &amp; 0 &amp; 0 &amp; +\dfrac{6 I_{zz}}{L^{2}} \\
+    0 &amp; 0 &amp; +\dfrac{12 I_{yy}}{L^{3}} &amp; 0 &amp; -\dfrac{6 I_{yy}}{L^{2}} &amp; 0 &amp;
+    0 &amp; 0 &amp; -\dfrac{12 I_{yy}}{L^{3}} &amp; 0 &amp; -\dfrac{6 I_{yy}}{L^{2}} &amp; 0 \\
+    0 &amp; 0 &amp; 0 &amp; +\dfrac{J}{2 (1 + \nu) L} &amp; 0 &amp; 0 &amp; 
+    0 &amp; 0 &amp; 0 &amp; -\dfrac{J}{2 (1 + \nu) L} &amp; 0 &amp; 0 \\
+    0 &amp; 0 &amp; -\dfrac{6 I_{yy}}{L^{2}} &amp; 0 &amp; +\dfrac{4 I_{yy}}{L} &amp; 0 &amp; 
+    0 &amp; 0 &amp; +\dfrac{6 I_{yy}}{L^{2}} &amp; 0 &amp; +\dfrac{2 I_{yy}}{L} &amp; 0 \\
+    0 &amp; +\dfrac{6 I_{zz}}{L^{2}} &amp; 0 &amp; 0 &amp; 0 &amp; +\dfrac{4 I_{zz}}{L} &amp; 
+    0 &amp; -\dfrac{6 I_{zz}}{L^{2}} &amp; 0 &amp; 0 &amp; 0 &amp; +\dfrac{2 I_{zz}}{L} \\
+    -\dfrac{A}{L} &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 
+    +\dfrac{A}{L} &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+    0 &amp; -\dfrac{12 I_{zz}}{L^{3}} &amp; 0 &amp; 0 &amp; 0 &amp; -\dfrac{6 I_{zz}}{L^{2}} &amp;
+    0 &amp; +\dfrac{12 I_{zz}}{L^{3}} &amp; 0 &amp; 0 &amp; 0 &amp; -\dfrac{6 I_{zz}}{L^{2}} \\
+    0 &amp; 0 &amp; -\dfrac{12 I_{yy}}{L} &amp; 0 &amp; +\dfrac{6 I_{yy}}{L^{2}} &amp; 0 &amp;
+    0 &amp; 0 &amp; +\dfrac{12 I_{yy}}{L} &amp; 0 &amp; +\dfrac{6 I_{yy}}{L^{2}} &amp; 0 \\
+    0 &amp; 0 &amp; 0 &amp; -\dfrac{J}{2 (1 + \nu) L} &amp; 0 &amp; 0 &amp; 
+    0 &amp; 0 &amp; 0 &amp; +\dfrac{J}{2 (1 + \nu) L} &amp; 0 &amp; 0 \\
+    0 &amp; 0 &amp; -\dfrac{6 I_{yy}}{L^{2}} &amp; 0 &amp; +\dfrac{2 I_{yy}}{L} &amp; 0 &amp; 
+    0 &amp; 0 &amp; +\dfrac{6 I_{yy}}{L^{2}} &amp; 0 &amp; +\dfrac{4 I_{yy}}{L} &amp; 0 \\
+    0 &amp; +\dfrac{6 I_{zz}}{L^{2}} &amp; 0 &amp; 0 &amp; 0 &amp; +\dfrac{2 I_{zz}}{L} &amp; 
+    0 &amp; -\dfrac{6 I_{zz}}{L^{2}} &amp; 0 &amp; 0 &amp; 0 &amp; +\dfrac{4 I_{zz}}{L} \\
+\end{bmatrix}\]</p><p>The element elastic stiffness matrix in the global coordinate system is given:</p><p class="math-container">\[[\mathbf{K}_{e}^{e}] = [\mathbf{\Gamma}]^{T} [\mathbf{k}_{e}^{e}] [\mathbf{\Gamma}]\]</p><p>The global elastic stiffness matrix is given by:</p><p class="math-container">\[[\mathbf{K}_{e}] = \text{A}_{i = 1}^{\text{NEL}} [\mathbf{K}_{e}^{i}]\]</p><h2 id="Geometric-Stiffness-Matrix"><a class="docs-heading-anchor" href="#Geometric-Stiffness-Matrix">Geometric Stiffness Matrix</a><a id="Geometric-Stiffness-Matrix-1"></a><a class="docs-heading-anchor-permalink" href="#Geometric-Stiffness-Matrix" title="Permalink"></a></h2><p>The element geometric stiffness matrix in the local coordinate system is given by:</p><p class="math-container">\[[\mathbf{k}_{g}^{e}]
+= \dfrac{F_{x2}}{L}
+\begin{bmatrix}
+    +1 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 
+    -1 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+    0 &amp; +\dfrac{6}{5} &amp; 0 &amp; 0 &amp; 0 &amp; +\dfrac{L}{10} &amp;
+    0 &amp; -\dfrac{6}{5} &amp; 0 &amp; 0 &amp; 0 &amp; +\dfrac{L}{10} \\
+    0 &amp; 0 &amp; +\dfrac{6}{5} &amp; 0 &amp; -\dfrac{L}{10} &amp; 0 &amp;
+    0 &amp; 0 &amp; -\dfrac{6}{5} &amp; 0 &amp; -\dfrac{L}{10} &amp; 0 \\
+    0 &amp; 0 &amp; 0 &amp; +\dfrac{I_{zz} + I_{yy}}{A} &amp; 0 &amp; 0 &amp;
+    0 &amp; 0 &amp; 0 &amp; -\dfrac{I_{zz} + I_{yy}}{A} &amp; 0 &amp; 0 \\
+    0 &amp; 0 &amp; -\dfrac{L}{10} &amp; 0 &amp; +\dfrac{2 L^{2}}{15} &amp; 0 &amp;
+    0 &amp; 0 &amp; +\dfrac{L}{10} &amp; 0 &amp; -\dfrac{L^{2}}{30} &amp; 0 \\
+    0 &amp; +\dfrac{L}{10} &amp; 0 &amp; 0 &amp; 0 &amp; +\dfrac{2 L^{2}}{15} &amp;
+    0 &amp; -\dfrac{L}{10} &amp; 0 &amp; 0 &amp; 0 &amp; -\dfrac{L^{2}}{30} \\
+    -1 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 
+    +1 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+    0 &amp; -\dfrac{6}{5} &amp; 0 &amp; 0 &amp; 0 &amp; -\dfrac{L}{10} &amp;
+    0 &amp; +\dfrac{6}{5} &amp; 0 &amp; 0 &amp; 0 &amp; -\dfrac{L}{10} \\
+    0 &amp; 0 &amp; -\dfrac{6}{5} &amp; 0 &amp; +\dfrac{L}{10} &amp; 0 &amp;
+    0 &amp; 0 &amp; +\dfrac{6}{5} &amp; 0 &amp; -\dfrac{L}{10} &amp; 0 \\
+    0 &amp; 0 &amp; 0 &amp; -\dfrac{I_{zz} + I_{yy}}{A} &amp; 0 &amp; 0 &amp;
+    0 &amp; 0 &amp; 0 &amp; +\dfrac{I_{zz} + I_{yy}}{A} &amp; 0 &amp; 0 \\
+    0 &amp; 0 &amp; -\dfrac{L}{10} &amp; 0 &amp; -\dfrac{L^{2}}{30} &amp; 0 &amp;
+    0 &amp; 0 &amp; +\dfrac{L}{10} &amp; 0 &amp; +\dfrac{2 L^{2}}{15} &amp; 0 \\
+    0 &amp; +\dfrac{L}{10} &amp; 0 &amp; 0 &amp; 0 &amp; -\dfrac{L^{2}}{30} &amp;
+    0 &amp; -\dfrac{L}{10} &amp; 0 &amp; 0 &amp; 0 &amp; +\dfrac{2 L^{2}}{15} \\
+\end{bmatrix}\]</p><p>The element geometric stiffness matrix in the global coordinate system is given:</p><p class="math-container">\[[\mathbf{K}_{g}^{e}] = [\mathbf{\Gamma}]^{T} [\mathbf{k}_{g}^{e}] [\mathbf{\Gamma}]\]</p><p>The global geometric stiffness matrix is given by:</p><p class="math-container">\[[\mathbf{K}_{g}] = \text{A}_{i = 1}^{\text{NEL}} [\mathbf{K}_{g}^{i}]\]</p><h2 id="Mass-Matrix"><a class="docs-heading-anchor" href="#Mass-Matrix">Mass Matrix</a><a id="Mass-Matrix-1"></a><a class="docs-heading-anchor-permalink" href="#Mass-Matrix" title="Permalink"></a></h2><p>The element mass matrix in the local coordinate system is given by:</p><p class="math-container">\[[\mathbf{m}^{e}]
+= \dfrac{\rho A L}{420}
+\begin{bmatrix}
+    +140 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp;
+    +70 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+    0 &amp; +156 &amp; 0 &amp; 0 &amp; 0 &amp; +22 L &amp;
+    0 &amp; +54 &amp; 0 &amp; 0 &amp; 0 &amp; -13 L \\
+    0 &amp; 0 &amp; +156 &amp; 0 &amp; -22 L &amp; 0 &amp;
+    0 &amp; 0 &amp; +54 &amp; 0 &amp; +13 L &amp; 0 \\
+    0 &amp; 0 &amp; 0 &amp; +\dfrac{140 J}{A} &amp; 0 &amp; 0 &amp;
+    0 &amp; 0 &amp; 0 &amp; +\dfrac{70 J}{A} &amp; 0 &amp; 0 \\
+    0 &amp; 0 &amp; -22 L &amp; 0 &amp; +4 L^{2} &amp; 0 &amp; 
+    0 &amp; 0 &amp; -13 L &amp; 0 &amp; -3 L^{2} &amp; 0 \\
+    0 &amp; +22 L &amp; 0 &amp; 0 &amp; 0 &amp; +4 L^{2} &amp;
+    0 &amp; +13 L &amp; 0 &amp; 0 &amp; 0 &amp; -3 L^{2} \\ 
+    +70 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 
+    +140 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+    0 &amp; +54 &amp; 0 &amp; 0 &amp; 0 &amp; +13 L &amp; 
+    0 &amp; +156 &amp; 0 &amp; 0 &amp; 0 &amp; -22 L \\
+    0 &amp; 0 &amp; +54 &amp; 0 &amp; -13 L &amp; 0 &amp; 
+    0 &amp; 0 &amp; +156 &amp; 0 &amp; +22 L &amp; 0 \\
+    0 &amp; 0 &amp; 0 &amp; +\dfrac{70 J}{A} &amp; 0 &amp; 0 &amp;
+    0 &amp; 0 &amp; 0 &amp; +\dfrac{140 J}{A} &amp; 0 &amp; 0 \\
+    0 &amp; 0 &amp; +13 L &amp; 0 &amp; -3 L^{2} &amp; 0 &amp; 
+    0 &amp; 0 &amp; +22 L &amp; 0 &amp; +4 L^{2} &amp; 0 \\
+    0 &amp; -13 L &amp; 0 &amp; 0 &amp; 0 &amp; -3 L^{2} &amp;
+    0 &amp; -22 L &amp; 0 &amp; 0 &amp; 0 &amp; +4 L^{2}
+\end{bmatrix}\]</p><p>The element mass matrix in the global coordinate system is given:</p><p class="math-container">\[[\mathbf{M}^{e}] = [\mathbf{\Gamma}]^{T} [\mathbf{m}^{e}] [\mathbf{\Gamma}]\]</p><p>The global mass matrix is given by:</p><p class="math-container">\[[\mathbf{M}] = \text{A}_{i = 1}^{\text{NEL}} [\mathbf{M}^{i}]\]</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../QuickStart/">« Quick Start</a><a class="docs-footer-nextpage" href="../CoordinateTransformation/">Coordinate Transformation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Wednesday 9 October 2024 16:40">Wednesday 9 October 2024</span>. Using Julia version 1.11.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
