@@ -10,7 +10,11 @@ makedocs(
     pages = [
         "Home"                   => "index.md",
         "Quick Start"            => "QuickStart.md",
-        "Theoretical Background" => "TheoreticalBackground.md",
+        "Theoretical Background" => [
+            "Bisymmetric Framework Element Formulation" => "BisymmetricFrameworkElementFormulation.md",
+            "Coordinate Transformation"                 => "CoordinateTransformation.md",
+            "Analyses Types"                            => "AnalysesTypes.md"
+        ],
         "API"                    => "API.md"],
     format = Documenter.HTML(
             assets = [

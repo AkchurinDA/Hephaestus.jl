@@ -1,7 +1,7 @@
 Makie.@recipe(PlotModel, Model) do scene
     Makie.Attributes(
         # Nodes:
-        show_nodes       = true,
+        node_visible     = true,
         node_color       = :steelblue,
         node_marker      = :circle,
         node_markersize  = 6,
@@ -9,24 +9,24 @@ Makie.@recipe(PlotModel, Model) do scene
         node_strokewidth = 1,
 
         # Node labels:
-        show_node_labels = true,
-        node_label_align = (:center, :bottom),
-        node_label_color = :steelblue,
+        node_label_visible = false,
+        node_label_align   = (:center, :bottom),
+        node_label_color   = :steelblue,
 
         # Elements:
-        show_elements     = true,
+        element_visible   = true,
         element_color     = :black,
         element_linestyle = :solid,
         element_linewidth = 1,
         
         # Element labels:
-        show_element_labels = true,
-        element_label_align = (:center, :bottom),
-        element_label_color = :black,
+        element_label_visible = false,
+        element_label_align   = (:center, :bottom),
+        element_label_color   = :black,
         
         # Supports:
-        show_supports = false,
-        support_color = :green)
+        support_visible = false,
+        support_color   = :green)
 end
 
 Makie.preferred_axis_type(::PlotModel) = Makie.Axis3
@@ -35,7 +35,7 @@ function Makie.plot!(P::PlotModel)
     model = P[:Model]
 
     if !isempty(model[].elements)
-        if P[:show_elements][]
+        if P[:element_visible][]
             for element in values(model[].elements)
                 x_i, y_i, z_i = element.x_i, element.y_i, element.z_i
                 x_j, y_j, z_j = element.x_j, element.y_j, element.z_j 
@@ -45,7 +45,7 @@ function Makie.plot!(P::PlotModel)
                     linestyle = P[:element_linestyle],
                     linewidth = P[:element_linewidth])
 
-                if P[:show_element_labels][]
+                if P[:element_label_visible][]
                     x_m = (x_i + x_j) / 2
                     y_m = (y_i + y_j) / 2
                     z_m = (z_i + z_j) / 2
@@ -62,7 +62,7 @@ function Makie.plot!(P::PlotModel)
     end
 
     if !isempty(model[].nodes)
-        if P[:show_nodes][]
+        if P[:node_visible][]
             for node in values(model[].nodes)
                 x, y, z = node.x, node.y, node.z
 
@@ -74,7 +74,7 @@ function Makie.plot!(P::PlotModel)
                     strokewidth = P[:node_strokewidth],
                     overdraw    = true)
 
-                if P[:show_node_labels][]
+                if P[:node_label_visible][]
                     text!(P, [x], [y], [z],
                         text  = string(node.ID),
                         color = P[:node_label_color],

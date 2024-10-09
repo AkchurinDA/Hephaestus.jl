@@ -1,46 +1,3 @@
-# Coordinate Transformations
-
-- ``\rho`` - rotation about the local ``y``-axis, bringing the ``x_{1}``-axis into the ``x_{1}``-``y`` plane. This angle is computed automatically.
-- ``\chi`` - rotation about the ``z_{1}``-axis, bringing the ``x_{1}``-axis into coincidence with the global ``x^{\prime}``-axis. This angle is computed automatically.
-- ``\omega`` - rotation about the ``x_{2}``-axis, bringing the ``y_{2}``-axis into coincidence with the global ``y^{\prime}``-axis and the ``z_{2}``-axis into coincidence with the global ``z^{\prime}``-axis. This angle must be provided by the user.
-
-```math
-\begin{align*}
-    \{\mathbf{x}^{\prime}\}
-    &= [\mathbf{\gamma}] \{\mathbf{x}\} \\
-    &= [\mathbf{\gamma}_{\omega}] [\mathbf{\gamma}_{\chi}] [\mathbf{\gamma}_{\rho}] \{\mathbf{x}\} \\
-    &= 
-    \begin{bmatrix}
-        1 & 0 & 0 \\
-        0 & +\cos{\omega} & +\sin{\omega} \\
-        0 & -\sin{\omega} & +\cos{\omega}
-    \end{bmatrix}
-    \begin{bmatrix}
-        +\cos{\chi} & +\sin{\chi} & 0 \\
-        -\sin{\chi} & +\cos{\chi} & 0 \\
-        0 & 0 & 1
-    \end{bmatrix}
-    \begin{bmatrix}
-        +\cos{\rho} & 0 & +\sin{\rho} \\
-        0 & 1 & 0 \\
-        -\sin{\rho} & 0 & +\cos{\rho}
-    \end{bmatrix}
-    \{\mathbf{x}\}
-\end{align*}
-```
-
-```math
-[\mathbf{\Gamma}] = 
-\begin{bmatrix}
-    [\mathbf{\gamma}] & [\mathbf{0}] & [\mathbf{0}] & [\mathbf{0}] \\
-    [\mathbf{0}] & [\mathbf{\gamma}] & [\mathbf{0}] & [\mathbf{0}] \\
-    [\mathbf{0}] & [\mathbf{0}] & [\mathbf{\gamma}] & [\mathbf{0}] \\
-    [\mathbf{0}] & [\mathbf{0}] & [\mathbf{0}] & [\mathbf{\gamma}]
-\end{bmatrix}
-```
-
-# Bisymmetrical Framework Element
-
 ## Description
 
 ## Elastic Stiffness Matrix
@@ -182,40 +139,4 @@ The global mass matrix is given by:
 
 ```math
 [\mathbf{M}] = \text{A}_{i = 1}^{\text{NEL}} [\mathbf{M}^{i}]
-```
-
-# Analyses Types
-
-## First-Order Elastic Analysis
-
-```math
-[\mathbf{K_{e}}] \{\mathbf{U}\} + \{\mathbf{P}\} = \{\mathbf{F}\}
-```
-
-## Second-Order Elastic Analysis
-
-```math
-[\mathbf{K_{e}} + \mathbf{K_{g}}] \{\mathbf{U}\} + \{\mathbf{P}\} = \{\mathbf{F}\}
-```
-
-## First-Order Inelastic Analysis
-
-!!! note
-    This feature is currently under development.
-
-## Second-Order Inelastic Analysis
-
-!!! note
-    This feature is currently under development.
-
-## Elastic Buckling Analysis
-
-```math
-[\mathbf{K_{e}} + \lambda \mathbf{K_{g}}] \{\mathbf{U}\} = \{\mathbf{0}\}
-```
-
-## Free Vibration Analysis
-
-```math
-[\mathbf{K_{e}} + \omega^{2} \mathbf{M}] \{\mathbf{U}\} = \{\mathbf{0}\}
 ```

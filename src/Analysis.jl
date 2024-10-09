@@ -1,4 +1,11 @@
 """
+    solve(model::Model, analysis::AbstractAnalysisType)
+
+The main function that performs the analysis of your choice on the model.
+"""
+function solve end
+
+"""
     struct O1EAnalysis
 
 A type that represents the 1st-order (`O1`) elastic (`E`) analysis.
@@ -157,10 +164,20 @@ function solve(model::Model, analysis::EBAnalysis)
     return EBSolutionCache(Λ, Φ)
 end
 
+"""
+    struct FVAnalysis
+
+A type that represents the free vibration (`FV`) analysis.
+"""
 struct FVAnalysis <: AbstractAnalysisType
 
 end
 
+"""
+    struct FVSolutionCache
+
+A type that stores the results of the free vibration analysis.
+"""
 struct FVSolutionCache <: AbstractSolutionCache
     Ω::AbstractVector{<:Real}
     Φ::AbstractMatrix{<:Real}
@@ -179,16 +196,16 @@ function solve(model::Model, analysis::FVAnalysis)
     # Assemble the global elastic stiffness matrix and partition it:
     K_e    = _assemble_K_e(model, internal_node_IDs)
     K_e_ff = K_e[indices_f, indices_f]
-    K_e_fs = K_e[indices_f, indices_s]
-    K_e_sf = K_e[indices_s, indices_f]
-    K_e_ss = K_e[indices_s, indices_s]
+    # K_e_fs = K_e[indices_f, indices_s]
+    # K_e_sf = K_e[indices_s, indices_f]
+    # K_e_ss = K_e[indices_s, indices_s]
 
     # Assemble the global mass matrix and partition it:
     M    = _assemble_M(model, internal_node_IDs)
     M_ff = M[indices_f, indices_f]
-    M_fs = M[indices_f, indices_s]
-    M_sf = M[indices_s, indices_f]
-    M_ss = M[indices_s, indices_s]
+    # M_fs = M[indices_f, indices_s]
+    # M_sf = M[indices_s, indices_f]
+    # M_ss = M[indices_s, indices_s]
 
     # Solve the generalized eigenvalue problem:
     Ω², ϕ = eigen(K_e_ff, M_ff)

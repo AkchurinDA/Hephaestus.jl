@@ -9,7 +9,7 @@ Makie.@recipe(PlotSolution, Model, Solution) do scene
         undisp_node_strokecolor = :black,
         undisp_node_strokewidth = 1,
 
-        undisp_node_label_visible = true,
+        undisp_node_label_visible = false,
         undisp_node_label_align   = (:center, :bottom),
         undisp_node_label_color   = :steelblue,
 
@@ -25,7 +25,7 @@ Makie.@recipe(PlotSolution, Model, Solution) do scene
         disp_node_strokecolor = :black,
         disp_node_strokewidth = 1,
 
-        disp_node_label_visible = true,
+        disp_node_label_visible = false,
         disp_node_label_align   = (:center, :top),
         disp_node_label_color   = :crimson,
 
