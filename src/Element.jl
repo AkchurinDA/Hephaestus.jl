@@ -51,17 +51,21 @@ struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
     "Length of the element, ``L``"
     L              ::Real
     "Local-to-global sub-transformation matrix, ``\\gamma``"
-    γ              ::Matrix{<:Real}
+    γ              ::AbstractMatrix{<:Real}
     "Local-to-global transformation matrix, ``\\Gamma``"
-    Γ              ::BlockDiagonal{<:Real}
+    Γ              ::AbstractMatrix{<:Real}
     "Elastic stiffness matrix in the local coordinate system of the element, ``k_{e, l}``"
-    k_e_l          ::Matrix{<:Real}
+    k_e_l          ::AbstractMatrix{<:Real}
     "Elastic stiffness matrix in the global coordinate system, ``k_{e, g}``"
-    k_e_g          ::Matrix{<:Real}
+    k_e_g          ::AbstractMatrix{<:Real}
     "Geometric stiffness matrix in the local coordinate system of the element, ``k_{g, l}``"
-    k_g_l          ::Matrix{<:Real}
+    k_g_l          ::AbstractMatrix{<:Real}
     "Geometric stiffness matrix in the global coordinate system, ``k_{g, g}``"
-    k_g_g          ::Matrix{<:Real}
+    k_g_g          ::AbstractMatrix{<:Real}
+    "Mass matrix in the local coordinate system of the element, ``m_{l}``"
+    m_l            ::AbstractMatrix{<:Real}
+    "Mass matrix in the global coordinate system, ``m_{g}``"
+    m_g            ::AbstractMatrix{<:Real}
 
     function Element(ID::Int, 
         node_i_ID::Int, node_j_ID::Int, material_ID::Int, section_ID::Int,
@@ -79,20 +83,29 @@ struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
         # Compute the element elastic stiffness matrix in its local coordinate system:
         k_e_l = _compute_k_e_l(E, ν, A, I_zz, I_yy, J, L)
 
-        # Transform the element elastic stiffness matrix to the global coordinate system:
-        k_e_g = Γ' * k_e_l * Γ
-
-        # Remove small values if any:
-        map!(x -> abs(x) < 1E-12 ? 0 : x, k_e_g, k_e_g)
-
         # Compute the element geometric stiffness matrix in its local coordinate system:
         k_g_l = _compute_k_g_l(A, I_zz, I_yy, L)
+
+        # Compute the element mass matrix in its local coordinate system:
+        m_l = _compute_m_l(ρ, A, J, L)
+
+        # Transform the element elastic stiffness matrix to the global coordinate system:
+        k_e_g = Γ' * k_e_l * Γ
 
         # Transform the element geometric stiffness matrix to the global coordinate system:
         k_g_g = Γ' * k_g_l * Γ
 
+        # Transform the element mass matrix to the global coordinate system:
+        m_g = Γ' * m_l * Γ
+
         # Remove small values if any:
-        map!(x -> abs(x) < 1E-12 ? 0 : x, k_g_g, k_g_g)
+        # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, k_e_g, k_e_g)
+
+        # Remove small values if any:
+        # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, k_g_g, k_g_g)
+
+        # Remove small values if any:
+        # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, m_g, m_g)
 
         # Return the element:
         return new{CTI, CTJ, MPT, SPT}(ID, 
@@ -102,7 +115,7 @@ struct Element{CTI<:Real, CTJ<:Real, MPT<:Real, SPT<:Real}
             x_j, y_j, z_j, 
             E, ν, ρ, 
             A, I_zz, I_yy, J, 
-            L, γ, Γ, k_e_l, k_e_g, k_g_l, k_g_g)
+            L, γ, Γ, k_e_l, k_e_g, k_g_l, k_g_g, m_l, m_g)
     end
 end
 
@@ -133,10 +146,19 @@ function _compute_Γ(
         +c_ω * s_ρ + s_ω * s_χ * c_ρ    -s_ω * c_χ    -s_ω * s_χ * s_ρ + c_ω * c_ρ]
 
     # Remove small values if any:
-    map!(x -> abs(x) < 1E-12 ? 0 : x, γ, γ)
+    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, γ, γ)
 
     # Preallocate the transformation matrix and fill it:
-    Γ = BlockDiagonal([γ, γ, γ, γ])
+    Γ = zeros(eltype(γ), 12, 12)
+    Γ[1:3  , 1:3  ] .= γ
+    Γ[4:6  , 4:6  ] .= γ
+    Γ[7:9  , 7:9  ] .= γ
+    Γ[10:12, 10:12] .= γ
+
+    # Γ = BlockDiagonal([γ, γ, γ, γ]) 
+    # NOTE: 
+    # Although this is a more efficient way to construct the transformation matrix, 
+    # it causes issues with reverse-mode automatic differentiation packages
 
     # Return the transformation matrices:
     return γ, Γ
@@ -190,7 +212,7 @@ function _compute_k_e_l(
     end
 
     # Remove small values if any:
-    map!(x -> abs(x) < 1E-12 ? 0 : x, k_e_l, k_e_l)
+    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, k_e_l, k_e_l)
     
     # Return the element elastic stiffness matrix:
     return k_e_l
@@ -237,10 +259,60 @@ function _compute_k_g_l(
     end
 
     # Remove small values if any:
-    map!(x -> abs(x) < 1E-12 ? 0 : x, k_g_l, k_g_l)
+    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, k_g_l, k_g_l)
 
     # Return the element geometric stiffness matrix:
     return k_g_l
+end
+
+function _compute_m_l(
+    ρ::MPT,
+    A::SPT, J::SPT,
+    L::EPT) where {MPT<:Real, SPT<:Real, EPT<:Real}
+    # Preallocate:
+    T   = float(promote_type(MPT, SPT, EPT))
+    m_l = zeros(T, 12, 12)
+
+    # Compute the components of the element mass matrix in its upper triangular part:
+    @inbounds m_l[1 , 1 ] = +140
+    @inbounds m_l[1 , 7 ] = +70
+    @inbounds m_l[2 , 2 ] = +156
+    @inbounds m_l[2 , 6 ] = +22 * L
+    @inbounds m_l[2 , 8 ] = +54
+    @inbounds m_l[2 , 12] = -13 * L
+    @inbounds m_l[3 , 3 ] = +156
+    @inbounds m_l[3 , 5 ] = -22 * L
+    @inbounds m_l[3 , 9 ] = +54 
+    @inbounds m_l[3 , 11] = +13 * L
+    @inbounds m_l[4 , 4 ] = +140 * J / A
+    @inbounds m_l[4 , 10] = +70 * J / A
+    @inbounds m_l[5 , 5 ] = +4 * L ^ 2 
+    @inbounds m_l[5 , 9 ] = -13 * L
+    @inbounds m_l[5 , 11] = -3 * L ^ 2
+    @inbounds m_l[6 , 6 ] = +4 * L ^ 2
+    @inbounds m_l[6 , 8 ] = +13 * L
+    @inbounds m_l[6 , 12] = -3 * L ^ 2
+    @inbounds m_l[7 , 7 ] = +140
+    @inbounds m_l[8 , 8 ] = +156
+    @inbounds m_l[8 , 12] = -22 * L
+    @inbounds m_l[9 , 9 ] = +156
+    @inbounds m_l[9 , 11] = +22 * L
+    @inbounds m_l[10, 10] = +140 * J / A
+    @inbounds m_l[11, 11] = +4 * L ^ 2
+    @inbounds m_l[12, 12] = +4 * L ^ 2
+    
+    # Compute the components of the element mass matrix in its lower triangular part:
+    for i in 1:12, j in (i + 1):12
+        @inbounds m_l[j, i] = m_l[i, j]
+    end
+
+    m_l *= (ρ * A * L) / 420
+
+    # Remove small values if any:
+    # map!(x -> abs(x) < 1E-12 ? 0 : x, m_l, m_l)
+
+    # Return the element mass matrix:
+    return m_l
 end
 
 function _compute_p_l(
@@ -262,7 +334,7 @@ function _compute_p_l(
         +q_y * L ^ 2 / 12] # M_z_j
 
     # Remove small values if any:
-    map!(x -> abs(x) < 1E-12 ? 0 : x, p_l, p_l)
+    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, p_l, p_l)
 
     # Return the element fixed-end forces:
     return p_l
