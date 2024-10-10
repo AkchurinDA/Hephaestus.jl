@@ -436,9 +436,14 @@ end
 Extracts the displacement vector of a node in the global coordinate system.
 """
 function get_node_u_g(solution_cache::AbstractSolutionCache, ID::Int)
-    # Extract the internal node IDs:
-    internal_node_IDs = solution_cache.internal_node_IDs
+    # Extract the displacement vector of the node in the global coordinate system:
+    u_g = _get_node_u_g(ID, solution_cache.internal_node_IDs, solution_cache.U)
 
+    # Return the displacement vector of the node in the global coordinate system:
+    return u_g
+end
+
+function _get_node_u_g(ID::Int, internal_node_IDs::Dict{Int, Int}, U::Vector{<:Real})
     # Extract the internal node ID of the node:
     internal_node_ID = internal_node_IDs[ID]
 
@@ -449,10 +454,7 @@ function get_node_u_g(solution_cache::AbstractSolutionCache, ID::Int)
     range = (base_index + 1):(base_index + 6)
 
     # Extract the displacement vector of the node in the global coordinate system:
-    u_g = solution_cache.U[range]
-
-    # Remove small values if any:
-    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, u_g, u_g)
+    u_g = U[range]
 
     # Return the displacement vector of the node in the global coordinate system:
     return u_g
@@ -464,9 +466,18 @@ end
 Extracts the element displacement vector in the local coordinate system.
 """
 function get_element_u_l(model::Model, solution_cache::AbstractSolutionCache, ID::Int)
+    # Extract the element displacement vector in the local coordinate system:
+    u_l = _get_element_u_l(model, ID, solution_cache.internal_node_IDs, solution_cache.U)
+
+    # Return the element displacement vector in the local coordinate system:
+    return u_l
+end
+
+function _get_element_u_l(model::Model, ID::Int, internal_node_IDs::Dict{Int, Int}, U::Vector{<:Real})
     # Extract the displacements at the nodes of the element in the global coordinate system:
-    node_i_u_g = get_node_u_g(solution_cache, model.elements[ID].node_i_ID)
-    node_j_u_g = get_node_u_g(solution_cache, model.elements[ID].node_j_ID)
+    (ID::Int, internal_node_IDs::Dict{Int, Int}, U::Vector{<:Real})
+    node_i_u_g = _get_node_u_g(model.elements[ID].node_i_ID, internal_node_IDs, U)
+    node_j_u_g = _get_node_u_g(model.elements[ID].node_j_ID, internal_node_IDs, U)
 
     # Combine the displacements at the nodes of the element in the global coordinate system:
     u_g = [node_i_u_g; node_j_u_g]
@@ -476,9 +487,6 @@ function get_element_u_l(model::Model, solution_cache::AbstractSolutionCache, ID
 
     # Transform the displacements to the local coordinate system:
     u_l = Γ * u_g
-
-    # Remove small values if any:
-    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, u_l, u_l)
 
     # Return the element displacement vector in the local coordinate system:
     return u_l
@@ -490,17 +498,21 @@ end
 Extract the element force vector in the local coordinate system.
 """
 function get_element_f_l(model::Model, solution_cache::AbstractSolutionCache, ID::Int)
-    # Extract the element displacement vector in the local coordinate system:
-    u_l = get_element_u_l(model, solution_cache, ID)
+    # Extract the element force vector in the local coordinate system:
+    f_l = _get_element_f_l(model, ID, solution_cache.internal_node_IDs, solution_cache.U)
+
+    # Return the element force vector in the local coordinate system:
+    return f_l
+end
+
+function _get_element_f_l(model::Model, ID::Int, internal_node_IDs::Dict{Int, Int}, U::Vector{<:Real})
+    u_l = _get_element_u_l(model, ID, internal_node_IDs, U)
 
     # Extract the element elastic stiffness matrix in the local coordinate system:
     k_e_l = model.elements[ID].k_e_l
 
     # Compute the element force vector in the local coordinate system:
     f_l = k_e_l * u_l
-
-    # Remove small values if any:
-    # map!(x -> abs(x) < 1E-12 && x ≠ 0 ? 0 : x, f_l, f_l)
 
     # Return the element force vector in the local coordinate system:
     return f_l
