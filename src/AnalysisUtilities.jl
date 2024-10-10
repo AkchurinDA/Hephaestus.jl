@@ -85,6 +85,36 @@ function _assemble_K_g(model::Model, internal_node_IDs::Dict{Int, Int}, P::Vecto
     return K_g
 end
 
+function _assemble_M(model::Model, internal_node_IDs::Dict{Int, Int})
+    # Preallocate the global mass matrix:
+    T   = promote_type([eltype(element.m_g) for element in values(model.elements)]...)
+    M = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
+
+    # Assemble the global mass matrix:
+    for element in values(model.elements)
+        # Extract the internal node IDs:
+        internal_node_i_ID = internal_node_IDs[element.node_i_ID]
+        internal_node_j_ID = internal_node_IDs[element.node_j_ID]
+
+        # Set the base indices:
+        base_index_i = 6 * (internal_node_i_ID - 1)
+        base_index_j = 6 * (internal_node_j_ID - 1)
+
+        # Set the ranges:
+        range_i = (base_index_i + 1):(base_index_i + 6)
+        range_j = (base_index_j + 1):(base_index_j + 6)
+
+        # Add the element mass matrix to the global mass matrix:
+        @inbounds M[range_i, range_i] += element.m_g[1:6 , 1:6 ]
+        @inbounds M[range_i, range_j] += element.m_g[1:6 , 7:12]
+        @inbounds M[range_j, range_i] += element.m_g[7:12, 1:6 ]
+        @inbounds M[range_j, range_j] += element.m_g[7:12, 7:12]
+    end
+
+    # Return the global mass matrix:
+    return M
+end
+
 function _assemble_F(model::Model, internal_node_IDs::Dict{Int, Int})
     if isempty(model.conc_loads)
         F = zeros(6 * length(model.nodes))

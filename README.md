@@ -41,6 +41,7 @@ The design of the package is inspired by [`OpenSeesPy`](https://github.com/zhumi
   - [x] 1nd-order elastic analysis
   - [ ] 2nd-order elastic analysis
   - [x] Elastic buckling analysis
+  - [x] Free vibration analysis
 - [ ] Elements
   - [ ] Truss element
   - [x] Beam-column element (Euler-Bernoulli)
