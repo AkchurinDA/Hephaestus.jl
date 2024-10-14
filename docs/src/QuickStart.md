@@ -96,13 +96,13 @@ add_dist_load!(model, 10, 0, 0, -1)
 
 ## Performing Analysis
 
-To perform the first-order elastic analysis, use the [`solve()`](@ref) function with the second argument being [`O1EAnalysis()`](@ref), which will make `Hephaestus.jl` to perform the first-order elastic analysis. Alternatively, to perform the:
-- Second-order elastic analysis use [`O2EAnalysis()`](@ref)
-- Elastic buckling analysis use [`EBAnalysis()`](@ref)
-- Free vibration analysis use [`FVAnalysis()`](@ref)
+To perform the first-order elastic analysis, use the [`solve()`](@ref) function with the second argument being [`LinearElasticAnalysis()`](@ref), which will make `Hephaestus.jl` to perform the first-order elastic analysis. Alternatively, to perform the:
+- Second-order elastic analysis use [`NonlinearElasticAnalysis()`](@ref)
+- Elastic buckling analysis use [`ElasticBucklingAnalysis()`](@ref)
+- Free vibration analysis use [`FreeVibrationAnalysis()`](@ref)
 
 ```@example QuickStart
-solution = solve(model, O1EAnalysis())
+solution = solve(model, LinearElasticAnalysis())
 ```
 
 ## Plotting the Model and Solution

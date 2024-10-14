@@ -47,7 +47,7 @@ using Hephaestus
 
         add_conc_load!(model, 11, 0, -1000, 0, 0, 0, 0)
 
-        solution = solve(model, O1EAnalysis())
+        solution = solve(model, LinearElasticAnalysis())
 
         # Test reactions at the fixed end:
         @test solution.R[1] ≈ 0
@@ -119,7 +119,7 @@ using Hephaestus
         add_dist_load!(model, 9 , 0, -100, 0)
         add_dist_load!(model, 10, 0, -100, 0)
 
-        solution = solve(model, O1EAnalysis())
+        solution = solve(model, LinearElasticAnalysis())
 
         # Test reactions at the fixed end:
         @test solution.R[1] ≈ 0
