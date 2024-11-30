@@ -1,0 +1,3 @@
+struct LinearElasticAnalysis <: AbstractAnalysisType
+
+end
