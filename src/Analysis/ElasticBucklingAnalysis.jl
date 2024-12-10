@@ -1,3 +1,0 @@
-struct ElasticBucklingAnalysis <: AbstractAnalysisType
-
-end
