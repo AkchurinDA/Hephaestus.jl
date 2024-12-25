@@ -55,7 +55,9 @@ function element!(model::Model, ID::Int,
     node_i_ID::Int, node_j_ID::Int, 
     section_ID::Int, 
     material_ID::Int; 
-    ω::Real = 0.0)
+    ω::Real = 0.0,
+    releases_i::Vector{<:Bool} = [false, false, false, false, false, false],
+    releases_j::Vector{<:Bool} = [false, false, false, false, false, false])
     # Check if the element already exists in the model:
     @assert ID ∉ getfield.(model.elements, :ID) "Element already exists in the model."
 
@@ -80,7 +82,7 @@ function element!(model::Model, ID::Int,
     material = model.materials[findfirst(x -> x.ID == material_ID, model.materials)]
 
     # Add the element to the model:
-    push!(model.elements, Element(ID, node_i, node_j, section, material, ω))
+    push!(model.elements, Element(ID, node_i, node_j, section, material, ω, releases_i, releases_j))
 
     # Return the updated model:
     return model
