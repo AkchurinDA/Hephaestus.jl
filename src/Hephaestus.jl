@@ -4,11 +4,11 @@ using Dates
 using Printf
 using StyledStrings
 
-include("Nodes.jl")
-include("Sections.jl")
-include("Materials.jl")
-include("Elements.jl")
-include("Loads.jl")
+include("Components/Nodes.jl")
+include("Components/Sections.jl")
+include("Components/Materials.jl")
+include("Components/Elements.jl")
+include("Components/Loads.jl")
 include("Models.jl")
 include("Analysis.jl")
 include("Utilities/PrettyPrint.jl")
