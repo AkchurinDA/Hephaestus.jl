@@ -1,6 +1,6 @@
 function assemble_K_e(model::Model)
     # Initialize the global elastic stiffness matrix:
-    K_e = zeros(6 * length(model.nodes), 6 * length(model.nodes))
+    K_e = zeros(Real, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global elastic stiffness matrix:
     for element in model.elements
@@ -81,7 +81,7 @@ end
 
 function assemble_F_conc(model::Model)
     # Initialize the global load vector due to concentrated loads:
-    F_conc = zeros(6 * length(model.nodes))
+    F_conc = zeros(Real, 6 * length(model.nodes))
 
     for concload in model.concloads
         # Extract the concentrated load vector in the global coordinate system:
