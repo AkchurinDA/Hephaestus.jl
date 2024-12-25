@@ -79,9 +79,9 @@ function assemble_M(model::Model)
     end
 end
 
-function assemble_F(model::Model)
-    # Initialize the global load vector:
-    F = zeros(6 * length(model.nodes))
+function assemble_F_conc(model::Model)
+    # Initialize the global load vector due to concentrated loads:
+    F_conc = zeros(6 * length(model.nodes))
 
     for concload in model.concloads
         # Extract the concentrated load vector in the global coordinate system:
@@ -90,20 +90,98 @@ function assemble_F(model::Model)
 
         # Assemble the concentrated load vector into the global load vector:
         idx = findfirst(x -> x.ID == concload.ID, model.nodes)
-        @inbounds F[6 * idx - 5] += F_x
-        @inbounds F[6 * idx - 4] += F_y
-        @inbounds F[6 * idx - 3] += F_z
-        @inbounds F[6 * idx - 2] += M_x
-        @inbounds F[6 * idx - 1] += M_y
-        @inbounds F[6 * idx    ] += M_z
-    end
-
-    for distload in model.distloads
-        # Compute the distributed load vector in the global coordinate system:
-
-        # Assemble the distributed load vector into the global load vector:
+        @inbounds F_conc[6 * idx - 5] += F_x
+        @inbounds F_conc[6 * idx - 4] += F_y
+        @inbounds F_conc[6 * idx - 3] += F_z
+        @inbounds F_conc[6 * idx - 2] += M_x
+        @inbounds F_conc[6 * idx - 1] += M_y
+        @inbounds F_conc[6 * idx    ] += M_z
     end
 
     # Return the global load vector:
-    return F
+    return F_conc
+end
+
+function assemble_F_dist(model::Model)
+    # Initialize the global load vector due to distributed loads:
+    F_dist = zeros(Real, 6 * length(model.nodes))
+
+    for distload in model.distloads
+        # Find the element to which the distributed load is applied:
+        element = model.elements[findfirst(x -> x.ID == distload.element.ID, model.elements)]
+
+        # Extact the transformation matrix of the element:
+        Γ = element.Γ
+
+        # Extract the distributed load vector in the global coordinate system:
+        w_x, w_y, w_z = distload.w_x, distload.w_y, distload.w_z
+        
+        # Extract the coordinate system in which the distributed loads are defined:
+        cs = distload.cs
+
+        # If the distributed loads are defined in the global coordinate system, convert them to the local coordinate system:
+        if cs == :global 
+            @error "Distributed loads defined in the global coordinate system are not yet supported."
+            
+            # Find the nodes of the element:
+            node_i = model.nodes[findfirst(x -> x.ID == element.node_i.ID, model.nodes)]
+            node_j = model.nodes[findfirst(x -> x.ID == element.node_j.ID, model.nodes)]
+
+            # Extract the coordinates of the nodes:
+            x_i, y_i, z_i = node_i.x, node_i.y, node_i.z
+            x_j, y_j, z_j = node_j.x, node_j.y, node_j.z
+
+            # Compute the element length projections:
+            L_x = abs(x_j - x_i)
+            L_y = abs(y_j - y_i)
+            L_z = abs(z_j - z_i)
+
+            # Extract the element length:
+            L = element.L
+
+            # Find the resultants of the distributed loads:
+            R_x = w_x * L_x
+            R_y = w_y * L_y
+            R_z = w_z * L_z
+
+            # TODO: Finish...
+        end
+
+        # Compute the fixed-end force vector:
+        p_l = [
+            -w_x * L / 2     ; # F_x_i
+            -w_y * L / 2     ; # F_y_i
+            -w_z * L / 2     ; # F_z_i
+            0                ; # M_x_i
+            -w_z * L ^ 2 / 12; # M_y_i
+            -w_y * L ^ 2 / 12; # M_z_i
+            +w_x * L / 2     ; # F_x_j
+            -w_y * L / 2     ; # F_y_j
+            -w_z * L / 2     ; # F_z_j
+            0                ; # M_x_j
+            +w_z * L ^ 2 / 12; # M_y_j
+            +w_y * L ^ 2 / 12] # M_z_j
+
+        # Convert the fixed-end force vector to the global coordinate system:
+        p_g = Γ * p_l
+
+        # Assemble the fixed-end force vector into the global load vector:
+        idx_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)
+        idx_j = findfirst(x -> x.ID == element.node_j.ID, model.nodes)
+        @inbounds F_dist[6 * idx_i - 5] += p_g[ 1]
+        @inbounds F_dist[6 * idx_i - 4] += p_g[ 2]
+        @inbounds F_dist[6 * idx_i - 3] += p_g[ 3]
+        @inbounds F_dist[6 * idx_i - 2] += p_g[ 4]
+        @inbounds F_dist[6 * idx_i - 1] += p_g[ 5]
+        @inbounds F_dist[6 * idx_i    ] += p_g[ 6]
+        @inbounds F_dist[6 * idx_j - 5] += p_g[ 7]
+        @inbounds F_dist[6 * idx_j - 4] += p_g[ 8]
+        @inbounds F_dist[6 * idx_j - 3] += p_g[ 9]
+        @inbounds F_dist[6 * idx_j - 2] += p_g[10]
+        @inbounds F_dist[6 * idx_j - 1] += p_g[11]
+        @inbounds F_dist[6 * idx_j    ] += p_g[12]
+    end
+
+    # Return the global load vector:
+    return F_dist
 end

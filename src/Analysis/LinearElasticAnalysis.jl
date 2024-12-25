@@ -10,11 +10,11 @@ function solve(model::Model, analysis::LinearElasticAnalysis)
     K_e_ff = K_e[indices_f, indices_f]
 
     # Assemble the global force vector:
-    F = assemble_F(model)
-    F_f = F[indices_f]
+    F_conc = assemble_F_conc(model)
+    F_conc_f = F_conc[indices_f]
 
     # Compute the displacements at the free DOFs:
-    U_f = K_e_ff \ F_f
+    U_f = K_e_ff \ F_conc_f
 
     # Assemble the global displacement vector:
     U = zeros(eltype(U_f), 6 * length(model.nodes))

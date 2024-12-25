@@ -1,6 +1,6 @@
 using Hephaestus
 
-M = Model(name = "Beam")
+M = Model()
 
 node!(M,  1,   0, 0, 0, u_x = true, u_y = true, u_z = true, θ_x = true, θ_y = true, θ_z = true)
 node!(M,  2,  12, 0, 0, u_z = true, θ_x = true, θ_y = true)

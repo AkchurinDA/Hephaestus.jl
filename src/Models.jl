@@ -106,7 +106,7 @@ end
 
 function distload!(model::Model, ID::Int, 
     w_x::Real, w_y::Real, w_z::Real; 
-    cs::Symbol = :global)
+    cs::Symbol = :local)
     # Check if the loads are zero:
     @assert w_x != 0 || w_y != 0 || w_z != 0 "All loads are zero. Aborting."
 

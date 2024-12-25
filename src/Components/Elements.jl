@@ -89,7 +89,6 @@ end
     E::Real, ν::Real, 
     A::Real, I_zz::Real, I_yy::Real, J::Real, 
     L::Real)
-    println("Computing the element elastic stiffness matrix in the local coordinate system...")
     # Initialize the element elastic stiffness matrix:
     k_e_l = zeros(Real, 12, 12)
 
@@ -135,7 +134,6 @@ end
 @memoize function compute_k_g_l(
     A::Real, J::Real,
     L::Real)
-    println("Computing the element geometric stiffness matrix in the local coordinate system...")
     # Initialize the element geometric stiffness matrix:
     k_g_l = zeros(Real, 12, 12)
 
@@ -179,7 +177,6 @@ end
     ρ::Real, 
     A::Real, J::Real, 
     L::Real)
-    println("Computing the element mass matrix in the local coordinate system...")
     # Initialize the element mass matrix:
     m_l = zeros(Real, 12, 12)
 
