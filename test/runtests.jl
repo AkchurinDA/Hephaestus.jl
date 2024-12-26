@@ -1,5 +1,6 @@
 using Test
 using Hephaestus
+using DifferentiationInterface, ForwardDiff, ReverseDiff
 
 @testset "Linear Elastic Analysis" begin
     # Reference:
