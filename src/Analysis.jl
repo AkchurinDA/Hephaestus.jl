@@ -15,10 +15,10 @@ Solve the model using the specified analysis type.
 """
 function solve(model::Model, analysistype::AbstractAnalysisType)
     # Extract the partition indices:
-    indices_f, indices_s = getpartitionindices(model)
+    partitionindices = getpartitionindices(model)
 
     # Solve the model using the specified analysis type:
-    solution = solve(model, analysistype, indices_f, indices_s)
+    solution = solve(model, analysistype, partitionindices)
 
     # Return the solution:
     return solution

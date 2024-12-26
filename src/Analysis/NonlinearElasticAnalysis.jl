@@ -9,6 +9,6 @@ struct NonlinearElasticAnalysisCache{
     R::AbstractVector{RT}
 end
 
-function solve(model::Model, analysis::NonlinearElasticAnalysis, indices_f::Vector{Bool}, indices_s::Vector{Bool})
+function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindices::Vector{Bool})
     
 end

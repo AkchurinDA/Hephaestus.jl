@@ -65,6 +65,9 @@ function assemble_M(model::Model)
         @inbounds M[(6 * index_j - 5):(6 * index_j), (6 * index_i - 5):(6 * index_i)] += m_g[7:12,  1:6]
         @inbounds M[(6 * index_j - 5):(6 * index_j), (6 * index_j - 5):(6 * index_j)] += m_g[7:12, 7:12]
     end
+
+    # Return the global mass matrix:
+    return M
 end
 
 function assemble_F_conc(model::Model)

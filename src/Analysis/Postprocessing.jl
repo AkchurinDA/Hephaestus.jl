@@ -1,7 +1,6 @@
 function getpartitionindices(model::Model)
     # Initialize the partition indices:
-    indices_f = fill(false, 6 * length(model.nodes))
-    indices_s = fill(false, 6 * length(model.nodes))
+    partitionindices = fill(false, 6 * length(model.nodes))
 
     # Assemble the partition indices:
     for (i, node) in enumerate(model.nodes)
@@ -9,74 +8,122 @@ function getpartitionindices(model::Model)
         θ_x, θ_y, θ_z = node.θ_x, node.θ_y, node.θ_z
 
         # Assemble the partition indices for the free DOFs:
-        indices_f[6 * i - 5] = !u_x
-        indices_f[6 * i - 4] = !u_y
-        indices_f[6 * i - 3] = !u_z
-        indices_f[6 * i - 2] = !θ_x
-        indices_f[6 * i - 1] = !θ_y
-        indices_f[6 * i    ] = !θ_z
-
-        # Assemble the partition indices for the supported DOFs:
-        indices_s[6 * i - 5] = u_x
-        indices_s[6 * i - 4] = u_y
-        indices_s[6 * i - 3] = u_z
-        indices_s[6 * i - 2] = θ_x
-        indices_s[6 * i - 1] = θ_y
-        indices_s[6 * i    ] = θ_z
+        partitionindices[6 * i - 5] = !u_x
+        partitionindices[6 * i - 4] = !u_y
+        partitionindices[6 * i - 3] = !u_z
+        partitionindices[6 * i - 2] = !θ_x
+        partitionindices[6 * i - 1] = !θ_y
+        partitionindices[6 * i    ] = !θ_z
     end
 
     # Return the partition indices:
-    return indices_f, indices_s
+    return partitionindices
 end
 
-function extract_node_disp(model::Model, U::Vector{<:Real}, ID::Int)
+getnodedisp(model::Model, solution::AbstractSolutionCache, ID::Int) = getnodedisp(model, solution.U, ID)
+function getnodedisp(model::Model, U::AbstractVector{<:Real}, ID::Int)
     # Find the index of the node in the model:
     index = findfirst(x -> x.ID == ID, model.nodes) 
 
     # Extract the displacement vector of the node:
-    node_disp = U[(6 * index - 5):(6 * index)]
+    nodedisp = U[(6 * index - 5):(6 * index)]
 
     # Return the displacement vector:
-    return node_disp
+    return nodedisp
 end
 
-function extract_element_disp_l(model::Model, U::Vector{<:Real}, ID::Int)
+getelementdisp_l(model::Model, solution::AbstractSolutionCache, ID::Int) = getelementdisp_l(model, solution.U, ID)
+function getelementdisp_l(model::Model, U::AbstractVector{<:Real}, ID::Int)
     # Find the element in the model:
     element = model.elements[findfirst(x -> x.ID == ID, model.elements)]
 
     # Extract the displacements of the nodes of the element:
-    node_i_disp = extract_node_disp(model, U, element.node_i.ID)
-    node_j_disp = extract_node_disp(model, U, element.node_j.ID)
+    nodeidisp = getnodedisp(model, U, element.node_i.ID)
+    nodejdisp = getnodedisp(model, U, element.node_j.ID)
 
     # Combine the displacements of the nodes into the displacement vector of the element:
-    element_disp_g = [node_i_disp; node_j_disp]
+    elementdisp_g = [nodeidisp; nodejdisp]
 
     # Transform the displacement vector of the element to the local coordinate system:
-    element_disp_l = element.Γ * element_disp_g
+    elementdisp_l = element.Γ * elementdisp_g
 
     # Return the displacement vector of the element:
-    return element_disp_l
+    return elementdisp_l
 end
 
-function extract_element_disp_g(model::Model, U::Vector{<:Real}, ID::Int)
+getelementdisp_g(model::Model, solution::AbstractSolutionCache, ID::Int) = getelementdisp_g(model, solution.U, ID)
+function getelementdisp_g(model::Model, U::AbstractVector{<:Real}, ID::Int)
     # Find the element in the model:
     element = model.elements[findfirst(x -> x.ID == ID, model.elements)]
 
     # Extract the displacements of the nodes of the element:
-    node_i_disp = extract_node_disp(model, U, element.node_i.ID)
-    node_j_disp = extract_node_disp(model, U, element.node_j.ID)
+    nodeidisp = getnodedisp(model, U, element.node_i.ID)
+    nodejdisp = getnodedisp(model, U, element.node_j.ID)
 
     # Combine the displacements of the nodes into the displacement vector of the element:
-    element_disp_g = [node_i_disp; node_j_disp]
+    elementdisp_g = [nodeidisp; nodejdisp]
 
     # Return the displacement vector of the element:
-    return element_disp_g
+    return elementdisp_g
 end
 
-function extract_element_force_l(model::Model, U::Vector{<:Real}, ID::Int)
+getelementforces_l(model::Model, solution::AbstractSolutionCache, ID::Int) = getelementforces_l(model, solution.U, ID)
+function getelementforces_l(model::Model, U::AbstractVector{<:Real}, ID::Int)
+    # Find the element in the model:
+    element = model.elements[findfirst(x -> x.ID == ID, model.elements)]
 
+    # Extract the displacements of the nodes of the element:
+    nodeidisp = getnodedisp(model, U, element.node_i.ID)
+    nodejdisp = getnodedisp(model, U, element.node_j.ID)
+
+    # Combine the displacements of the nodes into the displacement vector of the element:
+    elementdisp_g = [nodeidisp; nodejdisp]
+
+    # Transform the displacement vector of the element to the local coordinate system:
+    elementdisp_l = element.Γ * elementdisp_g
+
+    # Compute the internal forces of the element:
+    elementforces_l = element.k_e_l * elementdisp_l
+
+    # Return the internal forces of the element:
+    return elementforces_l
 end
 
-function extract_element_force_g(model::Model, U::Vector{<:Real}, ID::Int)
+getelementforces_g(model::Model, solution::AbstractSolutionCache, ID::Int) = getelementforces_g(model, solution.U, ID)
+function getelementforces_g(model::Model, U::AbstractVector{<:Real}, ID::Int)
+    # Find the element in the model:
+    element = model.elements[findfirst(x -> x.ID == ID, model.elements)]
 
+    # Extract the displacements of the nodes of the element:
+    nodeidisp = getnodedisp(model, U, element.node_i.ID)
+    nodejdisp = getnodedisp(model, U, element.node_j.ID)
+
+    # Combine the displacements of the nodes into the displacement vector of the element:
+    elementdisp_g = [nodeidisp; nodejdisp]
+
+    # Combine the displacements of the nodes into the displacement vector of the element:
+    elementdisp_g = [nodeidisp; nodejdisp]
+
+    # Transform the displacement vector of the element to the local coordinate system:
+    elementdisp_l = element.Γ * elementdisp_g
+
+    # Compute the internal forces of the element:
+    elementforces_l = element.k_e_l * elementdisp_l
+    
+    # Transform the internal forces of the element to the global coordinate system:
+    elementforces_g = element.Γ * elementforces_l
+
+    # Return the internal forces of the element:
+    return elementforces_g
+end
+
+function getelementaxialload(model::Model, solution::AbstractSolutionCache, ID::Int)
+    # Extract the internal forces of the element:
+    elementforces_l = getelementforces_l(model, solution, ID)
+
+    # Extract the axial load of the element:
+    elementaxialload = elementforces_l[7]
+
+    # Return the axial load of the element:
+    return elementaxialload
 end

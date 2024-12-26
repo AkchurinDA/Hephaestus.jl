@@ -19,14 +19,14 @@ struct FreeVibrationAnalysisCache{
     Φ::AbstractMatrix{ΦT}
 end
 
-function solve(model::Model, analysistype::FreeVibrationAnalysis, indices_f::Vector{Bool}, indices_s::Vector{Bool})
+function solve(model::Model, analysistype::FreeVibrationAnalysis, partitionindices::Vector{Bool})
     # Assemble the global elastic stiffness matrix and partition it:
     K_e    = assemble_K_e(model)
-    K_e_ff = K_e[indices_f, indices_f]
+    K_e_ff = K_e[partitionindices, partitionindices]
 
     # Assemble the global mass matrix and partition it:
     M    = assemble_M(model)
-    M_ff = M[indices_f, indices_f]
+    M_ff = M[partitionindices, partitionindices]
 
     # Solve the generalized eigenvalue problem:
     Ω², ϕ = eigen(K_e_ff, M_ff)
@@ -38,7 +38,7 @@ function solve(model::Model, analysistype::FreeVibrationAnalysis, indices_f::Vec
     # Normalize the eigenvectors:
     Φ = zeros(eltype(ϕ), 6 * length(model.nodes), length(Ω))
     for i in 1:length(Ω)
-        Φ[indices_f, i] = ϕ[:, i] / maximum(abs.(ϕ[:, i]))
+        Φ[partitionindices, i] = ϕ[:, i] / maximum(abs.(ϕ[:, i]))
     end
 
     # Return the analysis cache:

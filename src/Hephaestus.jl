@@ -1,4 +1,5 @@
 module Hephaestus
+using LinearAlgebra
 using Memoization
 using Dates
 using DocStringExtensions
@@ -18,11 +19,13 @@ include("Utilities/Plotting.jl")
 
 export Node, Section, Material, Element, ConcentratedLoad, DistributedLoad, Model
 export node!, section!, material!, element!, concload!, distload!
-export LinearElasticAnalysis, NonlinearElasticAnalysis
+export LinearElasticAnalysis, ElasticBucklingAnalysis, FreeVibrationAnalysis
+export LinearElasticAnalysisCache, ElasticBucklingAnalysisCache, FreeVibrationAnalysisCache
 export solve
 export getnodedisp
 export getelementdisp_l, getelementforces_l
 export getelementdisp_g, getelementforces_g
+export getelementaxialload
 export generatereport
 export plotmodel, plotmodel!
 end
