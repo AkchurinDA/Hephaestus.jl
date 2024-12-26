@@ -1,3 +1,10 @@
+"""
+    struct Element
+
+A type representing an element in the finite element model.
+
+$(FIELDS)
+"""
 struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real}
     "Identification tag"
     ID::Int

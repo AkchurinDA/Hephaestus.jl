@@ -72,3 +72,11 @@ function extract_element_disp_g(model::Model, U::Vector{<:Real}, ID::Int)
     # Return the displacement vector of the element:
     return element_disp_g
 end
+
+function extract_element_force_l(model::Model, U::Vector{<:Real}, ID::Int)
+
+end
+
+function extract_element_force_g(model::Model, U::Vector{<:Real}, ID::Int)
+
+end

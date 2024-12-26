@@ -5,6 +5,11 @@
 # Body:
 # ─ Number of model entities
 
+"""
+    generatereport(model::Model; path = pwd(), reportname = "Report")
+
+Generate a report.
+"""
 function generatereport(model::Model; path = pwd(), reportname = "Report")
     open(joinpath(path, "$(reportname).txt"), "w") do io
         write(io, "Hephaestus.jl: \n")

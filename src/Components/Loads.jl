@@ -1,3 +1,10 @@
+"""
+    struct ConcentratedLoad
+
+A type representing a concentrated load in the finite element model.
+
+$(FIELDS)
+"""
 struct ConcentratedLoad{T<:Real}
     "Identification tag of the node at which the concentrated load is applied"
     ID::Int
@@ -31,6 +38,13 @@ struct ConcentratedLoad{T<:Real}
     end
 end
 
+"""
+    struct DistributedLoad
+
+A type representing a concentrated load in the finite element model.
+
+$(FIELDS)
+"""
 struct DistributedLoad{T<:Real}
     "Identification tag of the element to which the distributed load is applied"
     ID::Int

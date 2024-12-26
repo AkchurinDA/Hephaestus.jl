@@ -1,3 +1,10 @@
+"""
+    struct Material
+
+A type representing a material in a finite element model.
+
+$(FIELDS)
+"""
 struct Material{T<:Real}
     "Identification tag"
     ID::Int

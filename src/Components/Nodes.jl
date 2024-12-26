@@ -1,3 +1,10 @@
+"""
+    struct Node
+
+A type representing a node in a finite element model.
+
+$(FIELDS)
+"""
 struct Node{T<:Real}
     "Identification tag"
     ID::Int

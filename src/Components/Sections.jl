@@ -1,3 +1,10 @@
+"""
+    struct Section
+
+A type representing a section in a finite element model.
+
+$(FIELDS)
+"""
 struct Section{T<:Real}
     "Identification tag"
     ID::Int

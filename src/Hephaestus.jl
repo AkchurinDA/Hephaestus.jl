@@ -1,6 +1,7 @@
 module Hephaestus
 using Memoization
 using Dates
+using DocStringExtensions
 using Printf
 using StyledStrings
 
@@ -18,6 +19,8 @@ export Node, Section, Material, Element, ConcentratedLoad, DistributedLoad, Mode
 export node!, section!, material!, element!, concload!, distload!
 export LinearElasticAnalysis, NonlinearElasticAnalysis
 export solve
-export extract_node_disp, extract_element_force_l, extract_element_disp_g
+export extract_node_disp
+export extract_element_disp_l, extract_element_force_l
+export extract_element_disp_g, extract_element_force_g
 export generatereport
 end
