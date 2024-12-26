@@ -119,13 +119,12 @@ function generatereport(model::Model; path = pwd(), reportname = "Report")
         write(io, "\n")
         write(io, "(6) DIST. LOADS: \n")
         write(io, "\n")
-        if !isempty(distload!)
-            write(io, "│ Element ID │ w_x        │ w_y        │ w_z        │ CS      │ \n")
-            write(io, "├────────────┼────────────┼────────────┼────────────┼─────────┤ \n")
+        if !isempty(model.distloads)
+            write(io, "│ Element ID │ w_x        │ w_y        │ w_z        │ \n")
+            write(io, "├────────────┼────────────┼────────────┼────────────┤ \n")
             for distload in model.distloads
-                cs = distload.cs == :global ? "Global" : "Local"
-                @printf(io, "│ %10d │ %10.3e │ %10.3e │ %10.3e │ %7s │ \n",
-                    distload.ID, distload.w_x, distload.w_y, distload.w_z, cs)
+                @printf(io, "│ %10d │ %10.3e │ %10.3e │ %10.3e │ \n",
+                    distload.ID, distload.w_x, distload.w_y, distload.w_z)
             end
         else
             write(io, "No distributed loads defined. \n")
