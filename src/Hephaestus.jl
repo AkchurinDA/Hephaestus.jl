@@ -1,30 +1,31 @@
 module Hephaestus
-using OrderedCollections
 using LinearAlgebra
+using Memoization
+using Dates
+using DocStringExtensions
+using Printf
 using StyledStrings
 
-using DocStringExtensions
-
-include("Nodes.jl")
-export AbstractNode, Node
-include("Materials.jl")
-export AbstractMaterial, Material
-include("Sections.jl")
-export AbstractSection, Section
-include("Elements.jl")
-export AbstractElement, Element
+include("Components/Nodes.jl")
+include("Components/Sections.jl")
+include("Components/Materials.jl")
+include("Components/Elements.jl")
+include("Components/Loads.jl")
 include("Models.jl")
-export AbstractModel, Model
-export add_node!, add_material!, add_section!, add_element!, add_support!, add_conc_load!, add_dist_load!
-export get_node_u_g, get_element_u_l, get_element_f_l
 include("Analysis.jl")
-export AbstractAnalysisType, AbstractAnalysisCache
-export LinearElasticAnalysis, LinearElasticAnalysisCache
-export NonlinearElasticAnalysis, NonlinearElasticAnalysisCache
-export ElasticBucklingAnalysis, ElasticBucklingAnalysisCache
-export FreeVibrationAnalysis, FreeVibrationAnalysisCache
+include("Utilities/PrettyPrint.jl")
+include("Utilities/GenerateReport.jl")
+include("Utilities/Plotting.jl")
+
+export Node, Section, Material, Element, ConcentratedLoad, DistributedLoad, Model
+export node!, section!, material!, element!, concload!, distload!
+export LinearElasticAnalysis, ElasticBucklingAnalysis, FreeVibrationAnalysis
+export LinearElasticAnalysisCache, ElasticBucklingAnalysisCache, FreeVibrationAnalysisCache
 export solve
-include("Plotting.jl")
+export getnodedisp
+export getelementdisp_l, getelementforces_l
+export getelementdisp_g, getelementforces_g
+export getelementaxialload
+export generatereport
 export plotmodel, plotmodel!
-export plotsolution, plotsolution!
 end

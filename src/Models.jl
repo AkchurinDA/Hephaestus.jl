@@ -1,5 +1,3 @@
-abstract type AbstractModel end
-
 """
     struct Model
 
@@ -8,266 +6,196 @@ A type representing the finite element model of a structure of interest.
 $(FIELDS)
 """
 @kwdef struct Model
-    "Ordered dictionary that stores the nodes of the model"
-    nodes         ::OrderedDict{Int, Node    } = OrderedDict{Int, Node    }()
-    "Ordered dictionary that stores the materials of the model"
-    materials     ::OrderedDict{Int, Material} = OrderedDict{Int, Material}()
-    "Ordered dictionary that stores the materials of the model"
-    sections      ::OrderedDict{Int, Section } = OrderedDict{Int, Section }()
-    "Ordered dictionary that stores the elements of the model"
-    elements      ::OrderedDict{Int, Element } = OrderedDict{Int, Element }()
-
-    "Ordered dictionary that stores the supports of the model"
-    supports      ::OrderedDict{Int, AbstractVector{Bool}} = OrderedDict{Int, AbstractVector{Bool}}()
-
-    "Ordered dictionary that stores the concentrated loads of the model"
-    conc_loads    ::OrderedDict{Int, AbstractVector{<:Real}} = OrderedDict{Int, AbstractVector{<:Real}}()
-    "Ordered dictionary that stores the distributed loads of the model"
-    dist_loads    ::OrderedDict{Int, AbstractVector{<:Real}} = OrderedDict{Int, AbstractVector{<:Real}}()
-
-    "Ordered dictionary that stores the fixed-end forces in the local coordinate system"
-    p_l           ::OrderedDict{Int, AbstractVector{<:Real}} = OrderedDict{Int, AbstractVector{<:Real}}()
-    "Ordered dictionary that stores the fixed-end forces in the global coordinate system"
-    p_g           ::OrderedDict{Int, AbstractVector{<:Real}} = OrderedDict{Int, AbstractVector{<:Real}}()
-end
-
-function Base.show(io::IO, model::Model)
-    num_nodes      = length(model.nodes     )
-    num_sections   = length(model.sections  )
-    num_materials  = length(model.materials )
-    num_elements   = length(model.elements  )
-    num_supports   = length(model.supports  )
-    num_conc_loads = length(model.conc_loads)
-    num_dist_loads = length(model.dist_loads)
-
-    if num_nodes == 0 && num_sections == 0 && num_materials == 0 && num_elements == 0 && num_supports == 0 && num_conc_loads == 0 && num_dist_loads == 0
-        return println(io, styled"{cyan, bold: Empty model.}")
-    else
-        reserved_spacing = floor(Int, log10(maximum([num_nodes, num_materials, num_sections, num_elements, num_supports, num_conc_loads, num_dist_loads])))  + 1
-
-        str_num_nodes      = lpad(num_nodes     , reserved_spacing)
-        str_num_materials  = lpad(num_materials , reserved_spacing)
-        str_num_sections   = lpad(num_sections  , reserved_spacing)
-        str_num_elements   = lpad(num_elements  , reserved_spacing)
-        str_num_supports   = lpad(num_supports  , reserved_spacing)
-        str_num_conc_loads = lpad(num_conc_loads, reserved_spacing)
-        str_num_dist_loads = lpad(num_dist_loads, reserved_spacing)
-
-        println(io, styled"{cyan, bold: Model with:}")
-        num_nodes      == 0 ? nothing : println(io, styled"{cyan: $(str_num_nodes     ) \t Nodes          }")
-        num_sections   == 0 ? nothing : println(io, styled"{cyan: $(str_num_sections  ) \t Sections       }")
-        num_materials  == 0 ? nothing : println(io, styled"{cyan: $(str_num_materials ) \t Materials      }")
-        num_elements   == 0 ? nothing : println(io, styled"{cyan: $(str_num_elements  ) \t Elements       }")
-        num_supports   == 0 ? nothing : println(io, styled"{cyan: $(str_num_supports  ) \t Supported nodes}")
-        num_conc_loads == 0 ? nothing : println(io, styled"{cyan: $(str_num_conc_loads) \t Loaded nodes   }")
-        num_dist_loads == 0 ? nothing : println(io, styled"{cyan: $(str_num_dist_loads) \t Loaded elements}")
-    end
-
-    return nothing
+    "Name of the model"
+    name::String = "Model"
+    "Nodes of the model"
+    nodes::Vector{Node} = Vector{Node}()
+    "Sections of the model"
+    sections::Vector{Section} = Vector{Section}()
+    "Materials of the model"
+    materials::Vector{Material} = Vector{Material}()
+    "Elements of the model"
+    elements::Vector{Element} = Vector{Element}()
+    "Concentrated loads of the model"
+    concloads::Vector{ConcentratedLoad} = Vector{ConcentratedLoad}()
+    "Distribution loads of the model"
+    distloads::Vector{DistributedLoad} = Vector{DistributedLoad}()
 end
 
 """
-    add_node!(model, tag, x, y, z)
+    node!(model, ID, 
+        x, y, z;
+        u_x = false, u_y = false, u_z = false,
+        θ_x = false, θ_y = false, θ_z = false)
 
-Add a node to the model.
+Add a node to a finite element model.
 """
-function add_node!(model::Model, tag::Int,
-    x::Real, y::Real, z::Real)
-    # Check if the node already exists:
-    if haskey(model.nodes, tag)
-        throw(ArgumentError("Node with tag $(tag) already exists"))
-    end
+function node!(model::Model, ID::Int, 
+    x::Real, y::Real, z::Real; 
+    u_x::Bool = false, u_y::Bool = false, u_z::Bool = false, 
+    θ_x::Bool = false, θ_y::Bool = false, θ_z::Bool = false)
+    # Check if the node already exists in the model:
+    @assert ID ∉ getfield.(model.nodes, :ID) "Node already exists in the model."
 
     # Add the node to the model:
-    model.nodes[tag] = Node(x, y, z)
+    push!(model.nodes, Node(ID, x, y, z, u_x, u_y, u_z, θ_x, θ_y, θ_z))
 
     # Return the updated model:
     return model
 end
 
 """
-    add_section!(model, tag, A, I_zz, I_yy, J)
+    section!(model, ID, 
+        A, I_zz, I_yy, J)
 
-Add a section to the model.
+Add a section to a finite element model.
 """
-function add_section!(model::Model, tag::Int,
-    A::Real, I_zz::Real, I_yy::Real, J::Real)
-    # Check if the section already exists:
-    if haskey(model.sections, tag)
-        throw(ArgumentError("Section with tag $(tag) already exists"))
-    end
+function section!(model::Model, ID::Int, A::Real, I_zz::Real, I_yy::Real, J::Real)
+    # Check if the section already exists in the model:
+    @assert ID ∉ getfield.(model.sections, :ID) "Section already exists in the model."
 
     # Add the section to the model:
-    model.sections[tag] = Section(A, I_zz, I_yy, J)
+    push!(model.sections, Section(ID, A, I_zz, I_yy, J))
 
     # Return the updated model:
     return model
 end
 
 """
-    add_material!(model, tag, E, ν, ρ)
+    material!(model, ID, 
+        E, ν, ρ)
 
-Add a material to the model.
+Add a material to a finite element model.
 """
-function add_material!(model::Model, tag::Int,
-    E::Real, ν::Real, ρ::Real)
-    # Check if the material already exists:
-    if haskey(model.materials, tag)
-        throw(ArgumentError("Material with tag $(tag) already exists"))
-    end
+function material!(model::Model, ID::Int, E::Real, ν::Real, ρ::Real)
+    # Check if the material already exists in the model:
+    @assert ID ∉ getfield.(model.materials, :ID) "Material already exists in the model."
 
     # Add the material to the model:
-    model.materials[tag] = Material(E, ν, ρ)
+    push!(model.materials, Material(ID, E, ν, ρ))
 
     # Return the updated model:
     return model
 end
 
 """
-    add_element!(model, tag, node_i_tag, node_j_tag, section_tag, material_tag)
+    element!(model, ID, 
+        node_i_ID, node_j_ID, 
+        section_ID, 
+        material_ID; 
+        ω = 0,
+        releases_i = [false, false, false, false, false, false],
+        releases_j = [false, false, false, false, false, false])
 
-Add an element to the model.    
+Add an element to a finite element model.
 """
-function add_element!(model::Model, tag::Int,
-    node_i_tag::Int, node_j_tag::Int, section_tag::Int, material_tag::Int;
-    ω::Real = 0, 
-    releases_i::Vector{Bool} = [false, false, false, false, false, false],
-    releases_j::Vector{Bool} = [false, false, false, false, false, false])
-    # Check if the element already exists:
-    if haskey(model.elements, tag)
-        throw(ArgumentError("Element with tag $(tag) already exists"))
-    end
+function element!(model::Model, ID::Int, 
+    node_i_ID::Int, node_j_ID::Int, 
+    section_ID::Int, 
+    material_ID::Int; 
+    ω::Real = 0,
+    releases_i::Vector{<:Bool} = [false, false, false, false, false, false],
+    releases_j::Vector{<:Bool} = [false, false, false, false, false, false])
+    # Check if the element already exists in the model:
+    @assert ID ∉ getfield.(model.elements, :ID) "Element already exists in the model."
 
-    # Check if the node (i) exists:
-    if !haskey(model.nodes, node_i_tag)
-        throw(ArgumentError("Node with tag $(node_i_tag) does not exist"))
-    end
+    # Check if the nodes exist in the model:
+    @assert node_i_ID ∈ getfield.(model.nodes, :ID) "Node (``i``) with ID $(node_i_ID) does not exist in the model."
+    @assert node_j_ID ∈ getfield.(model.nodes, :ID) "Node (``j``) with ID $(node_j_ID) does not exist in the model."
 
-    # Check if the node (j) exists:
-    if !haskey(model.nodes, node_j_tag)
-        throw(ArgumentError("Node with tag $(node_j_tag) does not exist"))
-    end
+    # Check if the section exists in the model:
+    @assert section_ID ∈ getfield.(model.sections, :ID) "Section with ID $(section_ID) does not exist in the model."
 
-    # Check if the section exists:
-    if !haskey(model.sections, section_tag)
-        throw(ArgumentError("Section with tag $(section_tag) does not exist"))
-    end
+    # Check if the material exists in the model:
+    @assert material_ID ∈ getfield.(model.materials, :ID) "Material with ID $(material_ID) does not exist in the model."
 
-    # Check if the material exists:
-    if !haskey(model.materials, material_tag)
-        throw(ArgumentError("Material with tag $(material_tag) does not exist"))
-    end
+    # Extract the nodes:
+    node_i = model.nodes[findfirst(x -> x.ID == node_i_ID, model.nodes)]
+    node_j = model.nodes[findfirst(x -> x.ID == node_j_ID, model.nodes)]
 
-    # Extract the nodal coordinates:
-    node_i = model.nodes[node_i_tag]
-    node_j = model.nodes[node_j_tag]
-    x_i, y_i, z_i = node_i.x, node_i.y, node_i.z
-    x_j, y_j, z_j = node_j.x, node_j.y, node_j.z
+    # Extract the section and material:
+    section = model.sections[findfirst(x -> x.ID == section_ID, model.sections)]
 
-    # Extract the section properties:
-    section = model.sections[section_tag]
-    A, I_zz, I_yy, J = section.A, section.I_zz, section.I_yy, section.J
-
-    # Extract the material properties:
-    material = model.materials[material_tag]
-    E, ν, ρ = material.E, material.ν, material.ρ
+    # Extract the material:
+    material = model.materials[findfirst(x -> x.ID == material_ID, model.materials)]
 
     # Add the element to the model:
-    model.elements[tag] = Element(
-        node_i_tag, x_i, y_i, z_i,
-        node_j_tag, x_j, y_j, z_j,
-        material_tag, E, ν, ρ,
-        section_tag, A, I_zz, I_yy, J,
-        ω,
-        releases_i, releases_j)
+    push!(model.elements, Element(ID, node_i, node_j, section, material, ω, releases_i, releases_j))
 
     # Return the updated model:
     return model
 end
 
 """
-    add_support!(model, tag, u_x, u_y, u_z, θ_x, θ_y, θ_z)
+    concload!(model, ID, 
+        F_x, F_y, F_z, 
+        M_x, M_y, M_z)
 
-Add a support to the model.
+Applies a concentrated load to a node with a specified ID.
 """
-function add_support!(model::Model, tag::Int, # Node tag
-    u_x::Bool, u_y::Bool, u_z::Bool, 
-    θ_x::Bool, θ_y::Bool, θ_z::Bool)
-    # Check if the support already exists:
-    if haskey(model.supports, tag)
-        throw(ArgumentError("Support with tag $(tag) already exists"))
-    end
-
-    # Check if the node exists:
-    if !haskey(model.nodes, tag)
-        throw(ArgumentError("Node with tag $(tag) does not exist"))
-    end
-
-    # Add the support to the model:
-    model.supports[tag] = [u_x, u_y, u_z, θ_x, θ_y, θ_z]
-
-    # Return the updated model:
-    return model
-end
-
-"""
-    add_conc_load!(model, tag, F_x, F_y, F_z, M_x, M_y, M_z)
-
-Add a concentrated load to the model.
-"""
-function add_conc_load!(model::Model, tag::Int, # Node tag
+function concload!(model::Model, ID::Int, 
     F_x::Real, F_y::Real, F_z::Real, 
     M_x::Real, M_y::Real, M_z::Real)
-    # Check if the concentrated load exists:
-    if haskey(model.conc_loads, tag)
-        throw(ArgumentError("Concentrated load with tag $(tag) already exists"))
-    end
+    # Check if the loads are zero:
+    @assert F_x != 0 || F_y != 0 || F_z != 0 || M_x != 0 || M_y != 0 || M_z != 0 "All loads are zero. Aborting."
 
-    # Check if the node exists:
-    if !haskey(model.nodes, tag)
-        throw(ArgumentError("Node with tag $(tag) does not exist"))
-    end
+    # Check that the node exists in the model:
+    @assert ID ∈ getfield.(model.nodes, :ID) "Node with ID $(ID) does not exist in the model."
 
     # Add the concentrated load to the model:
-    model.conc_loads[tag] = [F_x, F_y, F_z, M_x, M_y, M_z]
+    push!(model.concloads, ConcentratedLoad(ID, F_x, F_y, F_z, M_x, M_y, M_z))
 
     # Return the updated model:
     return model
 end
 
 """
-    add_dist_load!(model, tag, q_x, q_y, q_z)
+    distload!(model, ID, 
+        w_x, w_y, w_z; 
+        cs = :local)
 
-Add a distributed load to the model.
+Applies a distributed load to an element with a specified ID.
 """
-function add_dist_load!(model::Model, tag::Int, # Element tag
-    q_x::Real, q_y::Real, q_z::Real)
-    # Check if the distributed load exists:
-    if haskey(model.dist_loads, tag)
-        throw(ArgumentError("Distributed load with tag $(tag) already exists"))
-    end
+function distload!(model::Model, ID::Int, 
+    w_x::Real, w_y::Real, w_z::Real)
+    # Check if the loads are zero:
+    @assert w_x != 0 || w_y != 0 || w_z != 0 "All loads are zero. Aborting."
 
-    # Check if the element exists:
-    if !haskey(model.elements, tag)
-        throw(ArgumentError("Element with tag $(tag) does not exist"))
-    end
+    # Check that the element exists in the model:
+    @assert ID ∈ getfield.(model.elements, :ID) "Element with ID $(ID) does not exist in the model."
 
-    # Add the distributed load to the model:
-    model.dist_loads[tag] = [q_x, q_y, q_z]
+    # Check if distributed loads are already applied to the element:
+    @assert ID ∉ getfield.(model.distloads, :ID) "Distributed loads are already applied to the element."
 
-    # Extract the information about the element:
-    L = model.elements[tag].L
-    Γ = model.elements[tag].Γ
+    # Find the element to which the distributed load is applied:
+    element = model.elements[findfirst(x -> x.ID == ID, model.elements)]
 
-    # Compute the fixed-end forces in the local coordinate system:
-    p_l = _compute_p_l(q_x, q_y, q_z, L)
+    # Extract the element length:
+    L = element.L
 
-    # Transform the fixed-end forces to the global coordinate system:
+    # Extract the transformation matrix of the element:
+    Γ = element.Γ
+
+    # Compute the fixed-end force vector in the local coordinate system:
+    p_l = [
+        -w_x * L / 2     ; # F_x_i
+        -w_y * L / 2     ; # F_y_i
+        -w_z * L / 2     ; # F_z_i
+        0                ; # M_x_i
+        -w_z * L ^ 2 / 12; # M_y_i
+        -w_y * L ^ 2 / 12; # M_z_i
+        +w_x * L / 2     ; # F_x_j
+        -w_y * L / 2     ; # F_y_j
+        -w_z * L / 2     ; # F_z_j
+        0                ; # M_x_j
+        +w_z * L ^ 2 / 12; # M_y_j
+        +w_y * L ^ 2 / 12] # M_z_j
+
+    # Convert the fixed-end force vector to the global coordinate system:
     p_g = Γ * p_l
 
-    # Add the fixed-end forces to the model:
-    model.p_l[tag] = p_l
-    model.p_g[tag] = p_g
+    # Add the distributed load to the model:
+    push!(model.distloads, DistributedLoad(ID, w_x, w_y, w_z, p_l, p_g))
 
     # Return the updated model:
     return model

@@ -1,10 +1,6 @@
-```@raw html
-<img src = "./assets/social-preview.svg"/>
-```
-
 ## Description
 
-`Hephaestus.jl` is an auto-differentiable structural analysis package purely written in the Julia programming language.
+`Hephaestus.jl` is an automatically differentiable structural analysis package purely written in the Julia programming language.
 
 ## Installation
 
@@ -24,4 +20,4 @@ For assistance with the package, please raise an issue on the [GitHub Issues](ht
 
 ## Acknowledgements
 
-The design of the package is inspired by [`OpenSeesPy`](https://github.com/zhuminjie/OpenSeesPy), [`PyNite`](https://github.com/JWock82/Pynite), and [`MASTAN2`](https://www.mastan2.com).
+The internal design of the package is inspired by [`OpenSeesPy`](https://github.com/zhuminjie/OpenSeesPy), [`PyNite`](https://github.com/JWock82/Pynite), and [`MASTAN2`](https://www.mastan2.com).

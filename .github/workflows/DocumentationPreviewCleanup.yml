@@ -1,4 +1,4 @@
-name: Documentation
+name: DocumentationPreviewCleanup
 on:
   pull_request:
     types: [closed]
