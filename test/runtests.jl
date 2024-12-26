@@ -1,5 +1,5 @@
-using Hephaestus
 using Test
+using Hephaestus
 
 @testset "Linear Elastic Analysis" begin
     # Reference:

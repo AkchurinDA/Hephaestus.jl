@@ -13,6 +13,7 @@ include("Components/Loads.jl")
 include("Models.jl")
 include("Analysis.jl")
 include("Utilities/PrettyPrint.jl")
+include("Utilities/Plotting.jl")
 include("Utilities/GenerateReport.jl")
 
 export Node, Section, Material, Element, ConcentratedLoad, DistributedLoad, Model
@@ -22,5 +23,6 @@ export solve
 export extract_node_disp
 export extract_element_disp_l, extract_element_force_l
 export extract_element_disp_g, extract_element_force_g
+export plotmodel, plotmodel!
 export generatereport
 end
