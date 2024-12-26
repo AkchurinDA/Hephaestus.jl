@@ -20,6 +20,11 @@ function getpartitionindices(model::Model)
     return partitionindices
 end
 
+"""
+    getnodedisp(model::Model, solution::AbstractSolutionCache, ID::Int)
+
+Extracts the displacement vector of a node of interest from the solution cache.
+"""
 getnodedisp(model::Model, solution::AbstractSolutionCache, ID::Int) = getnodedisp(model, solution.U, ID)
 function getnodedisp(model::Model, U::AbstractVector{<:Real}, ID::Int)
     # Find the index of the node in the model:
@@ -32,6 +37,11 @@ function getnodedisp(model::Model, U::AbstractVector{<:Real}, ID::Int)
     return nodedisp
 end
 
+"""
+    getelementdisp_l(model::Model, solution::AbstractSolutionCache, ID::Int)
+
+Extracts the displacement vector of an element of interest in the local coordinate system from the solution cache.
+"""
 getelementdisp_l(model::Model, solution::AbstractSolutionCache, ID::Int) = getelementdisp_l(model, solution.U, ID)
 function getelementdisp_l(model::Model, U::AbstractVector{<:Real}, ID::Int)
     # Find the element in the model:
@@ -51,6 +61,11 @@ function getelementdisp_l(model::Model, U::AbstractVector{<:Real}, ID::Int)
     return elementdisp_l
 end
 
+"""
+    getelementdisp_g(model::Model, solution::AbstractSolutionCache, ID::Int)
+
+Extracts the displacement vector of an element of interest in the global coordinate system from the solution cache.
+"""
 getelementdisp_g(model::Model, solution::AbstractSolutionCache, ID::Int) = getelementdisp_g(model, solution.U, ID)
 function getelementdisp_g(model::Model, U::AbstractVector{<:Real}, ID::Int)
     # Find the element in the model:
@@ -67,6 +82,11 @@ function getelementdisp_g(model::Model, U::AbstractVector{<:Real}, ID::Int)
     return elementdisp_g
 end
 
+"""
+    getelementforces_l(model::Model, solution::AbstractSolutionCache, ID::Int)
+
+Extracts the internal forces of an element of interest in the local coordinate system from the solution cache.
+"""
 getelementforces_l(model::Model, solution::AbstractSolutionCache, ID::Int) = getelementforces_l(model, solution.U, ID)
 function getelementforces_l(model::Model, U::AbstractVector{<:Real}, ID::Int)
     # Find the element in the model:
@@ -89,6 +109,11 @@ function getelementforces_l(model::Model, U::AbstractVector{<:Real}, ID::Int)
     return elementforces_l
 end
 
+"""
+    getelementforces_g(model::Model, solution::AbstractSolutionCache, ID::Int)
+
+Extracts the internal forces of an element of interest in the global coordinate system from the solution cache.
+"""
 getelementforces_g(model::Model, solution::AbstractSolutionCache, ID::Int) = getelementforces_g(model, solution.U, ID)
 function getelementforces_g(model::Model, U::AbstractVector{<:Real}, ID::Int)
     # Find the element in the model:
@@ -117,6 +142,11 @@ function getelementforces_g(model::Model, U::AbstractVector{<:Real}, ID::Int)
     return elementforces_g
 end
 
+"""
+    getelementaxialload(model::Model, solution::AbstractSolutionCache, ID::Int)
+
+Extracts the interal axial load of an element of interest from the solution cache.
+"""
 function getelementaxialload(model::Model, solution::AbstractSolutionCache, ID::Int)
     # Extract the internal forces of the element:
     elementforces_l = getelementforces_l(model, solution, ID)
