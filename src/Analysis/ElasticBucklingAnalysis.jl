@@ -14,7 +14,7 @@ A type used to store the results of elastic buckling analysis.
 """
 struct ElasticBucklingAnalysisCache{
     ΛT <: Real,
-    ΦT <: Real} <: AbstractAnalysisCache
+    ΦT <: Real} <: AbstractSolutionCache
     Λ::AbstractVector{ΛT}
     Φ::AbstractMatrix{ΦT}
 end

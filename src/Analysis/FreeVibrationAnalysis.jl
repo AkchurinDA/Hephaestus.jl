@@ -14,7 +14,7 @@ A type used to store the results of free vibration analysis.
 """
 struct FreeVibrationAnalysisCache{
     ΩT <: Real,
-    ΦT <: Real} <: AbstractAnalysisCache
+    ΦT <: Real} <: AbstractSolutionCache
     Ω::AbstractVector{ΩT}
     Φ::AbstractMatrix{ΦT}
 end

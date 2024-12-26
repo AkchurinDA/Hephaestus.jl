@@ -25,21 +25,21 @@ struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real, ESMT<:Real, GSMT<:Real,
     "Element length, ``L``"
     L::Real
     "Subtransformation matrix, ``\\gamma``"
-    γ::Matrix{<:Real}
+    γ::AbstractMatrix{<:Real}
     "Transformation matrix, ``\\Gamma``"
-    Γ::Matrix{<:Real}
+    Γ::AbstractMatrix{<:Real}
     "Elastic stiffness matrix in the local coordinate system, ``k_{el}``"
-    k_e_l::Matrix{<:Real}
+    k_e_l::AbstractMatrix{<:Real}
     "Elastic stiffness matrix in the global coordinate system, ``k_{eg}``"
-    k_e_g::Matrix{ESMT}
+    k_e_g::AbstractMatrix{ESMT}
     "Geometric stiffness matrix in the local coordinate system, ``k_{gl}``"
-    k_g_l::Matrix{<:Real}
+    k_g_l::AbstractMatrix{<:Real}
     "Geometric stiffness matrix in the global coordinate system, ``k_{gg}``"
-    k_g_g::Matrix{GSMT}
+    k_g_g::AbstractMatrix{GSMT}
     "Mass matrix in the local coordinate system, ``m_{l}``"
-    m_l::Matrix{<:Real}
+    m_l::AbstractMatrix{<:Real}
     "Mass matrix in the global coordinate system, ``m_{g}``"
-    m_g::Matrix{MMT}
+    m_g::AbstractMatrix{MMT}
 
     function Element(ID, 
         node_i::Node{NIT}, node_j::Node{NJT},
@@ -254,7 +254,7 @@ end
     return m_l
 end
 
-@memoize function condense!(m::Matrix{<:Real}, releases_i::Vector{Bool}, releases_j::Vector{Bool})
+@memoize function condense!(m::AbstractMatrix{<:Real}, releases_i::Vector{Bool}, releases_j::Vector{Bool})
     # Condense the matrix if end releases are present:
     for i in 1:6
         # Node (i):
@@ -274,7 +274,7 @@ end
     return m
 end
 
-@memoize function transform(m::Matrix{<:Real}, Γ::Matrix{<:Real})
+@memoize function transform(m::AbstractMatrix{<:Real}, Γ::Matrix{<:Real})
     # Transform the matrix to the global coordinate system:
     M = Γ' * m * Γ
 

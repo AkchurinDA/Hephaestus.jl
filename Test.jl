@@ -2,8 +2,9 @@
 # http://www1.coe.neu.edu/~jfhajjar/home/Denavit%20and%20Hajjar%20-%20Geometric%20Nonlinearity%20in%20OpenSees%20-%20Report%20No.%20NEU-CEE-2013-02%202013.pdf
 
 using Hephaestus
-# using GLMakie
+using ReverseDiff
 
+function f(x)
 # Define an empty model:
 M = Model()
 
@@ -39,25 +40,18 @@ element!(M,  9,  9, 10, 1, 1)
 element!(M, 10, 10, 11, 1, 1)
 
 # Define the loads:
-distload!(M,  1, 0, -10, 0)
-distload!(M,  2, 0, -10, 0)
-distload!(M,  3, 0, -10, 0)
-distload!(M,  4, 0, -10, 0)
-distload!(M,  5, 0, -10, 0)
-distload!(M,  6, 0, -10, 0)
-distload!(M,  7, 0, -10, 0)
-distload!(M,  8, 0, -10, 0)
-distload!(M,  9, 0, -10, 0)
-distload!(M, 10, 0, -10, 0)
+distload!(M,  1, 0, -x[1], 0)
+distload!(M,  2, 0, -x[1], 0)
+distload!(M,  3, 0, -x[1], 0)
+distload!(M,  4, 0, -x[1], 0)
+distload!(M,  5, 0, -x[1], 0)
+distload!(M,  6, 0, -x[1], 0)
+distload!(M,  7, 0, -x[1], 0)
+distload!(M,  8, 0, -x[1], 0)
+distload!(M,  9, 0, -x[1], 0)
+distload!(M, 10, 0, -x[1], 0)
 
-U, R = solve(M, LinearElasticAnalysis())
+U = solve(M, LinearElasticAnalysis()).U
 
-begin
-    F = Figure()
-
-    A = Axis3(F[1, 1])
-
-    plotmodel!(A, M)
-
-    display(F)
+return Δ = extract_node_disp(M, U, 6)[2]
 end

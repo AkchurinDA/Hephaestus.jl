@@ -4,7 +4,7 @@ end
 
 struct NonlinearElasticAnalysisCache{
     UT <: Real,
-    RT <: Real} <: AbstractAnalysisCache
+    RT <: Real} <: AbstractSolutionCache
     U::AbstractVector{UT}
     R::AbstractVector{RT}
 end

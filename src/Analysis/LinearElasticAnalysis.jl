@@ -14,7 +14,7 @@ A type used to store the results of linear elastic analysis.
 """
 struct LinearElasticAnalysisCache{
     UT <: Real,
-    RT <: Real} <: AbstractAnalysisCache
+    RT <: Real} <: AbstractSolutionCache
     U::AbstractVector{UT}
     R::AbstractVector{RT}
 end

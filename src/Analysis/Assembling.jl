@@ -1,6 +1,6 @@
 function assemble_K_e(model::Model)
     # Initialize the global elastic stiffness matrix:
-    T = promote_type([get_k_e_g_T(element) for element in model.elements]...)
+    T   = promote_type([get_k_e_g_T(element) for element in model.elements]...)
     K_e = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global elastic stiffness matrix:
@@ -21,12 +21,12 @@ function assemble_K_e(model::Model)
     return K_e
 end
 
-function assemble_K_g(model::Model, P::Vector{PT}) where {PT <: Real}
+function assemble_K_g(model::Model, P::AbstractVector{PT}) where {PT <: Real}
     # Make sure the length of the vector of axial loads is equal to the number of elements:
     @assert length(P) == length(model.elements) "The length of the vector of axial loads is not equal to the number of elements. Something is wrong."
 
     # Initialize the global geometric stiffness matrix:
-    T = promote_type([get_k_e_g_T(element) for element in model.elements]..., PT)
+    T   = promote_type([get_k_e_g_T(element) for element in model.elements]..., PT)
     K_g = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global geometric stiffness matrix:
@@ -102,8 +102,8 @@ function assemble_F_dist(model::Model)
         F_dist = zeros(6 * length(model.nodes))
     else
         # Initialize the global load vector due to distributed loads:
-        T = promote_type([get_distload_T(distload) for distload in model.distloads]...)
-        F_dist = zeros(Real, 6 * length(model.nodes))
+        T      = promote_type([get_distload_T(distload) for distload in model.distloads]...)
+        F_dist = zeros(T, 6 * length(model.nodes))
 
         for distload in model.distloads
             # Extract the fixed-end force vector in the global coordinate system:

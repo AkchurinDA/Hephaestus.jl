@@ -63,7 +63,7 @@ struct DistributedLoad{T<:Real}
 
     function DistributedLoad(ID::Int, 
         w_x::T1, w_y::T2, w_z::T3,
-        p_l::Vector{T4}, p_g::Vector{T5}) where {
+        p_l::AbstractVector{T4}, p_g::AbstractVector{T5}) where {
         T1<:Real,
         T2<:Real,
         T3<:Real,
