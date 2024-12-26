@@ -2,26 +2,26 @@
 # http://www1.coe.neu.edu/~jfhajjar/home/Denavit%20and%20Hajjar%20-%20Geometric%20Nonlinearity%20in%20OpenSees%20-%20Report%20No.%20NEU-CEE-2013-02%202013.pdf
 
 using Hephaestus
-using GLMakie
+# using GLMakie
 
 # Define an empty model:
 M = Model()
 
 # Define the nodes and DOF supports:
-node!(M,  1,   0, 0, 0, u_x = true, u_y = true, u_z = true, θ_x = true, θ_y = true, θ_z = true)
-node!(M,  2,  18, 0, 0, u_z = true, θ_x = true, θ_y = true)
-node!(M,  3,  36, 0, 0, u_z = true, θ_x = true, θ_y = true)
-node!(M,  4,  54, 0, 0, u_z = true, θ_x = true, θ_y = true)
-node!(M,  5,  72, 0, 0, u_z = true, θ_x = true, θ_y = true)
-node!(M,  6,  90, 0, 0, u_z = true, θ_x = true, θ_y = true)
-node!(M,  7, 108, 0, 0, u_z = true, θ_x = true, θ_y = true)
-node!(M,  8, 126, 0, 0, u_z = true, θ_x = true, θ_y = true)
-node!(M,  9, 144, 0, 0, u_z = true, θ_x = true, θ_y = true)
-node!(M, 10, 162, 0, 0, u_z = true, θ_x = true, θ_y = true)
-node!(M, 11, 180, 0, 0, u_z = true, θ_x = true, θ_y = true)
+node!(M,  1,   0, 0, 0, u_x = true, u_y = true, u_z = true, θ_x = true, θ_y = true)
+node!(M,  2,  12, 0, 0, u_z = true, θ_x = true, θ_y = true)
+node!(M,  3,  24, 0, 0, u_z = true, θ_x = true, θ_y = true)
+node!(M,  4,  36, 0, 0, u_z = true, θ_x = true, θ_y = true)
+node!(M,  5,  48, 0, 0, u_z = true, θ_x = true, θ_y = true)
+node!(M,  6,  60, 0, 0, u_z = true, θ_x = true, θ_y = true)
+node!(M,  7,  72, 0, 0, u_z = true, θ_x = true, θ_y = true)
+node!(M,  8,  84, 0, 0, u_z = true, θ_x = true, θ_y = true)
+node!(M,  9,  96, 0, 0, u_z = true, θ_x = true, θ_y = true)
+node!(M, 10, 108, 0, 0, u_z = true, θ_x = true, θ_y = true)
+node!(M, 11, 120, 0, 0, u_y = true, u_z = true, θ_x = true, θ_y = true)
 
 # Define the sections:
-section!(M, 1, 9.12, 110, 37.1, 0)
+section!(M, 1, 10, 100, 100, 5)
 
 # Define the materials:
 material!(M, 1, 29000, 0.3, 0)
@@ -39,9 +39,18 @@ element!(M,  9,  9, 10, 1, 1)
 element!(M, 10, 10, 11, 1, 1)
 
 # Define the loads:
-P = 50
-H = 1
-concload!(M, 11, -P, -H, 0, 0, 0, 0)
+distload!(M,  1, 0, -10, 0)
+distload!(M,  2, 0, -10, 0)
+distload!(M,  3, 0, -10, 0)
+distload!(M,  4, 0, -10, 0)
+distload!(M,  5, 0, -10, 0)
+distload!(M,  6, 0, -10, 0)
+distload!(M,  7, 0, -10, 0)
+distload!(M,  8, 0, -10, 0)
+distload!(M,  9, 0, -10, 0)
+distload!(M, 10, 0, -10, 0)
+
+U, R = solve(M, LinearElasticAnalysis())
 
 begin
     F = Figure()

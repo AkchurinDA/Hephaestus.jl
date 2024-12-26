@@ -157,20 +157,47 @@ end
 Applies a distributed load to an element with a specified ID.
 """
 function distload!(model::Model, ID::Int, 
-    w_x::Real, w_y::Real, w_z::Real; 
-    cs::Symbol = :local)
+    w_x::Real, w_y::Real, w_z::Real)
     # Check if the loads are zero:
     @assert w_x != 0 || w_y != 0 || w_z != 0 "All loads are zero. Aborting."
 
     # Check that the element exists in the model:
-    @assert ID ∈ getfield.(model.elements, :ID) "Element with ID $(element) does not exist in the model."
+    @assert ID ∈ getfield.(model.elements, :ID) "Element with ID $(ID) does not exist in the model."
 
-    # Check that a valid coordinate system is provided:
-    @assert cs in [:local, :global] "Invalid coordinate system provided. Must be either `:local` or `:global`."
+    # Check if distributed loads are already applied to the element:
+    @assert ID ∉ getfield.(model.distloads, :ID) "Distributed loads are already applied to the element."
+
+    # Find the element to which the distributed load is applied:
+    element = model.elements[findfirst(x -> x.ID == ID, model.elements)]
+
+    # Extract the element length:
+    L = element.L
+
+    # Extract the transformation matrix of the element:
+    Γ = element.Γ
+
+    # Compute the fixed-end force vector in the local coordinate system:
+    p_l = [
+        -w_x * L / 2     ; # F_x_i
+        -w_y * L / 2     ; # F_y_i
+        -w_z * L / 2     ; # F_z_i
+        0                ; # M_x_i
+        -w_z * L ^ 2 / 12; # M_y_i
+        -w_y * L ^ 2 / 12; # M_z_i
+        +w_x * L / 2     ; # F_x_j
+        -w_y * L / 2     ; # F_y_j
+        -w_z * L / 2     ; # F_z_j
+        0                ; # M_x_j
+        +w_z * L ^ 2 / 12; # M_y_j
+        +w_y * L ^ 2 / 12] # M_z_j
+
+    # Convert the fixed-end force vector to the global coordinate system:
+    p_g = Γ * p_l
 
     # Add the distributed load to the model:
-    push!(model.distloads, DistributedLoad(ID, w_x, w_y, w_z, cs))
+    push!(model.distloads, DistributedLoad(ID, w_x, w_y, w_z, p_l, p_g))
 
     # Return the updated model:
     return model
 end
+

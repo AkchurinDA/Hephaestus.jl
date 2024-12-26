@@ -5,7 +5,7 @@ A type representing an element in the finite element model.
 
 $(FIELDS)
 """
-struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real}
+struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real, ESMT<:Real, GSMT<:Real, MMT<:Real}
     "Identification tag"
     ID::Int
     "Node (``i``)"
@@ -18,13 +18,28 @@ struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real}
     material::Material{MT}
     "Orientation angle, ``\\omega``"
     ω::Real
+    "End releases at node (``i``)"
     releases_i::Vector{Bool}
+    "End releases at node (``j``)"
     releases_j::Vector{Bool}
+    "Element length, ``L``"
     L::Real
+    "Subtransformation matrix, ``\\gamma``"
+    γ::Matrix{<:Real}
+    "Transformation matrix, ``\\Gamma``"
     Γ::Matrix{<:Real}
+    "Elastic stiffness matrix in the local coordinate system, ``k_{el}``"
     k_e_l::Matrix{<:Real}
+    "Elastic stiffness matrix in the global coordinate system, ``k_{eg}``"
+    k_e_g::Matrix{ESMT}
+    "Geometric stiffness matrix in the local coordinate system, ``k_{gl}``"
     k_g_l::Matrix{<:Real}
+    "Geometric stiffness matrix in the global coordinate system, ``k_{gg}``"
+    k_g_g::Matrix{GSMT}
+    "Mass matrix in the local coordinate system, ``m_{l}``"
     m_l::Matrix{<:Real}
+    "Mass matrix in the global coordinate system, ``m_{g}``"
+    m_g::Matrix{MMT}
 
     function Element(ID, 
         node_i::Node{NIT}, node_j::Node{NJT},
@@ -78,26 +93,33 @@ struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real}
         # Compute the element elastic stiffness matrix in the local coordinate system:
         k_e_l = compute_k_e_l(E, ν, A, I_zz, I_yy, J, L)
         condense!(k_e_l, releases_i, releases_j)
+        k_e_g = transform(k_e_l, Γ)
 
         # Compute the element geometric stiffness matrix in the local coordinate system:
         k_g_l = compute_k_g_l(A, J, L)
         condense!(k_g_l, releases_i, releases_j)
+        k_g_g = transform(k_g_l, Γ)
 
         # Compute the element mass matrix in the local coordinate system:
         m_l = compute_m_l(ρ, A, J, L)
         condense!(m_l, releases_i, releases_j)
+        m_g = transform(m_l, Γ)
 
         # Return the element:
-        return new{NIT, NJT, ST, MT}(ID, node_i, node_j, section, material, ω, releases_i, releases_j, L, Γ, k_e_l, k_g_l, m_l)
+        return new{NIT, NJT, ST, MT, eltype(k_e_g), eltype(k_g_g), eltype(m_g)}(ID, node_i, node_j, section, material, ω, releases_i, releases_j, L, γ, Γ, k_e_l, k_e_g, k_g_l, k_g_g, m_l, m_g)
     end
 end
 
 @memoize function compute_k_e_l(
-    E::Real, ν::Real, 
-    A::Real, I_zz::Real, I_yy::Real, J::Real, 
-    L::Real)
+    E::MT, ν::MT, 
+    A::ST, I_zz::ST, I_yy::ST, J::ST, 
+    L::LT) where {
+        MT <: Real, 
+        ST <: Real, 
+        LT <: Real}
     # Initialize the element elastic stiffness matrix:
-    k_e_l = zeros(Real, 12, 12)
+    T     = promote_type(MT, ST, LT)
+    k_e_l = zeros(T, 12, 12)
 
     # Compute the shear modulus:
     G = E / (2 * (1 + ν))
@@ -139,10 +161,13 @@ end
 end
 
 @memoize function compute_k_g_l(
-    A::Real, J::Real,
-    L::Real)
+    A::ST, J::ST,
+    L::LT) where {
+        ST <: Real, 
+        LT <: Real}
     # Initialize the element geometric stiffness matrix:
-    k_g_l = zeros(Real, 12, 12)
+    T = promote_type(ST, LT)
+    k_g_l = zeros(T, 12, 12)
 
     # Compute the element geometric stiffness matrix:
     @inbounds k_g_l[ 1,  1] = +1 / L
@@ -181,11 +206,15 @@ end
 end
 
 @memoize function compute_m_l(
-    ρ::Real, 
-    A::Real, J::Real, 
-    L::Real)
+    ρ::MT, 
+    A::ST, J::ST, 
+    L::LT) where {
+        MT <: Real, 
+        ST <: Real, 
+        LT <: Real}
     # Initialize the element mass matrix:
-    m_l = zeros(Real, 12, 12)
+    T = promote_type(MT, ST, LT)
+    m_l = zeros(T, 12, 12)
 
     # Compute the element mass matrix:
     @inbounds m_l[1 , 1 ] = +140
@@ -244,3 +273,18 @@ end
     # Return the condensed matrix:
     return m
 end
+
+@memoize function transform(m::Matrix{<:Real}, Γ::Matrix{<:Real})
+    # Transform the matrix to the global coordinate system:
+    M = Γ' * m * Γ
+
+    # Return the transformed matrix:
+    return M
+end
+
+get_k_e_g_T(::Element{NIT, NJT, ST, MT, ESMT, GSMT, MMT}) where {
+    NIT, NJT, ST, MT, ESMT, GSMT, MMT} = ESMT
+get_k_g_g_T(::Element{NIT, NJT, ST, MT, ESMT, GSMT, MMT}) where {
+    NIT, NJT, ST, MT, ESMT, GSMT, MMT} = GSMT
+get_m_g_T(::Element{NIT, NJT, ST, MT, ESMT, GSMT, MMT}) where {
+    NIT, NJT, ST, MT, ESMT, GSMT, MMT} = MMT
