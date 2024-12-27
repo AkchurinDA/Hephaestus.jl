@@ -147,7 +147,7 @@ function assemble_F_dist(model::Model)
 
         for distload in model.distloads
             # Extract the fixed-end force vector in the global coordinate system:
-            p_g = distload.p_g
+            p = distload.p
 
             # Find the element to which the distributed load is applied:
             element = model.elements[findfirst(x -> x.ID == distload.ID, model.elements)]
@@ -155,18 +155,18 @@ function assemble_F_dist(model::Model)
             # Assemble the fixed-end force vector into the global load vector:
             index_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)
             index_j = findfirst(x -> x.ID == element.node_j.ID, model.nodes)
-            @inbounds F_dist[6 * index_i - 5] += p_g[ 1]
-            @inbounds F_dist[6 * index_i - 4] += p_g[ 2]
-            @inbounds F_dist[6 * index_i - 3] += p_g[ 3]
-            @inbounds F_dist[6 * index_i - 2] += p_g[ 4]
-            @inbounds F_dist[6 * index_i - 1] += p_g[ 5]
-            @inbounds F_dist[6 * index_i    ] += p_g[ 6]
-            @inbounds F_dist[6 * index_j - 5] += p_g[ 7]
-            @inbounds F_dist[6 * index_j - 4] += p_g[ 8]
-            @inbounds F_dist[6 * index_j - 3] += p_g[ 9]
-            @inbounds F_dist[6 * index_j - 2] += p_g[10]
-            @inbounds F_dist[6 * index_j - 1] += p_g[11]
-            @inbounds F_dist[6 * index_j    ] += p_g[12]
+            @inbounds F_dist[6 * index_i - 5] += p[ 1]
+            @inbounds F_dist[6 * index_i - 4] += p[ 2]
+            @inbounds F_dist[6 * index_i - 3] += p[ 3]
+            @inbounds F_dist[6 * index_i - 2] += p[ 4]
+            @inbounds F_dist[6 * index_i - 1] += p[ 5]
+            @inbounds F_dist[6 * index_i    ] += p[ 6]
+            @inbounds F_dist[6 * index_j - 5] += p[ 7]
+            @inbounds F_dist[6 * index_j - 4] += p[ 8]
+            @inbounds F_dist[6 * index_j - 3] += p[ 9]
+            @inbounds F_dist[6 * index_j - 2] += p[10]
+            @inbounds F_dist[6 * index_j - 1] += p[11]
+            @inbounds F_dist[6 * index_j    ] += p[12]
         end
     end
 

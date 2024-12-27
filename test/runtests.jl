@@ -52,10 +52,14 @@ using DifferentiationInterface, ForwardDiff, ReverseDiff
     @test_throws AssertionError distload!(model, 2, 0, -1, 0) # Invalid element
 end
 
-@testset "Denavit and Hajjar (2013).jl" begin
+@testset "Denavit and Hajjar (2013)" begin
     include("Denavit and Hajjar (2013).jl")
 end
 
-@testset "Ziemian and Ziemian (2021).jl" begin
+@testset "Ziemian and Ziemian (2021)" begin
     include("Ziemian and Ziemian (2021).jl")
+end
+
+@testset "Automatic differentiation" begin
+    include("AutomaticDifferentiation.jl")
 end

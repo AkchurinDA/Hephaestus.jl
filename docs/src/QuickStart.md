@@ -74,7 +74,6 @@ distload!(model,  9, 0, -1, 0)
 distload!(model, 10, 0, -1, 0)
 ```
 
-## Performing analysis
-
 ## Plotting model and solution
 
+## Generating reports

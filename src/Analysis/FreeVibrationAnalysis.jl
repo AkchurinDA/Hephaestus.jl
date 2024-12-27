@@ -17,7 +17,6 @@ struct FreeVibrationAnalysisCache{
     ΦT <: Real} <: AbstractSolutionCache
     Ω::AbstractVector{ΩT}
     Φ::AbstractMatrix{ΦT}
-    planar::Bool
 end
 
 function solve(model::Model, analysistype::FreeVibrationAnalysis, partitionindices::Vector{Bool})

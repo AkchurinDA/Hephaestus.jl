@@ -56,24 +56,21 @@ struct DistributedLoad{T<:Real}
     w_y::T
     "Distributed load in the local/global ``z``-direction"
     w_z::T
-    "Fixed-end force vector in the local coordinate system"
-    p_l::Vector{T}
     "Fixed-end force vector in the global coordinate system"
-    p_g::Vector{T}
+    p::Vector{T}
 
     function DistributedLoad(ID::Int, 
         w_x::T1, w_y::T2, w_z::T3,
-        p_l::AbstractVector{T4}, p_g::AbstractVector{T5}) where {
+        p::AbstractVector{T4}) where {
         T1<:Real,
         T2<:Real,
         T3<:Real,
-        T4<:Real,
-        T5<:Real}
+        T4<:Real}
         # Promote the types:
-        T = float(promote_type(T1, T2, T3, T4, T5))
+        T = float(promote_type(T1, T2, T3, T4))
         
         # Construct a new instance:
-        return new{T}(ID, w_x, w_y, w_z, p_l, p_g)
+        return new{T}(ID, w_x, w_y, w_z, p)
     end
 end
 

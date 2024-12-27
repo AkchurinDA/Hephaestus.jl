@@ -181,7 +181,7 @@ function distload!(model::Model, ID::Int,
     Γ = element.Γ
 
     # Compute the fixed-end force vector in the local coordinate system:
-    p_l = [
+    p = [
         -w_x * L / 2     ; # F_x_i
         -w_y * L / 2     ; # F_y_i
         -w_z * L / 2     ; # F_z_i
@@ -196,10 +196,10 @@ function distload!(model::Model, ID::Int,
         +w_y * L ^ 2 / 12] # M_z_j
 
     # Convert the fixed-end force vector to the global coordinate system:
-    p_g = Γ * p_l
+    p = Γ * p
 
     # Add the distributed load to the model:
-    push!(model.distloads, DistributedLoad(ID, w_x, w_y, w_z, p_l, p_g))
+    push!(model.distloads, DistributedLoad(ID, w_x, w_y, w_z, p))
 
     # Return the updated model:
     return model

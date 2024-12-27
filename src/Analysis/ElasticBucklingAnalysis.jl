@@ -17,7 +17,6 @@ struct ElasticBucklingAnalysisCache{
     ΦT <: Real} <: AbstractSolutionCache
     Λ::AbstractVector{ΛT}
     Φ::AbstractMatrix{ΦT}
-    planar::Bool
 end
 
 function solve(model::Model, ::ElasticBucklingAnalysis, partitionindices::Vector{Bool})
