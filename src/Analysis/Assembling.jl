@@ -1,10 +1,10 @@
-function getpartitionindices(model::Model, planar::Bool)
+function getpartitionindices(model::Model)
     # Initialize the partition indices:
     partitionindices = fill(false, 6 * length(model.nodes))
 
     # Assemble the partition indices:
-    for (i, node) in enumerate(model.nodes)
-        if planar
+    if model.dimentionality == 2
+        for (i, node) in enumerate(model.nodes)
             # Extract the free DOFs of the node:
             u_x, u_y = node.u_x, node.u_y
             θ_z      = node.θ_z
@@ -16,7 +16,9 @@ function getpartitionindices(model::Model, planar::Bool)
             partitionindices[6 * i - 2] = false
             partitionindices[6 * i - 1] = false
             partitionindices[6 * i    ] = !θ_z
-        else
+        end
+    elseif model.dimentionality == 3
+        for (i, node) in enumerate(model.nodes)
             # Extract the free DOFs of the node:
             u_x, u_y, u_z = node.u_x, node.u_y, node.u_z
             θ_x, θ_y, θ_z = node.θ_x, node.θ_y, node.θ_z

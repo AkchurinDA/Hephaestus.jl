@@ -38,7 +38,13 @@ Makie.@recipe(PlotModel, Model) do scene
 end
 
 # Define the preferred axis type for the model plot:
-Makie.preferred_axis_type(::PlotModel) = Makie.Axis3
+function Makie.preferred_axis_type(P::PlotModel)
+    if P[:Model][].dimentionality == 2
+        return Makie.Axis
+    elseif P[:Model][].dimentionality == 3
+        return Makie.Axis3
+    end
+end
 
 # Define the plotting function for the model:
 function Makie.plot!(P::PlotModel)

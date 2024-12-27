@@ -38,7 +38,7 @@
         concload!(model, 11, 0, -P, 0, 0, 0, 0)
 
         # Solve the model using a linear elastic analysis:
-        solution = solve(model, LinearElasticAnalysis(), true)
+        solution = solve(model, LinearElasticAnalysis())
 
         # Extract the vertical displacement of free end of the cantilever beam:
         Δ = -getnodaldisplacements(model, solution, 11)[2]
@@ -111,7 +111,7 @@ end
         end
 
         # Solve the model using a linear elastic analysis:
-        solution = solve(model, LinearElasticAnalysis(), true)
+        solution = solve(model, LinearElasticAnalysis())
 
         # Extract the vertical displacement of free end of the cantilever beam:
         Δ = -getnodaldisplacements(model, solution, 11)[2]

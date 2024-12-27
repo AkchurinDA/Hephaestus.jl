@@ -13,7 +13,7 @@ using Hephaestus
 To create a new model, use the [`Model()`](@ref) constructor:
 
 ```@example QuickStart
-model = Model()
+model = Model(dimentionality = 2)
 ```
 
 To add nodes to the model, use the [`node!()`](@ref) function:
@@ -75,5 +75,13 @@ distload!(model, 10, 0, -1, 0)
 ```
 
 ## Plotting model and solution
+
+```@example QuickStart
+using CairoMakie
+```
+
+```@example QuickStart
+plotmodel(model)
+```
 
 ## Generating reports

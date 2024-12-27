@@ -43,7 +43,7 @@
     concload!(model, 13, 0.0000e+00, -3.4849e+02, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00)
 
     # Solve the model using a linear elastic analysis:
-    solution = solve(model, LinearElasticAnalysis(), true)
+    solution = solve(model, LinearElasticAnalysis())
 
     # Check the nodal displacements:
     @test getnodaldisplacements(model, solution,  1) ≈ [0.0000e+00,  0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,  0.0000e+00] rtol = 1E-3
@@ -152,7 +152,7 @@ end
     concload!(model, 29, -2.3362e+00, -1.9697e+01, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00)
 
     # Solve the model using a linear elastic analysis:
-    solution = solve(model, LinearElasticAnalysis(), true)
+    solution = solve(model, LinearElasticAnalysis())
 
     # Check the nodal displacements:
     @test getnodaldisplacements(model, solution,  1) ≈ [ 0.0000e+00,  0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,  1.4588e-02] rtol = 1E-3

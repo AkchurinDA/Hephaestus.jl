@@ -50,7 +50,7 @@
     concload!(model, 16, -50, -1, 0, 0, 0, 0)
 
     # Solve the model using a linear elastic analysis:
-    solution = solve(model, LinearElasticAnalysis(), true)
+    solution = solve(model, LinearElasticAnalysis())
 
     # Extract the vertical displacement of free end of the cantilever beam:
     y_max = getnodaldisplacements(model, solution, 16)[2]
