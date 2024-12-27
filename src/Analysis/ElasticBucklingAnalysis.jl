@@ -23,9 +23,6 @@ function solve(model::Model, ::ElasticBucklingAnalysis, partitionindices::Vector
     # Perform the linear elastic analysis:
     solution = solve(model, LinearElasticAnalysis(), partitionindices)
 
-    # Extract the axial loads within each element:
-    # TODO
-
     # Extract the global elastic stiffness matrix and partition it:
     K_e = assemble_K_e(model)
     K_e_ff = K_e[partitionindices, partitionindices]

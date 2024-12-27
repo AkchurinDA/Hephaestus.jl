@@ -2,6 +2,7 @@ abstract type AbstractAnalysisType  end
 abstract type AbstractSolutionCache end
 
 include("Analysis/Assembling.jl")
+include("Analysis/NonlinearSolvers.jl")
 include("Analysis/LinearElasticAnalysis.jl")
 include("Analysis/NonlinearElasticAnalysis.jl")
 include("Analysis/ElasticBucklingAnalysis.jl")

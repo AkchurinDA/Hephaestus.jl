@@ -1,5 +1,5 @@
 struct NonlinearElasticAnalysis <: AbstractAnalysisType
-    
+    nonlinearsolver::AbstractNonlinearSolver
 end
 
 struct NonlinearElasticAnalysisCache{
@@ -10,5 +10,6 @@ struct NonlinearElasticAnalysisCache{
 end
 
 function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindices::Vector{Bool})
-    
+    # Extract the nonlinear solver:
+    nonlinearsolver = analysis.nonlinearsolver
 end
