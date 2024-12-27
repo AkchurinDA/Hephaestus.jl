@@ -22,7 +22,7 @@ export node!, section!, material!, element!, concload!, distload!
 export LinearElasticAnalysis, ElasticBucklingAnalysis, FreeVibrationAnalysis
 export LinearElasticAnalysisCache, ElasticBucklingAnalysisCache, FreeVibrationAnalysisCache
 export solve
-export getnodedisp
+export getnodedisp, getnodereactions
 export getelementdisp_l, getelementforces_l
 export getelementdisp_g, getelementforces_g
 export getelementaxialload

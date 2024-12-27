@@ -1,10 +1,3 @@
-# What is included in the report:
-# Header:
-# ─ Date and time of the report
-# ─ Name of the model
-# Body:
-# ─ Number of model entities
-
 """
     generatereport(model::Model; path = pwd(), reportname = "Report")
 

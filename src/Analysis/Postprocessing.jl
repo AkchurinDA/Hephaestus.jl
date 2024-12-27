@@ -38,6 +38,23 @@ function getnodedisp(model::Model, U::AbstractVector{<:Real}, ID::Int)
 end
 
 """
+    getnodereactions(model::Model, solution::AbstractSolutionCache, ID::Int)
+
+Extracts the reaction vector of a node of interest from the solution cache.
+"""
+getnodereactions(model::Model, solution::AbstractSolutionCache, ID::Int) = getnodereactions(model, solution.R, ID)
+function getnodereactions(model::Model, R::AbstractVector{<:Real}, ID::Int)
+    # Find the index of the node in the model:
+    index = findfirst(x -> x.ID == ID, model.nodes) 
+
+    # Extract the reaction vector of the node:
+    nodereactions = R[(6 * index - 5):(6 * index)]
+
+    # Return the reaction vector:
+    return nodereactions
+end
+
+"""
     getelementdisp_l(model::Model, solution::AbstractSolutionCache, ID::Int)
 
 Extracts the displacement vector of an element of interest in the local coordinate system from the solution cache.

@@ -8,7 +8,7 @@ Makie.@recipe(PlotModel, Model) do scene
     Makie.Attributes(
         # Nodes:
         nodevisible     = true,
-        nodecolor       = :red,
+        nodecolor       = :blue,
         nodemarker      = :circle,
         nodemarkersize  = 6,
         nodestrokecolor = :black,
@@ -16,8 +16,8 @@ Makie.@recipe(PlotModel, Model) do scene
 
         # Node labels:
         nodelabelvisible = true,
-        nodelabelalign   = (:center, :bottom),
-        nodelabelcolor   = :red,
+        nodelabelalign   = (:left, :bottom),
+        nodelabelcolor   = :blue,
 
         # Elements:
         elementvisible   = true,
@@ -27,8 +27,14 @@ Makie.@recipe(PlotModel, Model) do scene
         
         # Element labels:
         elementlabelvisible = true,
-        elementlabelalign   = (:center, :top),
-        elementlabelcolor   = :black)
+        elementlabelalign   = (:right, :top),
+        elementlabelcolor   = :black,
+
+        # Loads:
+        concloadsvisible = true,
+        concloadcolor    = :red,
+        distloadsvisible = true,
+        distloadcolor    = :red)
 end
 
 # Define the preferred axis type for the model plot:
@@ -40,8 +46,8 @@ function Makie.plot!(P::PlotModel)
     model = P[:Model]
 
     # Plot the elements:
-    if !isempty(model[].elements)
-        if P[:elementvisible][]
+    if P[:elementvisible][]
+        if !isempty(model[].elements)
             for element in values(model[].elements)
                 # Extract the coordinates of the element's nodes:
                 x_i, y_i, z_i = element.node_i.x, element.node_i.y, element.node_i.z
@@ -72,8 +78,8 @@ function Makie.plot!(P::PlotModel)
     end
 
     # Plot the nodes:
-    if !isempty(model[].nodes)
-        if P[:nodevisible][]
+    if P[:nodevisible][]
+        if !isempty(model[].nodes)
             for node in values(model[].nodes)
                 # Extract the coordinates of the node:
                 x, y, z = node.x, node.y, node.z
@@ -97,6 +103,24 @@ function Makie.plot!(P::PlotModel)
         end
     else
         @warn "The model has no nodes to plot."
+    end
+
+    # Plot the concentrated loads:
+    if P[:concloadsvisible][]
+        if !isempty(model[].concloads)
+
+        end
+    else
+        @warn "The model has no concentrated loads to plot."
+    end
+
+    # Plot the distributed loads:
+    if P[:distloadsvisible][]
+        if !isempty(model[].distloads)
+
+        end
+    else
+        @warn "The model has no distributed loads to plot."
     end
 
     # Return the updated model plot:

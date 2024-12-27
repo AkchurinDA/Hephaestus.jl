@@ -71,7 +71,7 @@ struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real, ESMT<:Real, GSMT<:Real,
         L = sqrt(Δx ^ 2 + Δy ^ 2 + Δz ^ 2)
 
         # Compute the element orientation angles:
-        β = -atan(Δz / Δx) # Conventionally, this angle is called "ρ", but had to rename it to avoid conflicts with the "ρ" symbol used for the material's density
+        β = -atan(Δz, Δx) # Conventionally, this angle is called "ρ", but had to rename it to avoid conflicts with the "ρ" symbol used for the material's density
         χ = π / 2 - acos(Δy / L)
 
         # Compute the element subtransformation matrix:
