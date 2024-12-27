@@ -23,10 +23,10 @@ $(FIELDS)
 end
 
 """
-    node!(model, ID, 
-        x, y, z;
-        u_x = false, u_y = false, u_z = false,
-        θ_x = false, θ_y = false, θ_z = false)
+    node!(model::Model, ID::Int, 
+        x::Real, y::Real, z::Real;
+        u_x::Bool = false, u_y::Bool = false, u_z::Bool = false,
+        θ_x::Bool = false, θ_y::Bool = false, θ_z::Bool = false)
 
 Add a node to a finite element model.
 """
@@ -45,12 +45,13 @@ function node!(model::Model, ID::Int,
 end
 
 """
-    section!(model, ID, 
-        A, I_zz, I_yy, J)
+    section!(model::Model, ID::Int, 
+        A::Real, I_zz::Real, I_yy::Real, J::Real)
 
 Add a section to a finite element model.
 """
-function section!(model::Model, ID::Int, A::Real, I_zz::Real, I_yy::Real, J::Real)
+function section!(model::Model, ID::Int, 
+    A::Real, I_zz::Real, I_yy::Real, J::Real)
     # Check if the section already exists in the model:
     @assert ID ∉ getfield.(model.sections, :ID) "Section already exists in the model."
 
@@ -62,12 +63,13 @@ function section!(model::Model, ID::Int, A::Real, I_zz::Real, I_yy::Real, J::Rea
 end
 
 """
-    material!(model, ID, 
-        E, ν, ρ)
+    material!(model::Model, ID::Int, 
+        E::Real, ν::Real, ρ::Real)
 
 Add a material to a finite element model.
 """
-function material!(model::Model, ID::Int, E::Real, ν::Real, ρ::Real)
+function material!(model::Model, ID::Int, 
+    E::Real, ν::Real, ρ::Real)
     # Check if the material already exists in the model:
     @assert ID ∉ getfield.(model.materials, :ID) "Material already exists in the model."
 
@@ -79,13 +81,13 @@ function material!(model::Model, ID::Int, E::Real, ν::Real, ρ::Real)
 end
 
 """
-    element!(model, ID, 
-        node_i_ID, node_j_ID, 
-        section_ID, 
-        material_ID; 
-        ω = 0,
-        releases_i = [false, false, false, false, false, false],
-        releases_j = [false, false, false, false, false, false])
+    element!(model::Model, ID::Int, 
+        node_i_ID::Int, node_j_ID::Int, 
+        section_ID::Int, 
+        material_ID::Int; 
+        ω::Real = 0,
+        releases_i::Vector{<:Bool} = [false, false, false, false, false, false],
+        releases_j::Vector{<:Bool} = [false, false, false, false, false, false])
 
 Add an element to a finite element model.
 """
@@ -127,20 +129,23 @@ function element!(model::Model, ID::Int,
 end
 
 """
-    concload!(model, ID, 
-        F_x, F_y, F_z, 
-        M_x, M_y, M_z)
+    concload!(model::Model, ID::Int, 
+        F_x::Real, F_y::Real, F_z::Real, 
+        M_x::Real, M_y::Real, M_z::Real)
 
 Applies a concentrated load to a node with a specified ID.
 """
 function concload!(model::Model, ID::Int, 
     F_x::Real, F_y::Real, F_z::Real, 
     M_x::Real, M_y::Real, M_z::Real)
-    # Check if the loads are zero:
-    @assert F_x != 0 || F_y != 0 || F_z != 0 || M_x != 0 || M_y != 0 || M_z != 0 "All loads are zero. Aborting."
-
     # Check that the node exists in the model:
     @assert ID ∈ getfield.(model.nodes, :ID) "Node with ID $(ID) does not exist in the model."
+
+    # Check if concentrated loads are already applied to the node:
+    @assert ID ∉ getfield.(model.concloads, :ID) "Concentrated loads are already applied to the node."
+
+    # Check if the loads are zero:
+    @assert F_x != 0 || F_y != 0 || F_z != 0 || M_x != 0 || M_y != 0 || M_z != 0 "All loads are zero. Aborting."
 
     # Add the concentrated load to the model:
     push!(model.concloads, ConcentratedLoad(ID, F_x, F_y, F_z, M_x, M_y, M_z))
@@ -150,9 +155,8 @@ function concload!(model::Model, ID::Int,
 end
 
 """
-    distload!(model, ID, 
-        w_x, w_y, w_z; 
-        cs = :local)
+    distload!(model::Model, ID::Int, 
+        w_x::Real, w_y::Real, w_z::Real)
 
 Applies a distributed load to an element with a specified ID.
 """

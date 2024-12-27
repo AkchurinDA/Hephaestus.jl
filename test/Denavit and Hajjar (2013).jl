@@ -53,10 +53,10 @@
     solution = solve(model, LinearElasticAnalysis(), true)
 
     # Extract the vertical displacement of free end of the cantilever beam:
-    y_max = getnodedisp(model, solution, 16)[2]
+    y_max = getnodaldisplacements(model, solution, 16)[2]
 
     # Extract the nodal reactions at the fixed end of the cantilever beam:
-    M_max = getnodereactions(model, solution, 1)[6]
+    M_max = getnodalreactions(model, solution, 1)[6]
 
     # Check the result:
     @test y_max ≈ -0.609 rtol = 1E-3

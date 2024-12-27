@@ -17,6 +17,7 @@ struct ElasticBucklingAnalysisCache{
     ΦT <: Real} <: AbstractSolutionCache
     Λ::AbstractVector{ΛT}
     Φ::AbstractMatrix{ΦT}
+    planar::Bool
 end
 
 function solve(model::Model, ::ElasticBucklingAnalysis, partitionindices::Vector{Bool})
@@ -31,8 +32,7 @@ function solve(model::Model, ::ElasticBucklingAnalysis, partitionindices::Vector
     K_e_ff = K_e[partitionindices, partitionindices]
 
     # Extract the element axial loads and partition them:
-    P = [getelementaxialload(model, solution, element.ID) for element in model.elements]
-    @show P
+    P = [getelementforces(model, solution, element.ID)[7] for element in model.elements]
 
     # Assemble the global geometric stiffness matrix and partition it:
     K_g = assemble_K_g(model, P)

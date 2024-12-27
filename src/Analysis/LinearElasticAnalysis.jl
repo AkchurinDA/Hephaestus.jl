@@ -17,6 +17,7 @@ struct LinearElasticAnalysisCache{
     RT <: Real} <: AbstractSolutionCache
     U::AbstractVector{UT}
     R::AbstractVector{RT}
+    planar::Bool
 end
 
 function solve(model::Model, analysis::LinearElasticAnalysis, partitionindices::Vector{Bool})

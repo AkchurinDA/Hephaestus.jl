@@ -36,11 +36,10 @@ distload!
 
 ```@docs
 solve
-getnodedisp
-getelementdisp_l
-getelementdisp_g
-getelementforces_l
-getelementforces_g
+getnodaldisplacements
+getnodalreactions
+getelementdisplacements
+getelementforces
 ```
 
 ## Functions Used to Plot a Model and the Results of Analyses of Different Types

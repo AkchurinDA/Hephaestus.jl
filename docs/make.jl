@@ -7,8 +7,9 @@ makedocs(
     sitename = "Hephaestus.jl",
     authors  = "Damir Akchurin",
     pages    = [
-        "Home" => "index.md",
-        "API"  => "API.md"])
+        "Home"        => "index.md",
+        "Quick Start" => "QuickStart.md",
+        "API"         => "API.md"])
 
 deploydocs(
     repo = "github.com/AkchurinDA/Hephaestus.jl")
