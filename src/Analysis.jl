@@ -13,9 +13,9 @@ include("Analysis/Postprocessing.jl")
 
 Solve the model using the specified analysis type.
 """
-function solve(model::Model, analysistype::AbstractAnalysisType)
+function solve(model::Model, analysistype::AbstractAnalysisType, planar::Bool)
     # Extract the partition indices:
-    partitionindices = getpartitionindices(model)
+    partitionindices = getpartitionindices(model, planar)
 
     # Solve the model using the specified analysis type:
     solution = solve(model, analysistype, partitionindices)

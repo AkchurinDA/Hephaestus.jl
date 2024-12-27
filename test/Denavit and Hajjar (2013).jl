@@ -6,22 +6,22 @@
     model = Model()
 
     # Define the nodes and DOF supports:
-    node!(model,  1,   0, 0, 0, u_x = true, u_y = true, u_z = true, θ_x = true, θ_y = true, θ_z = true)
-    node!(model,  2,  12, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model,  3,  24, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model,  4,  36, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model,  5,  48, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model,  6,  60, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model,  7,  72, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model,  8,  84, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model,  9,  96, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model, 10, 108, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model, 11, 120, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model, 12, 132, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model, 13, 144, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model, 14, 156, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model, 15, 168, 0, 0, u_z = true, θ_x = true, θ_y = true)
-    node!(model, 16, 180, 0, 0, u_z = true, θ_x = true, θ_y = true)
+    node!(model,  1,   0, 0, 0, u_x = true, u_y = true, θ_z = true)
+    node!(model,  2,  12, 0, 0)
+    node!(model,  3,  24, 0, 0)
+    node!(model,  4,  36, 0, 0)
+    node!(model,  5,  48, 0, 0)
+    node!(model,  6,  60, 0, 0)
+    node!(model,  7,  72, 0, 0)
+    node!(model,  8,  84, 0, 0)
+    node!(model,  9,  96, 0, 0)
+    node!(model, 10, 108, 0, 0)
+    node!(model, 11, 120, 0, 0)
+    node!(model, 12, 132, 0, 0)
+    node!(model, 13, 144, 0, 0)
+    node!(model, 14, 156, 0, 0)
+    node!(model, 15, 168, 0, 0)
+    node!(model, 16, 180, 0, 0)
 
     # Define the sections:
     section!(model, 1, 9.12, 110, 37.1, 0)
@@ -50,7 +50,7 @@
     concload!(model, 16, -50, -1, 0, 0, 0, 0)
 
     # Solve the model using a linear elastic analysis:
-    solution = solve(model, LinearElasticAnalysis())
+    solution = solve(model, LinearElasticAnalysis(), true)
 
     # Extract the vertical displacement of free end of the cantilever beam:
     y_max = getnodedisp(model, solution, 16)[2]

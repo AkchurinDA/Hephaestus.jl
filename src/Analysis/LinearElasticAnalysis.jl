@@ -20,9 +20,6 @@ struct LinearElasticAnalysisCache{
 end
 
 function solve(model::Model, analysis::LinearElasticAnalysis, partitionindices::Vector{Bool})
-    # Extract the partition indices:
-    indices_f, indices_s = getpartitionindices(model)
-
     # Assemble the global geometric stiffness matrix:
     K_e = assemble_K_e(model)
     K_e_ff = K_e[  partitionindices, partitionindices]

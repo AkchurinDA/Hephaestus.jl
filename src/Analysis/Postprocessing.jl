@@ -1,25 +1,3 @@
-function getpartitionindices(model::Model)
-    # Initialize the partition indices:
-    partitionindices = fill(false, 6 * length(model.nodes))
-
-    # Assemble the partition indices:
-    for (i, node) in enumerate(model.nodes)
-        u_x, u_y, u_z = node.u_x, node.u_y, node.u_z
-        θ_x, θ_y, θ_z = node.θ_x, node.θ_y, node.θ_z
-
-        # Assemble the partition indices for the free DOFs:
-        partitionindices[6 * i - 5] = !u_x
-        partitionindices[6 * i - 4] = !u_y
-        partitionindices[6 * i - 3] = !u_z
-        partitionindices[6 * i - 2] = !θ_x
-        partitionindices[6 * i - 1] = !θ_y
-        partitionindices[6 * i    ] = !θ_z
-    end
-
-    # Return the partition indices:
-    return partitionindices
-end
-
 """
     getnodedisp(model::Model, solution::AbstractSolutionCache, ID::Int)
 
