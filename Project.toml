@@ -23,7 +23,7 @@ DocStringExtensions = "0.9.3"
 LinearAlgebra = "1.11.0"
 Memoization = "0.2.2"
 Printf = "1.11.0"
-StyledStrings = "1.11.0"
+StyledStrings = "1.11.0, 1"
 
 [extras]
 DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
