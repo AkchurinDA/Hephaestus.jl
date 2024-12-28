@@ -6,10 +6,9 @@ A type representing the finite element model of a structure of interest.
 $(FIELDS)
 """
 @kwdef struct Model
-    "Name of the model"
-    name::String = "Model"
     "Dimensionality of the model"
-    dimentionality::Int = 2
+    dimensionality::Int = 2
+    
     "Nodes of the model"
     nodes::Vector{Node} = Vector{Node}()
     "Sections of the model"

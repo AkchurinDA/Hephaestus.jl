@@ -3,7 +3,7 @@ function getpartitionindices(model::Model)
     partitionindices = fill(false, 6 * length(model.nodes))
 
     # Assemble the partition indices:
-    if model.dimentionality == 2
+    if model.dimensionality == 2
         for (i, node) in enumerate(model.nodes)
             # Extract the free DOFs of the node:
             u_x, u_y = node.u_x, node.u_y
@@ -17,7 +17,7 @@ function getpartitionindices(model::Model)
             partitionindices[6 * i - 1] = false
             partitionindices[6 * i    ] = !θ_z
         end
-    elseif model.dimentionality == 3
+    elseif model.dimensionality == 3
         for (i, node) in enumerate(model.nodes)
             # Extract the free DOFs of the node:
             u_x, u_y, u_z = node.u_x, node.u_y, node.u_z

@@ -20,22 +20,27 @@ struct LinearElasticAnalysisCache{
 end
 
 function solve(model::Model, analysis::LinearElasticAnalysis, partitionindices::Vector{Bool})
-    # Assemble the global geometric stiffness matrix:
-    K_e = assemble_K_e(model)
-    K_e_ff = K_e[  partitionindices, partitionindices]
-    K_e_sf = K_e[.!partitionindices, partitionindices]
-
     # Assemble the global force vector due to concentrated loads:
     F_conc = assemble_F_conc(model)
     F_conc_f = F_conc[partitionindices]
 
     # Assemble the global force vector due to distributed loads:
-    F_dist = assemble_F_dist(model)
+    F_dist   = assemble_F_dist(model)
     F_dist_f = F_dist[  partitionindices]
     F_dist_s = F_dist[.!partitionindices]
 
+    # Assemble the global geometric stiffness matrix:
+    K_e    = assemble_K_e(model)
+    K_e_ff = K_e[  partitionindices, partitionindices]
+    K_e_sf = K_e[.!partitionindices, partitionindices]
+
+    # Check if the global stiffness matrix is singular:
+    if det(K_e_ff) ≈ 0
+        error("The global stiffness matrix is singular. Aborting.")
+    end
+
     # Compute the displacements at the free DOFs:
-    U_f = K_e_ff \ (F_conc_f - F_dist_f)
+    U_f = K_e_ff \ (F_conc_f - F_dist_f)    
 
     # Compute the reaction forces at the support DOFs:
     R_s = K_e_sf * U_f + F_dist_s
