@@ -91,6 +91,16 @@ struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real, ESMT<:Real, GSMT<:Real,
     end
 end
 
+mutable struct ElementState
+    ID::Int
+    Γ::AbstractMatrix{<:Real}
+    ω_i::Real
+    ω_j::Real
+    node_i_coords::AbstractVector{<:Real}
+    node_j_coords::AbstractVector{<:Real}
+    N::Real
+end
+
 @memoize function compute_Γ(
     x_i::Real, y_i::Real, z_i::Real,
     x_j::Real, y_j::Real, z_j::Real,
@@ -134,7 +144,8 @@ function compute_Γ(
     θ_x_i::Real, θ_y_i::Real, θ_z_i::Real,
     u_x_j::Real, u_y_j::Real, u_z_j::Real,
     θ_x_j::Real, θ_y_j::Real, θ_z_j::Real,
-    ω::Real)
+    ω_i::Real,
+    ω_j::Real)
     # Compute the element length projections:
     Δx = (x_j + u_x_j) - (x_i + u_x_i)
     Δy = (y_j + u_y_j) - (y_i + u_y_i)
@@ -150,7 +161,7 @@ function compute_Γ(
     # Compute the element subtransformation matrix for node (i):
     β_i = β + θ_y_i
     χ_i = χ + θ_z_i
-    ω_i = ω + θ_x_i
+    ω_i = ω_i + θ_x_i
     s_β_i, c_β_i = sincos(β_i)
     s_χ_i, c_χ_i = sincos(χ_i)
     s_ω_i, c_ω_i = sincos(ω_i)
@@ -162,7 +173,7 @@ function compute_Γ(
     # Compute the element subtransformation matrix for node (j):
     β_j = β + θ_y_j
     χ_j = χ + θ_z_j
-    ω_j = ω + θ_x_j
+    ω_j = ω_j + θ_x_j
     s_β_j, c_β_j = sincos(β_j)
     s_χ_j, c_χ_j = sincos(χ_j)
     s_ω_j, c_ω_j = sincos(ω_j)

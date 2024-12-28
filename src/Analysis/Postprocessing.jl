@@ -82,3 +82,17 @@ function getelementforces(model::Model, U::AbstractVector{<:Real}, ID::Int)
     # Return the internal forces of the element:
     return elementforces
 end
+
+function getelementforces(element::Element, elementstate::ElementState)
+    N = elementstate.N
+    k_e_l = element.k_e_l
+    k_g_l = N * element.k_g_l
+
+    elementdisplacements = [elementstate.node_i_coords; elementstate.node_j_coords]
+
+    elementforces = elementstate.Γ * elementdisplacements
+    
+    elementforces = (k_e_l + k_g_l) * elementforces
+
+    return elementforces
+end
