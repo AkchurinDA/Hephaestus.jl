@@ -24,8 +24,6 @@ struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real, ESMT<:Real, GSMT<:Real,
     releases_j::Vector{Bool}
     "Element length, ``L``"
     L::Real
-    "Subtransformation matrix, ``\\gamma``"
-    γ::AbstractMatrix{<:Real}
     "Transformation matrix, ``\\Gamma``"
     Γ::AbstractMatrix{<:Real}
     "Elastic stiffness matrix in the local coordinate system, ``k_{el}``"
@@ -56,12 +54,6 @@ struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real, ESMT<:Real, GSMT<:Real,
         x_i, y_i, z_i = node_i.x, node_i.y, node_i.z
         x_j, y_j, z_j = node_j.x, node_j.y, node_j.z
 
-        # Extract the section properties:
-        A, I_zz, I_yy, J = section.A, section.I_zz, section.I_yy, section.J
-
-        # Extract the material properties:
-        E, ν, ρ = material.E, material.ν, material.ρ
-
         # Compute the element length projections:
         Δx = x_j - x_i
         Δy = y_j - y_i
@@ -70,25 +62,14 @@ struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real, ESMT<:Real, GSMT<:Real,
         # Compute the element length:
         L = sqrt(Δx ^ 2 + Δy ^ 2 + Δz ^ 2)
 
-        # Compute the element orientation angles:
-        β = -atan(Δz, Δx) # Conventionally, this angle is called "ρ", but had to rename it to avoid conflicts with the "ρ" symbol used for the material's density
-        χ = π / 2 - acos(Δy / L)
+        # Compute the transformation matrix:
+        Γ = compute_Γ(x_i, y_i, z_i, x_j, y_j, z_j, ω)
 
-        # Compute the element subtransformation matrix:
-        s_β, c_β = sincos(β)
-        s_χ, c_χ = sincos(χ)
-        s_ω, c_ω = sincos(ω)
-        γ = [
-            +c_χ * c_β                      +s_χ          -c_χ * s_β                  ;
-            -c_ω * s_χ * c_β + s_ω * s_β    +c_ω * c_χ    +c_ω * s_χ * s_β + s_ω * c_β;
-            +s_ω * s_χ * c_β + c_ω * s_β    -s_ω * c_χ    -s_ω * s_χ * s_β + c_ω * c_β]
+        # Extract the section properties:
+        A, I_zz, I_yy, J = section.A, section.I_zz, section.I_yy, section.J
 
-        # Compute the element transformation matrix:
-        Γ = zeros(eltype(γ), 12, 12)
-        Γ[1:3  , 1:3  ] = γ
-        Γ[4:6  , 4:6  ] = γ
-        Γ[7:9  , 7:9  ] = γ
-        Γ[10:12, 10:12] = γ
+        # Extract the material properties:
+        E, ν, ρ = material.E, material.ν, material.ρ
 
         # Compute the element elastic stiffness matrix in the local coordinate system:
         k_e_l = compute_k_e_l(E, ν, A, I_zz, I_yy, J, L)
@@ -106,8 +87,100 @@ struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real, ESMT<:Real, GSMT<:Real,
         m_g = transform(m_l, Γ)
 
         # Return the element:
-        return new{NIT, NJT, ST, MT, eltype(k_e_g), eltype(k_g_g), eltype(m_g)}(ID, node_i, node_j, section, material, ω, releases_i, releases_j, L, γ, Γ, k_e_l, k_e_g, k_g_l, k_g_g, m_l, m_g)
+        return new{NIT, NJT, ST, MT, eltype(k_e_g), eltype(k_g_g), eltype(m_g)}(ID, node_i, node_j, section, material, ω, releases_i, releases_j, L, Γ, k_e_l, k_e_g, k_g_l, k_g_g, m_l, m_g)
     end
+end
+
+@memoize function compute_Γ(
+    x_i::Real, y_i::Real, z_i::Real,
+    x_j::Real, y_j::Real, z_j::Real,
+    ω::Real)
+    # Compute the element length projections:
+    Δx = x_j - x_i
+    Δy = y_j - y_i
+    Δz = z_j - z_i
+
+    # Compute the element length:
+    L = sqrt(Δx ^ 2 + Δy ^ 2 + Δz ^ 2)
+
+    # Compute the element orientation angles:
+    β = -atan(Δz, Δx) # Conventionally, this angle is called "ρ", but had to rename it to avoid conflicts with the "ρ" symbol used for the material's density
+    χ = π / 2 - acos(Δy / L)
+
+    # Compute the element subtransformation matrix:
+    s_β, c_β = sincos(β)
+    s_χ, c_χ = sincos(χ)
+    s_ω, c_ω = sincos(ω)
+    γ = [
+        +c_χ * c_β                      +s_χ          -c_χ * s_β                  ;
+        -c_ω * s_χ * c_β + s_ω * s_β    +c_ω * c_χ    +c_ω * s_χ * s_β + s_ω * c_β;
+        +s_ω * s_χ * c_β + c_ω * s_β    -s_ω * c_χ    -s_ω * s_χ * s_β + c_ω * c_β]
+
+    # Compute the element transformation matrix:
+    Γ = zeros(eltype(γ), 12, 12)
+    Γ[1:3  , 1:3  ] .= γ
+    Γ[4:6  , 4:6  ] .= γ
+    Γ[7:9  , 7:9  ] .= γ
+    Γ[10:12, 10:12] .= γ
+
+    # Return the element transformation matrix:
+    return Γ
+end
+
+function compute_Γ(
+    x_i::Real, y_i::Real, z_i::Real,
+    x_j::Real, y_j::Real, z_j::Real,
+    u_x_i::Real, u_y_i::Real, u_z_i::Real,
+    θ_x_i::Real, θ_y_i::Real, θ_z_i::Real,
+    u_x_j::Real, u_y_j::Real, u_z_j::Real,
+    θ_x_j::Real, θ_y_j::Real, θ_z_j::Real,
+    ω::Real)
+    # Compute the element length projections:
+    Δx = (x_j + u_x_j) - (x_i + u_x_i)
+    Δy = (y_j + u_y_j) - (y_i + u_y_i)
+    Δz = (z_j + u_z_j) - (z_i + u_z_i)
+
+    # Compute the element length:
+    L = sqrt(Δx ^ 2 + Δy ^ 2 + Δz ^ 2)
+
+    # Compute the element orientation angles:
+    β = -atan(Δz, Δx) # Conventionally, this angle is called "ρ", but had to rename it to avoid conflicts with the "ρ" symbol used for the material's density
+    χ = π / 2 - acos(Δy / L)
+
+    # Compute the element subtransformation matrix for node (i):
+    β_i = β + θ_y_i
+    χ_i = χ + θ_z_i
+    ω_i = ω + θ_x_i
+    s_β_i, c_β_i = sincos(β_i)
+    s_χ_i, c_χ_i = sincos(χ_i)
+    s_ω_i, c_ω_i = sincos(ω_i)
+    γ_i = [
+        +c_χ_i * c_β_i                            +s_χ_i            -c_χ_i * s_β_i                        ;
+        -c_ω_i * s_χ_i * c_β_i + s_ω_i * s_β_i    +c_ω_i * c_χ_i    +c_ω_i * s_χ_i * s_β_i + s_ω_i * c_β_i;
+        +s_ω_i * s_χ_i * c_β_i + c_ω_i * s_β_i    -s_ω_i * c_χ_i    -s_ω_i * s_χ_i * s_β_i + c_ω_i * c_β_i]
+
+    # Compute the element subtransformation matrix for node (j):
+    β_j = β + θ_y_j
+    χ_j = χ + θ_z_j
+    ω_j = ω + θ_x_j
+    s_β_j, c_β_j = sincos(β_j)
+    s_χ_j, c_χ_j = sincos(χ_j)
+    s_ω_j, c_ω_j = sincos(ω_j)
+    γ_j = [
+        +c_χ_j * c_β_j                            +s_χ_j            -c_χ_j * s_β_j                        ;
+        -c_ω_j * s_χ_j * c_β_j + s_ω_j * s_β_j    +c_ω_j * c_χ_j    +c_ω_j * s_χ_j * s_β_j + s_ω_j * c_β_j;
+        +s_ω_j * s_χ_j * c_β_j + c_ω_j * s_β_j    -s_ω_j * c_χ_j    -s_ω_j * s_χ_j * s_β_j + c_ω_j * c_β_j]
+
+    # Compute the element transformation matrix:
+    T = promote_type(eltype(γ_i), eltype(γ_j))
+    Γ = zeros(T, 12, 12)
+    Γ[1:3  , 1:3  ] .= γ_i
+    Γ[4:6  , 4:6  ] .= γ_i
+    Γ[7:9  , 7:9  ] .= γ_j
+    Γ[10:12, 10:12] .= γ_j
+
+    # Return the element transformation matrix:
+    return Γ
 end
 
 @memoize function compute_k_e_l(

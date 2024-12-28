@@ -10,7 +10,7 @@ struct LCM <: AbstractNonlinearSolver
     Δλ::Real
 end
 
-function initialize(nonlinearsolver::LCM, j::Int, partitionindices::Vector{Bool})
+function coefficients(nonlinearsolver::LCM, j::Int, partitionindices::Vector{Bool})
     a = zeros(length(partitionindices))
     b = 1
     c = j == 1 ? nonlinearsolver.Δλ : 0

@@ -43,6 +43,14 @@ function assemble_K_e(model::Model)
     K_e = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global elastic stiffness matrix:
+    assemble_K_e!(K_e, model)
+
+    # Return the global elastic stiffness matrix:
+    return K_e
+end
+
+function assemble_K_e!(K_e::AbstractMatrix{<:Real}, model::Model)
+    # Assemble the global elastic stiffness matrix:
     for element in model.elements
         # Extact the element stiffness matrix in the global coordinate system:
         k_e_g = element.k_e_g
@@ -60,18 +68,26 @@ function assemble_K_e(model::Model)
     return K_e
 end
 
-function assemble_K_g(model::Model, P::AbstractVector{PT}) where {PT <: Real}
+function assemble_K_g(model::Model, N::AbstractVector{NT}) where {NT <: Real}
     # Make sure the length of the vector of axial loads is equal to the number of elements:
-    @assert length(P) == length(model.elements) "The length of the vector of axial loads is not equal to the number of elements. Something is wrong."
+    @assert length(N) == length(model.elements) "The length of the vector of axial loads is not equal to the number of elements. Something is wrong."
 
     # Initialize the global geometric stiffness matrix:
-    T   = promote_type([get_k_e_g_T(element) for element in model.elements]..., PT)
+    T   = promote_type([get_k_e_g_T(element) for element in model.elements]..., NT)
     K_g = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global geometric stiffness matrix:
-    for (element, p) in zip(model.elements, P)
+    assemble_K_g!(K_g, model, N)
+
+    # Return the global geometric stiffness matrix:
+    return K_g
+end
+
+function assemble_K_g!(K_g::AbstractMatrix{<:Real}, model::Model, N::AbstractVector{<:Real})
+    # Assemble the global geometric stiffness matrix:
+    for (element, n) in zip(model.elements, N)
         # Extact the element stiffness matrix in the global coordinate system:
-        k_g_g = p * element.k_g_g
+        k_g_g = n * element.k_g_g
 
         # Assemble the element stiffness matrix into the global stiffness matrix:
         index_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)

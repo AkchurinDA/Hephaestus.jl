@@ -27,11 +27,11 @@ function solve(model::Model, ::ElasticBucklingAnalysis, partitionindices::Vector
     K_e = assemble_K_e(model)
     K_e_ff = K_e[partitionindices, partitionindices]
 
-    # Extract the element axial loads and partition them:
-    P = [getelementforces(model, solution, element.ID)[7] for element in model.elements]
+    # Extract the element axial loads:
+    N = [getelementforces(model, solution, element.ID)[7] for element in model.elements]
 
     # Assemble the global geometric stiffness matrix and partition it:
-    K_g = assemble_K_g(model, P)
+    K_g = assemble_K_g(model, N)
     K_g_ff = K_g[partitionindices, partitionindices]
 
     # Solve the generalized eigenvalue problem:
