@@ -90,9 +90,9 @@ function getelementforces(element::Element, elementstate::ElementState)
 
     elementdisplacements = [elementstate.node_i_coords; elementstate.node_j_coords]
 
-    elementforces = elementstate.Γ * elementdisplacements
+    elementdisplacements = elementstate.Γ * elementdisplacements
     
-    elementforces = (k_e_l + k_g_l) * elementforces
+    elementforces = (k_e_l + k_g_l) * elementdisplacements
 
     return elementforces
 end

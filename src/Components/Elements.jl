@@ -92,14 +92,24 @@ struct Element{NIT<:Real, NJT<:Real, ST<:Real, MT<:Real, ESMT<:Real, GSMT<:Real,
 end
 
 mutable struct ElementState
-    ID::Int
-    Γ::AbstractMatrix{<:Real}
-    ω_i::Real
-    ω_j::Real
-    node_i_coords::AbstractVector{<:Real}
-    node_j_coords::AbstractVector{<:Real}
-    N::Real
+    ID      ::Int
+    x_i     ::Real
+    y_i     ::Real
+    z_i     ::Real
+    x_j     ::Real
+    y_j     ::Real
+    z_j     ::Real
+    ω_i     ::Real
+    ω_j     ::Real
+    Γ       ::AbstractMatrix{<:Real}
+    k_e_l   ::AbstractMatrix{<:Real}
+    k_e_g   ::AbstractMatrix{<:Real}
+    k_g_l   ::AbstractMatrix{<:Real}
+    k_g_g   ::AbstractMatrix{<:Real}
+    q       ::AbstractVector{<:Real}
 end
+
+# TODO: Add a function to update the element state based of the current global displacement vector increment.
 
 @memoize function compute_Γ(
     x_i::Real, y_i::Real, z_i::Real,

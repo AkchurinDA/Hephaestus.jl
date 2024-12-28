@@ -43,7 +43,7 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
     K_t  = zeros(T, count(partitionindices), count(partitionindices))
     δu_p = zeros(T, count(partitionindices))
     δu_r = zeros(T, count(partitionindices))
-    dU   = zeros(T, 6 * length(model.nodes))
+    δU   = zeros(T, 6 * length(model.nodes))
     U    = zeros(T, 6 * length(model.nodes))
     U_f  = zeros(T, count(partitionindices))
     P_f  = zeros(T, count(partitionindices))
@@ -54,12 +54,16 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
     # Initialize the current state of each element:
     elementstates = [ElementState(
         element.ID,
-        element.Γ, 
+        element.node_i.x,
+        element.node_i.y,
+        element.node_i.z,
+        element.node_j.x,
+        element.node_j.y,
+        element.node_j.z,
         element.ω,
         element.ω,
-        [element.node_i.x, element.node_i.y, element.node_i.z, 0, 0, 0],
-        [element.node_j.x, element.node_j.y, element.node_j.z, 0, 0, 0],
-        0) for element in model.elements]
+        Matrix(I, 12, 12),
+        zeros(12)) for element in model.elements]
 
     # Extract the nonlinear solver and its parameters:
     nonlinearsolver = analysis.nonlinearsolver
@@ -83,7 +87,7 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
         while j ≤ maxnumj && converganceflag ≠ true
             if j == 1 || update == :standard
                 # Extract the element axial loads:
-                N = [elementstate.N for elementstate in elementstates]
+                N = [elementstate.q[7] for elementstate in elementstates]
                 
                 # Assemble the global elastic stiffness matrix:
                 K_e .= 0
@@ -120,45 +124,26 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
             P_f += δλ * P̄
 
             # Update the displacement vector for the free DOFs:
-            dU_f = δλ * δu_p + δu_r
-            U_f += dU_f
+            δU_f = δλ * δu_p + δu_r
+            U_f += δU_f
 
             # Assemble the global displacement vector:
-            dU[partitionindices] .= dU_f
+            δU[partitionindices] .= δU_f
             U[partitionindices] .= U_f
 
             # Update the state of each element:
             for (elementstate, element) in zip(elementstates, model.elements)
-                d_node_i_disp = getnodaldisplacements(model, dU, element.node_i.ID)
-                d_node_j_disp = getnodaldisplacements(model, dU, element.node_j.ID)
-                
-                # Compute the transformation matrix from the previous state to the current state:
-                Γ′ = compute_Γ(
-                    elementstate.node_i_coords[1:3]..., 
-                    elementstate.node_j_coords[1:3]...,
-                    d_node_i_disp...,
-                    d_node_j_disp...,
-                    elementstate.ω_i,
-                    elementstate.ω_j)
-
-                elementstate.Γ = Γ′ * element.Γ
-
-                # Update the current element orientation:
-                elementstate.ω_i += d_node_i_disp[4]
-                elementstate.ω_j += d_node_j_disp[4]
-
-                elementstate.node_i_coords += d_node_i_disp
-                elementstate.node_j_coords += d_node_j_disp
-
-                elementstate.N = getelementforces(element, elementstate)[7]
-
-                @show d_node_i_disp
-                @show d_node_j_disp
-                @show elementstate.N
+                # TODO: Update the state of each element.
             end
 
             # Compute the internal force vector:
-            # TODO: To implement this, I need to be able to remember the current state each element.
+            for (elementstate, element) in zip(elementstates, model.elements)
+                index_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)
+                index_j = findfirst(x -> x.ID == element.node_j.ID, model.nodes)
+
+                Q[(6 * index_i - 5):(6 * index_i)] .= elementstate.q[ 1:6]
+                Q[(6 * index_j - 5):(6 * index_j)] .= elementstate.q[7:12]
+            end
 
             # Compute the residual force vector for the free DOFs:
             R_f .= P_f - Q[partitionindices]
