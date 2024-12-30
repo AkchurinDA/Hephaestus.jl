@@ -45,10 +45,10 @@ A type representing the arc-length control method.
 """
 struct ALCM <: AbstractNonlinearSolver
     # Arc-length increment:
-    Δs::Real
+    ΔS::Real
 end
 
-function constraintequation(
+function constraint(
     a::AbstractVector{<:Real}, 
     b::Real, 
     c::Real, 
@@ -59,10 +59,4 @@ function constraintequation(
 
     # Return the load parameter increment:
     return δλ
-end
-
-function checkconvergance(F_ext, F_int, P̄_norm, ϵ)
-    converganceflag = norm(F_ext - F_int) / P̄_norm < ϵ
-
-    return converganceflag
 end

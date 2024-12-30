@@ -19,7 +19,7 @@ struct LinearElasticAnalysisCache{
     R::AbstractVector{RT}
 end
 
-function solve(model::Model, analysis::LinearElasticAnalysis, partitionindices::Vector{Bool})
+function solve(model::Model, analysis::LinearElasticAnalysis, partitionindices::Vector{Bool})::LinearElasticAnalysisCache
     # Assemble the global geometric stiffness matrix:
     K_e    = assemble_K_e(model)
     K_e_ff = K_e[  partitionindices, partitionindices]

@@ -10,12 +10,12 @@ function getpartitionindices(model::Model)
             θ_z      = node.θ_z
 
             # Assemble the partition indices for the free DOFs:
-            partitionindices[6 * i - 5] = !u_x
-            partitionindices[6 * i - 4] = !u_y
-            partitionindices[6 * i - 3] = false
-            partitionindices[6 * i - 2] = false
-            partitionindices[6 * i - 1] = false
-            partitionindices[6 * i    ] = !θ_z
+            @inbounds partitionindices[6 * i - 5] = !u_x
+            @inbounds partitionindices[6 * i - 4] = !u_y
+            @inbounds partitionindices[6 * i - 3] = false
+            @inbounds partitionindices[6 * i - 2] = false
+            @inbounds partitionindices[6 * i - 1] = false
+            @inbounds partitionindices[6 * i    ] = !θ_z
         end
     elseif model.dimensionality == 3
         for (i, node) in enumerate(model.nodes)
@@ -24,12 +24,12 @@ function getpartitionindices(model::Model)
             θ_x, θ_y, θ_z = node.θ_x, node.θ_y, node.θ_z
     
             # Assemble the partition indices for the free DOFs:
-            partitionindices[6 * i - 5] = !u_x
-            partitionindices[6 * i - 4] = !u_y
-            partitionindices[6 * i - 3] = !u_z
-            partitionindices[6 * i - 2] = !θ_x
-            partitionindices[6 * i - 1] = !θ_y
-            partitionindices[6 * i    ] = !θ_z
+            @inbounds partitionindices[6 * i - 5] = !u_x
+            @inbounds partitionindices[6 * i - 4] = !u_y
+            @inbounds partitionindices[6 * i - 3] = !u_z
+            @inbounds partitionindices[6 * i - 2] = !θ_x
+            @inbounds partitionindices[6 * i - 1] = !θ_y
+            @inbounds partitionindices[6 * i    ] = !θ_z
         end
     end
 
@@ -39,7 +39,7 @@ end
 
 function assemble_K_e(model::Model)
     # Initialize the global elastic stiffness matrix:
-    T   = promote_type([get_k_e_g_T(element) for element in model.elements]...)
+    T   = promote_type([gettype(element) for element in model.elements]...)
     K_e = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global elastic stiffness matrix:
@@ -73,7 +73,7 @@ function assemble_K_g(model::Model, N::AbstractVector{NT}) where {NT <: Real}
     @assert length(N) == length(model.elements) "The length of the vector of axial loads is not equal to the number of elements. Something is wrong."
 
     # Initialize the global geometric stiffness matrix:
-    T   = promote_type([get_k_e_g_T(element) for element in model.elements]..., NT)
+    T   = promote_type([gettype(element) for element in model.elements]...)
     K_g = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global geometric stiffness matrix:
@@ -102,11 +102,35 @@ function assemble_K_g!(K_g::AbstractMatrix{<:Real}, model::Model, N::AbstractVec
     return K_g
 end
 
+function assemble_K_m(model::Model)
+    # Initialize the global material stiffness matrix:
+    T   = promote_type([gettype(element) for element in model.elements]...)
+    K_m = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
+
+    # Assemble the global material stiffness matrix:
+    assemble_K_m!(K_m, model)
+
+    # Return the global elastic stiffness matrix:
+    return K_e
+end
+
+function assemble_K_m!(K_m::AbstractMatrix{<:Real}, model::Model)
+
+end
+
 function assemble_M(model::Model)
     # Initialize the global mass matrix:
-    T = promote_type([get_m_g_T(element) for element in model.elements]...)
+    T = promote_type([gettype(element) for element in model.elements]...)
     M = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
+    # Assemble the global mass matrix:
+    assemble_M!(M, model)
+
+    # Return the global mass matrix:
+    return M
+end
+
+function assemble_M!(M::AbstractMatrix{<:Real}, model::Model)
     # Assemble the global mass matrix:
     for element in model.elements
         # Extact the element mass matrix in the global coordinate system:
@@ -128,11 +152,11 @@ end
 function assemble_F_conc(model::Model)
     if isempty(model.concloads)
         # Initialize the global load vector due to concentrated loads:
-        F_conc = zeros(6 * length(model.nodes))
+        F_c = zeros(6 * length(model.nodes))
     else
         # Initialize the global load vector due to concentrated loads:
-        T = promote_type([get_concload_T(concload) for concload in model.concloads]...)
-        F_conc = zeros(T, 6 * length(model.nodes))
+        T   = promote_type([gettype(concload) for concload in model.concloads]...)
+        F_c = zeros(T, 6 * length(model.nodes))
 
         for concload in model.concloads
             # Extract the concentrated load vector in the global coordinate system:
@@ -140,28 +164,28 @@ function assemble_F_conc(model::Model)
             M_x, M_y, M_z = concload.M_x, concload.M_y, concload.M_z
 
             # Assemble the concentrated load vector into the global load vector:
-            idx = findfirst(x -> x.ID == concload.ID, model.nodes)
-            @inbounds F_conc[6 * idx - 5] += F_x
-            @inbounds F_conc[6 * idx - 4] += F_y
-            @inbounds F_conc[6 * idx - 3] += F_z
-            @inbounds F_conc[6 * idx - 2] += M_x
-            @inbounds F_conc[6 * idx - 1] += M_y
-            @inbounds F_conc[6 * idx    ] += M_z
+            index = findfirst(x -> x.ID == concload.ID, model.nodes)
+            @inbounds F_c[6 * index - 5] += F_x
+            @inbounds F_c[6 * index - 4] += F_y
+            @inbounds F_c[6 * index - 3] += F_z
+            @inbounds F_c[6 * index - 2] += M_x
+            @inbounds F_c[6 * index - 1] += M_y
+            @inbounds F_c[6 * index    ] += M_z
         end
     end
 
     # Return the global load vector:
-    return F_conc
+    return F_c
 end
 
 function assemble_F_dist(model::Model)
     if isempty(model.distloads)
         # Initialize the global load vector due to distributed loads:
-        F_dist = zeros(6 * length(model.nodes))
+        F_d = zeros(6 * length(model.nodes))
     else
         # Initialize the global load vector due to distributed loads:
-        T      = promote_type([get_distload_T(distload) for distload in model.distloads]...)
-        F_dist = zeros(T, 6 * length(model.nodes))
+        T   = promote_type([gettype(distload) for distload in model.distloads]...)
+        F_d = zeros(T, 6 * length(model.nodes))
 
         for distload in model.distloads
             # Extract the fixed-end force vector in the global coordinate system:
@@ -173,21 +197,11 @@ function assemble_F_dist(model::Model)
             # Assemble the fixed-end force vector into the global load vector:
             index_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)
             index_j = findfirst(x -> x.ID == element.node_j.ID, model.nodes)
-            @inbounds F_dist[6 * index_i - 5] += p[ 1]
-            @inbounds F_dist[6 * index_i - 4] += p[ 2]
-            @inbounds F_dist[6 * index_i - 3] += p[ 3]
-            @inbounds F_dist[6 * index_i - 2] += p[ 4]
-            @inbounds F_dist[6 * index_i - 1] += p[ 5]
-            @inbounds F_dist[6 * index_i    ] += p[ 6]
-            @inbounds F_dist[6 * index_j - 5] += p[ 7]
-            @inbounds F_dist[6 * index_j - 4] += p[ 8]
-            @inbounds F_dist[6 * index_j - 3] += p[ 9]
-            @inbounds F_dist[6 * index_j - 2] += p[10]
-            @inbounds F_dist[6 * index_j - 1] += p[11]
-            @inbounds F_dist[6 * index_j    ] += p[12]
+            @inbounds F_d[(6 * index_i - 5):(6 * index_i)] += p[ 1:6]
+            @inbounds F_d[(6 * index_j - 5):(6 * index_j)] += p[7:12]
         end
     end
 
     # Return the global load vector:
-    return F_dist
-end
+    return F_d
+end 

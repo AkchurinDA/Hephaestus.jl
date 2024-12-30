@@ -18,7 +18,7 @@ struct NonlinearElasticAnalysisCache{
     R::AbstractVector{RT}
 end
 
-function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindices::Vector{Bool})
+function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindices::Vector{Bool})::NonlinearElasticAnalysisCache
     # Assemble the initial global elastic stiffness matrix:
     K_e    = assemble_K_e(model)
     K_e_ff = K_e[partitionindices, partitionindices]
@@ -90,11 +90,9 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
                 N = [elementstate.q[7] for elementstate in elementstates]
                 
                 # Assemble the global elastic stiffness matrix:
-                K_e .= 0
                 assemble_K_e!(K_e, model)
 
                 # Assemble the global geometric stiffness matrix:
-                K_g .= 0
                 assemble_K_g!(K_g, model, N)
 
                 # Assemble the global tangent stiffness matrix and partition it:

@@ -19,7 +19,7 @@ struct ElasticBucklingAnalysisCache{
     Φ::AbstractMatrix{ΦT}
 end
 
-function solve(model::Model, ::ElasticBucklingAnalysis, partitionindices::Vector{Bool})
+function solve(model::Model, ::ElasticBucklingAnalysis, partitionindices::Vector{Bool})::ElasticBucklingAnalysisCache
     # Perform the linear elastic analysis:
     solution = solve(model, LinearElasticAnalysis(), partitionindices)
 

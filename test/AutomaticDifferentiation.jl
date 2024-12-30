@@ -7,7 +7,7 @@
     t = float.([L, I, E, P])
 
     # Define the function to be differentiated:
-    function f(t)
+    function f(t::AbstractVector{<:Real})::Real
         # Extract the problem parameters:
         L, I, E, P = t
 
@@ -78,7 +78,7 @@ end
     t = float.([L, I, E, w])
 
     # Define the function to be differentiated:
-    function f(t)
+    function f(t::AbstractVector{<:Real})::Real
         # Extract the problem parameters:
         L, I, E, w = t
 

@@ -19,7 +19,7 @@ struct FreeVibrationAnalysisCache{
     Φ::AbstractMatrix{ΦT}
 end
 
-function solve(model::Model, analysistype::FreeVibrationAnalysis, partitionindices::Vector{Bool})
+function solve(model::Model, analysistype::FreeVibrationAnalysis, partitionindices::Vector{Bool})::FreeVibrationAnalysisCache
     # Assemble the global elastic stiffness matrix and partition it:
     K_e    = assemble_K_e(model)
     K_e_ff = K_e[partitionindices, partitionindices]

@@ -38,7 +38,7 @@ struct ConcentratedLoad{T<:Real}
     end
 end
 
-get_concload_T(::ConcentratedLoad{T}) where {T} = T
+gettype(::ConcentratedLoad{T}) where {T} = T
 
 """
     struct DistributedLoad
@@ -74,4 +74,4 @@ struct DistributedLoad{T<:Real}
     end
 end
 
-get_distload_T(::DistributedLoad{T}) where {T} = T
+gettype(::DistributedLoad{T}) where {T} = T

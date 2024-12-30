@@ -27,3 +27,5 @@ struct Material{T<:Real}
         return new{T}(ID, E, ν, ρ)
     end
 end
+
+gettype(::Material{T}) where {T} = T

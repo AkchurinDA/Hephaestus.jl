@@ -30,3 +30,5 @@ struct Section{T<:Real}
         return new{T}(ID, A, I_zz, I_yy, J)
     end
 end
+
+gettype(::Section{T}) where {T} = T

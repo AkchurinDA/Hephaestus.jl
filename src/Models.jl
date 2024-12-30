@@ -27,14 +27,14 @@ end
     node!(model::Model, ID::Int, 
         x::Real, y::Real, z::Real;
         u_x::Bool = false, u_y::Bool = false, u_z::Bool = false,
-        θ_x::Bool = false, θ_y::Bool = false, θ_z::Bool = false)
+        θ_x::Bool = false, θ_y::Bool = false, θ_z::Bool = false)::Model
 
 Add a node to a finite element model.
 """
 function node!(model::Model, ID::Int, 
     x::Real, y::Real, z::Real; 
     u_x::Bool = false, u_y::Bool = false, u_z::Bool = false, 
-    θ_x::Bool = false, θ_y::Bool = false, θ_z::Bool = false)
+    θ_x::Bool = false, θ_y::Bool = false, θ_z::Bool = false)::Model
     # Check if the node already exists in the model:
     @assert ID ∉ getfield.(model.nodes, :ID) "Node already exists in the model."
 
@@ -47,12 +47,12 @@ end
 
 """
     section!(model::Model, ID::Int, 
-        A::Real, I_zz::Real, I_yy::Real, J::Real)
+        A::Real, I_zz::Real, I_yy::Real, J::Real)::Model
 
 Add a section to a finite element model.
 """
 function section!(model::Model, ID::Int, 
-    A::Real, I_zz::Real, I_yy::Real, J::Real)
+    A::Real, I_zz::Real, I_yy::Real, J::Real)::Model
     # Check if the section already exists in the model:
     @assert ID ∉ getfield.(model.sections, :ID) "Section already exists in the model."
 
@@ -65,12 +65,12 @@ end
 
 """
     material!(model::Model, ID::Int, 
-        E::Real, ν::Real, ρ::Real)
+        E::Real, ν::Real, ρ::Real)::Model
 
 Add a material to a finite element model.
 """
 function material!(model::Model, ID::Int, 
-    E::Real, ν::Real, ρ::Real)
+    E::Real, ν::Real, ρ::Real)::Model
     # Check if the material already exists in the model:
     @assert ID ∉ getfield.(model.materials, :ID) "Material already exists in the model."
 
@@ -83,22 +83,24 @@ end
 
 """
     element!(model::Model, ID::Int, 
-        node_i_ID::Int, node_j_ID::Int, 
-        section_ID::Int, 
+        node_i_ID  ::Int, 
+        node_j_ID  ::Int, 
+        section_ID ::Int, 
         material_ID::Int; 
-        ω::Real = 0,
-        releases_i::Vector{<:Bool} = [false, false, false, false, false, false],
-        releases_j::Vector{<:Bool} = [false, false, false, false, false, false])
+        ω          ::Real = 0,
+        releases_i ::Vector{<:Bool} = [false, false, false],
+        releases_j ::Vector{<:Bool} = [false, false, false])::Model
 
 Add an element to a finite element model.
 """
 function element!(model::Model, ID::Int, 
-    node_i_ID::Int, node_j_ID::Int, 
-    section_ID::Int, 
-    material_ID::Int; 
-    ω::Real = 0,
-    releases_i::Vector{<:Bool} = [false, false, false, false, false, false],
-    releases_j::Vector{<:Bool} = [false, false, false, false, false, false])
+    node_i_ID  ::Int,
+    node_j_ID  ::Int,
+    section_ID ::Int,
+    material_ID::Int;
+    ω          ::Real = 0,
+    releases_i ::Vector{<:Bool} = [false, false, false],
+    releases_j ::Vector{<:Bool} = [false, false, false])::Model
     # Check if the element already exists in the model:
     @assert ID ∉ getfield.(model.elements, :ID) "Element already exists in the model."
 
@@ -132,13 +134,13 @@ end
 """
     concload!(model::Model, ID::Int, 
         F_x::Real, F_y::Real, F_z::Real, 
-        M_x::Real, M_y::Real, M_z::Real)
+        M_x::Real, M_y::Real, M_z::Real)::Model
 
 Applies a concentrated load to a node with a specified ID.
 """
 function concload!(model::Model, ID::Int, 
     F_x::Real, F_y::Real, F_z::Real, 
-    M_x::Real, M_y::Real, M_z::Real)
+    M_x::Real, M_y::Real, M_z::Real)::Model
     # Check that the node exists in the model:
     @assert ID ∈ getfield.(model.nodes, :ID) "Node with ID $(ID) does not exist in the model."
 
@@ -157,12 +159,12 @@ end
 
 """
     distload!(model::Model, ID::Int, 
-        w_x::Real, w_y::Real, w_z::Real)
+        w_x::Real, w_y::Real, w_z::Real)::Model
 
 Applies a distributed load to an element with a specified ID.
 """
 function distload!(model::Model, ID::Int, 
-    w_x::Real, w_y::Real, w_z::Real)
+    w_x::Real, w_y::Real, w_z::Real)::Model
     # Check if the loads are zero:
     @assert w_x != 0 || w_y != 0 || w_z != 0 "All loads are zero. Aborting."
 

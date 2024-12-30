@@ -42,3 +42,4 @@ struct Node{T<:Real}
     end
 end
 
+gettype(::Node{T}) where {T} = T
