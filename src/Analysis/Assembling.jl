@@ -37,23 +37,23 @@ function getpartitionindices(model::Model)
     return partitionindices
 end
 
-function assemble_K_e(model::Model)
+function assemble_K_e(model::Model, elementstates::AbstractVector{ElementState})
     # Initialize the global elastic stiffness matrix:
     T   = promote_type([gettype(element) for element in model.elements]...)
     K_e = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global elastic stiffness matrix:
-    assemble_K_e!(K_e, model)
+    assemble_K_e!(K_e, model, elementstates)
 
     # Return the global elastic stiffness matrix:
     return K_e
 end
 
-function assemble_K_e!(K_e::AbstractMatrix{<:Real}, model::Model)
+function assemble_K_e!(K_e::AbstractMatrix{<:Real}, model::Model, elementstates::AbstractVector{ElementState})
     # Assemble the global elastic stiffness matrix:
-    for element in model.elements
+    for (element, elementstate) in zip(model.elements, elementstates)
         # Extact the element stiffness matrix in the global coordinate system:
-        k_e_g = element.k_e_g
+        k_e_g = elementstate.k_e_g
 
         # Assemble the element stiffness matrix into the global stiffness matrix:
         index_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)
@@ -68,26 +68,23 @@ function assemble_K_e!(K_e::AbstractMatrix{<:Real}, model::Model)
     return K_e
 end
 
-function assemble_K_g(model::Model, N::AbstractVector{NT}) where {NT <: Real}
-    # Make sure the length of the vector of axial loads is equal to the number of elements:
-    @assert length(N) == length(model.elements) "The length of the vector of axial loads is not equal to the number of elements. Something is wrong."
-
+function assemble_K_g(model::Model, elementstates::AbstractVector{ElementState})
     # Initialize the global geometric stiffness matrix:
     T   = promote_type([gettype(element) for element in model.elements]...)
     K_g = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global geometric stiffness matrix:
-    assemble_K_g!(K_g, model, N)
+    assemble_K_g!(K_g, model, elementstates)
 
     # Return the global geometric stiffness matrix:
     return K_g
 end
 
-function assemble_K_g!(K_g::AbstractMatrix{<:Real}, model::Model, N::AbstractVector{<:Real})
+function assemble_K_g!(K_g::AbstractMatrix{<:Real}, model::Model, elementstates::AbstractVector{ElementState})
     # Assemble the global geometric stiffness matrix:
-    for (element, n) in zip(model.elements, N)
+    for (element, elementstate) in zip(model.elements, elementstates)
         # Extact the element stiffness matrix in the global coordinate system:
-        k_g_g = n * element.k_g_g
+        k_g_g = elementstate.k_g_g
 
         # Assemble the element stiffness matrix into the global stiffness matrix:
         index_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)
@@ -149,7 +146,7 @@ function assemble_M!(M::AbstractMatrix{<:Real}, model::Model)
     return M
 end
 
-function assemble_F_conc(model::Model)
+function assemble_F_c(model::Model)
     if isempty(model.concloads)
         # Initialize the global load vector due to concentrated loads:
         F_c = zeros(6 * length(model.nodes))
@@ -178,7 +175,7 @@ function assemble_F_conc(model::Model)
     return F_c
 end
 
-function assemble_F_dist(model::Model)
+function assemble_F_d(model::Model)
     if isempty(model.distloads)
         # Initialize the global load vector due to distributed loads:
         F_d = zeros(6 * length(model.nodes))

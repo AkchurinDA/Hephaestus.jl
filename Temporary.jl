@@ -22,7 +22,7 @@ node!(model, 15, 168, 0, 0)
 node!(model, 16, 180, 0, 0)
 
 # Define the sections:
-section!(model, 1, 9.12, 110, 37.1, 0)
+section!(model, 1, 9.12, 110, 37.1, 1)
 
 # Define the materials:
 material!(model, 1, 29000, 0.3, 0)
@@ -47,4 +47,6 @@ element!(model, 15, 15, 16, 1, 1)
 # Define the loads:
 concload!(model, 16, -50, -1, 0, 0, 0, 0)
 
-solution = solve(model, NonlinearElasticAnalysis(LCM(0.10), 1, 1, :standard, 1E-6))
+solution = solve(model, NonlinearElasticAnalysis(LCM(1 / 100), 100, 100, 1E-12));
+
+getnodaldisplacements(model, solution, 16)

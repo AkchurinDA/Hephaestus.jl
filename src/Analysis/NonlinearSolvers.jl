@@ -48,7 +48,7 @@ struct ALCM <: AbstractNonlinearSolver
     ΔS::Real
 end
 
-function constraint(
+function constraintequation(
     a::AbstractVector{<:Real}, 
     b::Real, 
     c::Real, 
