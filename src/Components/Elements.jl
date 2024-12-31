@@ -73,6 +73,7 @@ mutable struct ElementState
     k_g_l::AbstractMatrix{<:Real}
     "Current element geometric stiffness matrix in the global coordinate system"
     k_g_g::AbstractMatrix{<:Real}
+    modified::Bool
 end
 
 function compute_γ(ρ::Real, χ::Real, ω::Real)::AbstractMatrix{<:Real}
@@ -308,4 +309,46 @@ function transform(m::AbstractMatrix{<:Real}, Γ::AbstractMatrix{<:Real})::Abstr
 
     # Return the transformed matrix:
     return M
+end
+
+function initelementstate(element::Element)::ElementState
+    # Compute the length of the element:
+    L = sqrt(
+        (element.node_j.x - element.node_i.x) ^ 2 + 
+        (element.node_j.y - element.node_i.y) ^ 2 + 
+        (element.node_j.z - element.node_i.z) ^ 2)
+
+    # Compute the orientation angle of the element:
+    ω_i = element.ω
+    ω_j = element.ω
+
+    # Compute the element global-to-local transformation matrix:
+    Γ = compute_Γ(
+        element.node_i.x, element.node_i.y, element.node_i.z, ω_i, 
+        element.node_j.x, element.node_j.y, element.node_j.z, ω_j, 
+        L)
+
+    # Infer the type of the element stiffness matrices:
+    T = gettype(element)
+
+    # Initialize the element internal force vector:
+    q = zeros(T, 12)
+
+    # Initialize the element elastic stiffness matrix:
+    k_e_l = zeros(T, 12, 12)
+    compute_k_e_l!(k_e_l, element, L)
+    condense!(k_e_l, element.releases_i, element.releases_j)
+    k_e_g = transform(k_e_l, Γ)
+
+    # Initialize the element geometric stiffness matrix:
+    k_g_l = zeros(T, 12, 12)
+    compute_k_g_l!(k_g_l, element, L, 0)
+    condense!(k_g_l, element.releases_i, element.releases_j)
+    k_g_g = transform(k_g_l, Γ)
+
+    # Initialize the state of the element:
+    elementstate = ElementState(element.ID, L, ω_i, ω_j, Γ, q, k_e_l, k_e_g, k_g_l, k_g_g, false)
+
+    # Return the state of the element:
+    return elementstate
 end

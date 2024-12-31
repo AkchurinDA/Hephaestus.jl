@@ -19,8 +19,22 @@ function solve(model::Model, analysistype::AbstractAnalysisType)::AbstractSoluti
     partitionindices = getpartitionindices(model)
 
     # Return the node states to their initial values:
+    if any([nodestate.modified for nodestate in model.nodestates]) # If any node state has been modified
+        empty!(model.nodestates)
+        for node in model.nodes
+            push!(model.nodestates, initnodestate(node))
+        end
+        @info "Node states have been reset to their initial values."
+    end
 
     # Return the element states to their initial values:
+    if any([elementstate.modified for elementstate in model.elementstates]) # If any element state has been modified
+        empty!(model.elementstates)
+        for element in model.elements
+            push!(model.elementstates, initelementstate(element))
+        end
+        @info "Element states have been reset to their initial values."
+    end
 
     # Solve the model using the specified analysis type:
     solution = solve(model, analysistype, partitionindices)

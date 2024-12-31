@@ -48,7 +48,7 @@ function node!(model::Model, ID::Int,
     push!(model.nodes, node)
 
     # Add the state of the node to the model:
-    nodestate = NodeState(ID, 0, 0, 0, 0, 0, 0)
+    nodestate = initnodestate(node)
     push!(model.nodestates, nodestate)
 
     # Return the updated model:
@@ -139,42 +139,8 @@ function element!(model::Model, ID::Int,
     element = Element(ID, node_i, node_j, section, material, ω, releases_i, releases_j)
     push!(model.elements, element)
 
-    # Compute the length of the element:
-    L = sqrt(
-        (node_j.x - node_i.x) ^ 2 + 
-        (node_j.y - node_i.y) ^ 2 + 
-        (node_j.z - node_i.z) ^ 2)
-
-    # Compute the orientation angle of the element:
-    ω_i = ω
-    ω_j = ω
-
-    # Compute the element global-to-local transformation matrix:
-    Γ = compute_Γ(
-        node_i.x, node_i.y, node_i.z, ω_i, 
-        node_j.x, node_j.y, node_j.z, ω_j, 
-        L)
-
-    # Infer the type of the element stiffness matrices:
-    T = gettype(element)
-
-    # Initialize the element internal force vector:
-    q = zeros(T, 12)
-
-    # Initialize the element elastic stiffness matrix:
-    k_e_l = zeros(T, 12, 12)
-    compute_k_e_l!(k_e_l, element, L)
-    condense!(k_e_l, releases_i, releases_j)
-    k_e_g = transform(k_e_l, Γ)
-
-    # Initialize the element geometric stiffness matrix:
-    k_g_l = zeros(T, 12, 12)
-    compute_k_g_l!(k_g_l, element, L, 0)
-    condense!(k_g_l, releases_i, releases_j)
-    k_g_g = transform(k_g_l, Γ)
-
     # Initialize the state of the element:
-    elementstate = ElementState(ID, L, ω_i, ω_j, Γ, q, k_e_l, k_e_g, k_g_l, k_g_g)
+    elementstate = initelementstate(element)
     push!(model.elementstates, elementstate)
 
     # Return the updated model:
@@ -259,4 +225,3 @@ function distload!(model::Model, ID::Int,
     # Return the updated model:
     return model
 end
-

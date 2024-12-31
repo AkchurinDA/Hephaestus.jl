@@ -59,4 +59,13 @@ mutable struct NodeState
     θ_y::Real
     "Rotation about the global ``z``-axis"
     θ_z::Real
+    modified::Bool
+end
+
+function initnodestate(node::Node)::NodeState
+    # Initialize the state of the node:
+    nodestate = NodeState(node.ID, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false)
+
+    # Return the state of the node:
+    return nodestate
 end

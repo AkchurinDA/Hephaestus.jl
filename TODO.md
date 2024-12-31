@@ -1,2 +1,6 @@
-- Add functions to initialize the node and element states.
-- Fix all the functionality that was broken during the development of the nonlinear elastic analysis module.
+- [x] Add functions to initialize the node and element states.
+- [ ] Add functions to update the node and element states.
+- [ ] Fix all the functionality that was broken during the development of the nonlinear elastic analysis module.
+  - [ ] Linear elastic analysis
+  - [ ] Elastic buckling analysis
+  - [ ] Free vibration analysis

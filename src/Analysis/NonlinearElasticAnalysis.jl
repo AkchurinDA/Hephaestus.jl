@@ -121,6 +121,8 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
                 nodestate.θ_x += δu_g[4]
                 nodestate.θ_y += δu_g[5]
                 nodestate.θ_z += δu_g[6]
+
+                nodestate.modified = true
             end
 
             # Update the state of each element:
@@ -193,6 +195,8 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
                 condense!(k_g_l, element.releases_i, element.releases_j)
                 elementstate.k_g_l = k_g_l
                 elementstate.k_g_g = transform(k_g_l, Γ′)
+
+                elementstate.modified = true
             end
 
             # Compute the global internal force vector:
