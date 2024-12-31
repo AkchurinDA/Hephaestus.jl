@@ -7,6 +7,7 @@ struct NonlinearElasticAnalysis <: AbstractAnalysisType
     nonlinearsolver::AbstractNonlinearSolver
     maxnumi::Int
     maxnumj::Int
+    update::Symbol
     ϵ::Real
 end
 
@@ -15,53 +16,11 @@ struct NonlinearElasticAnalysisCache{
     RT <: Real} <: AbstractSolutionCache
     U::AbstractVector{UT}
     R::AbstractVector{RT}
-    states::AbstractVector{ElementState}
 end
 
 function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindices::Vector{Bool})::NonlinearElasticAnalysisCache
-    # Initialize the current state of each element:
-    elementstates = ElementState[]
-    for element in model.elements
-        ID = element.ID
-        x_i, y_i, z_i = element.node_i.x, element.node_i.y, element.node_i.z
-        x_j, y_j, z_j = element.node_j.x, element.node_j.y, element.node_j.z
-
-        L = sqrt((x_j - x_i) ^ 2 + (y_j - y_i) ^ 2 + (z_j - z_i) ^ 2)
-
-        ω = element.ω
-
-        Γ = compute_Γ(x_i, y_i, z_i, x_j, y_j, z_j, ω, ω)
-
-        T     = gettype(element)
-        q     = zeros(T, 12)
-        k_e_l = zeros(T, 12, 12)
-        k_g_l = zeros(T, 12, 12)
-        compute_k_e_l!(k_e_l, element, L)
-        compute_k_g_l!(k_g_l, element, L, q[7])
-
-        releases_i = element.releases_i
-        releases_j = element.releases_j
-        condense!(k_e_l, releases_i, releases_j)
-        condense!(k_g_l, releases_i, releases_j)
-
-        k_e_g = transform(k_e_l, Γ)
-        k_g_g = transform(k_g_l, Γ)
-        
-        push!(elementstates, ElementState(
-            ID,
-            x_i, y_i, z_i,
-            x_j, y_j, z_j,
-            L, 
-            ω, ω,
-            Γ,
-            q,
-            k_e_l, k_e_g,
-            k_g_l, k_g_g))
-    end
-
-    # Assemble the initial global elastic stiffness matrix:
-    K_e = assemble_K_e(model, elementstates)
-    K_e_ff = K_e[partitionindices, partitionindices]
+    # Infer the type of the global elastic stiffness matrix:
+    KT = promote_type([gettype(element) for element in model.elements]...)
 
     # Assemble the global force vector due to concentrated loads:
     F_c   = assemble_F_c(model)
@@ -75,7 +34,7 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
     P̄ = F_c_f - F_d_f
 
     # Infer the type of the displacement vector:
-    T = promote_type(eltype(K_e), eltype(F_c), eltype(F_d))
+    T = promote_type(KT, eltype(F_c), eltype(F_d))
 
     # Preallocate:
     K_e  = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
@@ -110,20 +69,20 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
 
         # Enter the iteration loop:
         while j ≤ maxnumj && converganceflag ≠ true
-            if j == 1
+            if j == 1 || update == :standard
                 # Assemble the global elastic stiffness matrix:
                 K_e .= 0
-                assemble_K_e!(K_e, model, elementstates)
+                assemble_K_e!(K_e, model)
 
                 # Assemble the global geometric stiffness matrix:
                 K_g .= 0
-                assemble_K_g!(K_g, model, elementstates)
+                assemble_K_g!(K_g, model)
 
                 # Assemble the global tangent stiffness matrix and partition it:
                 K_t .= (K_e + K_g)[partitionindices, partitionindices]
 
                 # Compute the displacement increment vector due to P̄ for the free DOFs:
-                δu_p .= K_e[partitionindices, partitionindices] \ P̄
+                δu_p .= K_t \ P̄
             end
 
             # Compute the displacement increment vector due to R for the free DOFs:
@@ -149,65 +108,95 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
             δU[partitionindices] .= δU_f
             U[partitionindices] .= U_f
 
+            # Update the state of the nodes:
+            for (node, nodestate) in zip(model.nodes, model.nodestates)
+                # Extract the nodal displacements increment:
+                δu_g = getnodaldisplacements(model, δU, node.ID)
+
+                # Update the nodal coordinates:
+                nodestate.u_x += δu_g[1]
+                nodestate.u_y += δu_g[2]
+                nodestate.u_z += δu_g[3]
+                nodestate.θ_x += δu_g[4]
+                nodestate.θ_y += δu_g[5]
+                nodestate.θ_z += δu_g[6]
+            end
+
             # Update the state of each element:
-            for (element, elementstate) in zip(model.elements, elementstates)
+            for (element, elementstate) in zip(model.elements, model.elementstates)
                 # Extract the nodal displacements increments in the local coordinate system of an element:
                 δu_i_g = getnodaldisplacements(model, δU, element.node_i.ID)
                 δu_j_g = getnodaldisplacements(model, δU, element.node_j.ID)
 
-                # Update the nodal coordinates of the nodes (i) and (j) of the element:
-                elementstate.x_i += δu_i_g[1]
-                elementstate.y_i += δu_i_g[2]
-                elementstate.z_i += δu_i_g[3]
-                elementstate.x_j += δu_j_g[1]
-                elementstate.y_j += δu_j_g[2]
-                elementstate.z_j += δu_j_g[3]
+                # Find the positional indices of the nodes:
+                index_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)
+                index_j = findfirst(x -> x.ID == element.node_j.ID, model.nodes)
 
+                # Extract the original nodal coordinates:
+                x_i = element.node_i.x
+                y_i = element.node_i.y
+                z_i = element.node_i.z
+                x_j = element.node_j.x
+                y_j = element.node_j.y
+                z_j = element.node_j.z
+
+                # Extract the nodal coordinates:
+                u_x_i = model.nodestates[index_i].u_x
+                u_y_i = model.nodestates[index_i].u_y
+                u_z_i = model.nodestates[index_i].u_z
+                u_x_j = model.nodestates[index_j].u_x
+                u_y_j = model.nodestates[index_j].u_y
+                u_z_j = model.nodestates[index_j].u_z
+
+                # Update the element length:
+                elementstate.L = sqrt(
+                    (x_j + u_x_i - x_i - u_x_j) ^ 2 + 
+                    (y_j + u_y_i - y_i - u_y_j) ^ 2 + 
+                    (z_j + u_z_i - z_i - u_z_j) ^ 2)
+
+                # Update the element orientation angles at its nodes (i) and (j):
                 elementstate.ω_i += δu_i_g[4]
                 elementstate.ω_j += δu_j_g[4]
 
+                # Compute the updated element global-to-local transformation matrix:
                 Γ′ = compute_Γ(
-                    elementstate.x_i, elementstate.y_i, elementstate.z_i, 
-                    elementstate.x_j, elementstate.y_j, elementstate.z_j, 
-                    elementstate.ω_i,
-                    elementstate.ω_j)
+                    x_i + u_x_i, y_i + u_y_i, z_i + u_z_i, elementstate.ω_i,
+                    x_j + u_x_j, y_j + u_y_j, z_j + u_z_j, elementstate.ω_j,
+                    elementstate.L)
 
+                # Construct the global element displacement increment vector:
                 δu_g = [δu_i_g; δu_j_g]
+
+                # Transform the global element displacement increment vector into its previous local coordinate system:
                 δu_l = elementstate.Γ * δu_g
 
+                # Compute the element internal force increment vector in its previous local coordinate system:
                 δq_l  = (elementstate.k_e_l + elementstate.k_g_l) * δu_l
+                
+                # Compute the element internal force increment vector in its global coordinate system:
                 q_l   = elementstate.q + δq_l
                 q_g   = transpose(elementstate.Γ) * q_l
                 q_l′  = Γ′ * q_g
                 elementstate.q = q_l′
 
                 elementstate.Γ = Γ′
-
-                L = sqrt(
-                    (elementstate.x_j - elementstate.x_i) ^ 2 + 
-                    (elementstate.y_j - elementstate.y_i) ^ 2 + 
-                    (elementstate.z_j - elementstate.z_i) ^ 2)
     
                 k_e_l = zeros(T, 12, 12)
-                k_g_l = zeros(T, 12, 12)
-                compute_k_e_l!(k_e_l, element, L)
-                compute_k_g_l!(k_g_l, element, L, elementstate.q[7])
-    
-                releases_i = element.releases_i
-                releases_j = element.releases_j
-                condense!(k_e_l, releases_i, releases_j)
-                condense!(k_g_l, releases_i, releases_j)
-    
+                compute_k_e_l!(k_e_l, element, elementstate.L)
+                condense!(k_e_l, element.releases_i, element.releases_j)
                 elementstate.k_e_l = k_e_l
-                elementstate.k_g_l = k_g_l
-    
                 elementstate.k_e_g = transform(k_e_l, Γ′)
+                
+                k_g_l = zeros(T, 12, 12)
+                compute_k_g_l!(k_g_l, element, elementstate.L, elementstate.q[7])
+                condense!(k_g_l, element.releases_i, element.releases_j)
+                elementstate.k_g_l = k_g_l
                 elementstate.k_g_g = transform(k_g_l, Γ′)
             end
 
-            # Compute the internal force vector:
+            # Compute the global internal force vector:
             Q .= 0
-            for (element, elementstate) in zip(model.elements, elementstates)
+            for (element, elementstate) in zip(model.elements, model.elementstates)
                 index_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)
                 index_j = findfirst(x -> x.ID == element.node_j.ID, model.nodes)
 
@@ -217,7 +206,7 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
                 Q[(6 * index_j - 5):(6 * index_j)] += q[7:12]
             end
 
-            # 
+            # Partition the global internal force vector:
             Q_f = Q[partitionindices]
 
             # Compute the residual force vector for the free DOFs:
@@ -238,7 +227,9 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
         i += 1
     end
 
+    # Compute the nodal reactions:
+
     # Return the solution cache:
-    return NonlinearElasticAnalysisCache(U, U, elementstates)
+    return NonlinearElasticAnalysisCache(U, U)
 end
 

@@ -18,6 +18,10 @@ function solve(model::Model, analysistype::AbstractAnalysisType)::AbstractSoluti
     # Extract the partition indices:
     partitionindices = getpartitionindices(model)
 
+    # Return the node states to their initial values:
+
+    # Return the element states to their initial values:
+
     # Solve the model using the specified analysis type:
     solution = solve(model, analysistype, partitionindices)
 

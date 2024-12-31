@@ -37,21 +37,21 @@ function getpartitionindices(model::Model)
     return partitionindices
 end
 
-function assemble_K_e(model::Model, elementstates::AbstractVector{ElementState})
+function assemble_K_e(model::Model)
     # Initialize the global elastic stiffness matrix:
     T   = promote_type([gettype(element) for element in model.elements]...)
     K_e = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global elastic stiffness matrix:
-    assemble_K_e!(K_e, model, elementstates)
+    assemble_K_e!(K_e, model)
 
     # Return the global elastic stiffness matrix:
     return K_e
 end
 
-function assemble_K_e!(K_e::AbstractMatrix{<:Real}, model::Model, elementstates::AbstractVector{ElementState})
+function assemble_K_e!(K_e::AbstractMatrix{<:Real}, model::Model)
     # Assemble the global elastic stiffness matrix:
-    for (element, elementstate) in zip(model.elements, elementstates)
+    for (element, elementstate) in zip(model.elements, model.elementstates)
         # Extact the element stiffness matrix in the global coordinate system:
         k_e_g = elementstate.k_e_g
 
@@ -68,21 +68,21 @@ function assemble_K_e!(K_e::AbstractMatrix{<:Real}, model::Model, elementstates:
     return K_e
 end
 
-function assemble_K_g(model::Model, elementstates::AbstractVector{ElementState})
+function assemble_K_g(model::Model)
     # Initialize the global geometric stiffness matrix:
     T   = promote_type([gettype(element) for element in model.elements]...)
     K_g = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
 
     # Assemble the global geometric stiffness matrix:
-    assemble_K_g!(K_g, model, elementstates)
+    assemble_K_g!(K_g, model)
 
     # Return the global geometric stiffness matrix:
     return K_g
 end
 
-function assemble_K_g!(K_g::AbstractMatrix{<:Real}, model::Model, elementstates::AbstractVector{ElementState})
+function assemble_K_g!(K_g::AbstractMatrix{<:Real}, model::Model)
     # Assemble the global geometric stiffness matrix:
-    for (element, elementstate) in zip(model.elements, elementstates)
+    for (element, elementstate) in zip(model.elements, model.elementstates)
         # Extact the element stiffness matrix in the global coordinate system:
         k_g_g = elementstate.k_g_g
 

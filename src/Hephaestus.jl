@@ -1,6 +1,5 @@
 module Hephaestus
 using LinearAlgebra
-using Memoization
 using Dates
 using DocStringExtensions
 using Printf

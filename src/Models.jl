@@ -21,6 +21,11 @@ $(FIELDS)
     concloads::Vector{ConcentratedLoad} = Vector{ConcentratedLoad}()
     "Distribution loads of the model"
     distloads::Vector{DistributedLoad} = Vector{DistributedLoad}()
+
+    "Current node states"
+    nodestates::Vector{NodeState} = Vector{NodeState}()
+    "Current element states"
+    elementstates::Vector{ElementState} = Vector{ElementState}()
 end
 
 """
@@ -39,7 +44,12 @@ function node!(model::Model, ID::Int,
     @assert ID ∉ getfield.(model.nodes, :ID) "Node already exists in the model."
 
     # Add the node to the model:
-    push!(model.nodes, Node(ID, x, y, z, u_x, u_y, u_z, θ_x, θ_y, θ_z))
+    node = Node(ID, x, y, z, u_x, u_y, u_z, θ_x, θ_y, θ_z)
+    push!(model.nodes, node)
+
+    # Add the state of the node to the model:
+    nodestate = NodeState(ID, 0, 0, 0, 0, 0, 0)
+    push!(model.nodestates, nodestate)
 
     # Return the updated model:
     return model
@@ -57,7 +67,8 @@ function section!(model::Model, ID::Int,
     @assert ID ∉ getfield.(model.sections, :ID) "Section already exists in the model."
 
     # Add the section to the model:
-    push!(model.sections, Section(ID, A, I_zz, I_yy, J))
+    section = Section(ID, A, I_zz, I_yy, J)
+    push!(model.sections, section)
 
     # Return the updated model:
     return model
@@ -125,7 +136,46 @@ function element!(model::Model, ID::Int,
     material = model.materials[findfirst(x -> x.ID == material_ID, model.materials)]
 
     # Add the element to the model:
-    push!(model.elements, Element(ID, node_i, node_j, section, material, ω, releases_i, releases_j))
+    element = Element(ID, node_i, node_j, section, material, ω, releases_i, releases_j)
+    push!(model.elements, element)
+
+    # Compute the length of the element:
+    L = sqrt(
+        (node_j.x - node_i.x) ^ 2 + 
+        (node_j.y - node_i.y) ^ 2 + 
+        (node_j.z - node_i.z) ^ 2)
+
+    # Compute the orientation angle of the element:
+    ω_i = ω
+    ω_j = ω
+
+    # Compute the element global-to-local transformation matrix:
+    Γ = compute_Γ(
+        node_i.x, node_i.y, node_i.z, ω_i, 
+        node_j.x, node_j.y, node_j.z, ω_j, 
+        L)
+
+    # Infer the type of the element stiffness matrices:
+    T = gettype(element)
+
+    # Initialize the element internal force vector:
+    q = zeros(T, 12)
+
+    # Initialize the element elastic stiffness matrix:
+    k_e_l = zeros(T, 12, 12)
+    compute_k_e_l!(k_e_l, element, L)
+    condense!(k_e_l, releases_i, releases_j)
+    k_e_g = transform(k_e_l, Γ)
+
+    # Initialize the element geometric stiffness matrix:
+    k_g_l = zeros(T, 12, 12)
+    compute_k_g_l!(k_g_l, element, L, 0)
+    condense!(k_g_l, releases_i, releases_j)
+    k_g_g = transform(k_g_l, Γ)
+
+    # Initialize the state of the element:
+    elementstate = ElementState(ID, L, ω_i, ω_j, Γ, q, k_e_l, k_e_g, k_g_l, k_g_g)
+    push!(model.elementstates, elementstate)
 
     # Return the updated model:
     return model
@@ -151,7 +201,8 @@ function concload!(model::Model, ID::Int,
     @assert F_x != 0 || F_y != 0 || F_z != 0 || M_x != 0 || M_y != 0 || M_z != 0 "All loads are zero. Aborting."
 
     # Add the concentrated load to the model:
-    push!(model.concloads, ConcentratedLoad(ID, F_x, F_y, F_z, M_x, M_y, M_z))
+    concload = ConcentratedLoad(ID, F_x, F_y, F_z, M_x, M_y, M_z)
+    push!(model.concloads, concload)
 
     # Return the updated model:
     return model
@@ -175,13 +226,13 @@ function distload!(model::Model, ID::Int,
     @assert ID ∉ getfield.(model.distloads, :ID) "Distributed loads are already applied to the element."
 
     # Find the element to which the distributed load is applied:
-    element = model.elements[findfirst(x -> x.ID == ID, model.elements)]
+    elementstate = model.elementstates[findfirst(x -> x.ID == ID, model.elementstates)]
 
     # Extract the element length:
-    L = element.L
+    L = elementstate.L
 
     # Extract the transformation matrix of the element:
-    Γ = element.Γ
+    Γ = elementstate.Γ
 
     # Compute the fixed-end force vector in the local coordinate system:
     p = [
@@ -202,7 +253,8 @@ function distload!(model::Model, ID::Int,
     p = Γ * p
 
     # Add the distributed load to the model:
-    push!(model.distloads, DistributedLoad(ID, w_x, w_y, w_z, p))
+    distload = DistributedLoad(ID, w_x, w_y, w_z, p)
+    push!(model.distloads, distload)
 
     # Return the updated model:
     return model

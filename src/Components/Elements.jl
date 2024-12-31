@@ -12,19 +12,27 @@ struct Element{
     MT  <: Real, # (M)aterial (T)ype
     OAT <: Real, # (O)rientation (A)ngle (T)ype
     ET  <: Real} # (E)lement (T)ype
+    "Identification tag"
     ID        ::Int
+    "Node (``i``) of the element"
     node_i    ::Node{NIT}
+    "Node (``j``) of the element"
     node_j    ::Node{NJT}
+    "Section attached to the element"
     section   ::Section{ST}
+    "Material attached to the element"
     material  ::Material{MT}
+    "Orientation angle of the element"
     ω         ::OAT
+    "End moment releases at node (``i``) of the element"
     releases_i::Vector{Bool}
+    "End moment releases at node (``j``) of the element"
     releases_j::Vector{Bool}
 
     function Element(ID, 
-        node_i    ::Node{NIT}, 
+        node_i    ::Node{NIT},
         node_j    ::Node{NJT},
-        section   ::Section{ST}, 
+        section   ::Section{ST},
         material  ::Material{MT},
         ω         ::OAT,
         releases_i::Vector{<:Bool},
@@ -42,79 +50,88 @@ struct Element{
     end
 end
 
+gettype(::Element{NIT, NJT, ST, MT, OAT, ET}) where {NIT, NJT, ST, MT, OAT, ET} = ET
+
 mutable struct ElementState
+    "Identification tag"
     ID   ::Int
-    x_i  ::Real
-    y_i  ::Real
-    z_i  ::Real
-    x_j  ::Real
-    y_j  ::Real
-    z_j  ::Real
+    "Current length of the element"
     L    ::Real
+    "Current orientation angle of the element at node (``i``)"
     ω_i  ::Real
+    "Current orientation angle of the element at node (``j``)"
     ω_j  ::Real
+    "Current element global-to-local transformation matrix"
     Γ    ::AbstractMatrix{<:Real}
+    "Current element internal force vector in its local coordinate system"
     q    ::AbstractVector{<:Real}
+    "Current element elastic stiffness matrix in its local coordinate system"
     k_e_l::AbstractMatrix{<:Real}
+    "Current element elastic stiffness matrix in the global coordinate system"
     k_e_g::AbstractMatrix{<:Real}
+    "Current element geometric stiffness matrix in its local coordinate system"
     k_g_l::AbstractMatrix{<:Real}
+    "Current element geometric stiffness matrix in the global coordinate system"
     k_g_g::AbstractMatrix{<:Real}
 end
 
-function compute_γ(β::Real, χ::Real, ω::Real)
-    s_β, c_β = sincos(β)
+function compute_γ(ρ::Real, χ::Real, ω::Real)::AbstractMatrix{<:Real}
+    # Compute the rotation matrix about the y-axis:
+    s_ρ, c_ρ = sincos(ρ)
+    γ_ρ = [+c_ρ 0 -s_ρ; 0 +1 0; +s_ρ 0 +c_ρ]
+
+    # Compute the rotation matrix about the z-axis:
     s_χ, c_χ = sincos(χ)
+    γ_χ = [+c_χ +s_χ 0; -s_χ +c_χ 0; 0 0 +1]
+
+    # Compute the rotation matrix about the x-axis:
     s_ω, c_ω = sincos(ω)
+    γ_ω = [+1 0 0; 0 +c_ω +s_ω; 0 -s_ω +c_ω]
 
-    γ = [
-        +c_χ * c_β                      +s_χ          -c_χ * s_β                  ;
-        -c_ω * s_χ * c_β + s_ω * s_β    +c_ω * c_χ    +c_ω * s_χ * s_β + s_ω * c_β;
-        +s_ω * s_χ * c_β + c_ω * s_β    -s_ω * c_χ    -s_ω * s_χ * s_β + c_ω * c_β]
+    # Compute the element global-to-local subtransformation matrix:
+    γ = γ_ω * γ_χ * γ_ρ
 
+    # Return the element global-to-local subtransformation matrix:
     return γ
 end
 
-@memoize function compute_Γ(
-    x_i::Real, y_i::Real, z_i::Real,
-    x_j::Real, y_j::Real, z_j::Real,
-    ω_i::Real,
-    ω_j::Real)::AbstractMatrix{<:Real}
+function compute_Γ(
+    x_i::Real, y_i::Real, z_i::Real, ω_i::Real,
+    x_j::Real, y_j::Real, z_j::Real, ω_j::Real,
+    L::Real)::AbstractMatrix{<:Real}
     # Compute the element length projections:
     Δx = x_j - x_i
     Δy = y_j - y_i
     Δz = z_j - z_i
 
-    # Compute the element length:
-    L = sqrt(Δx ^ 2 + Δy ^ 2 + Δz ^ 2)
-
     # Compute the element orientation angles:
-    β = -atan(Δz, Δx) # Conventionally, this angle is called "ρ", but had to rename it to avoid conflicts with the "ρ" symbol used for the material's density
+    ρ = -atan(Δz, Δx)
     χ = π / 2 - acos(Δy / L)
 
-    # Compute the element subtransformation matrix:
-    γ_i = compute_γ(β, χ, ω_i)
-    γ_j = compute_γ(β, χ, ω_j)
+    # Compute the element global-to-local subtransformation matrix:
+    γ_i = compute_γ(ρ, χ, ω_i) # At node (i)
+    γ_j = compute_γ(ρ, χ, ω_j) # At node (j)
 
-    # Compute the element transformation matrix:
+    # Compute the element global-to-local transformation matrix:
     T = promote_type(eltype(γ_i), eltype(γ_j))
     Γ = zeros(T, 12, 12)
-    Γ[1:3  , 1:3  ] .= γ_i
-    Γ[4:6  , 4:6  ] .= γ_i
-    Γ[7:9  , 7:9  ] .= γ_j
+    Γ[  1:3,   1:3] .= γ_i
+    Γ[  4:6,   4:6] .= γ_i
+    Γ[  7:9,   7:9] .= γ_j
     Γ[10:12, 10:12] .= γ_j
 
-    map!(x -> abs(x) ≤ eps() ? zero(T) : x, Γ, Γ)
-
-    # Return the element transformation matrix:
+    # Return the element global-to-local transformation matrix:
     return Γ
 end
 
 function compute_k_e_l!(k_e_l::AbstractMatrix{<:Real}, element::Element, L::Real)::AbstractMatrix{<:Real}
-    # Extract the section properties:
-    E, ν = element.material.E, element.material.ν
+    # Extract the material properties:
+    material = element.material
+    E, ν = material.E, material.ν
 
     # Extract the section properties:
-    A, I_zz, I_yy, J = element.section.A, element.section.I_zz, element.section.I_yy, element.section.J
+    section = element.section
+    A, I_zz, I_yy, J = section.A, section.I_zz, section.I_yy, section.J
 
     # Compute the element elastic stiffness matrix:
     compute_k_e_l!(k_e_l, E, ν, A, I_zz, I_yy, J, L)
@@ -123,14 +140,14 @@ function compute_k_e_l!(k_e_l::AbstractMatrix{<:Real}, element::Element, L::Real
     return k_e_l
 end
 
-@memoize function compute_k_e_l!(k_e_l::AbstractMatrix{<:Real},
+function compute_k_e_l!(k_e_l::AbstractMatrix{<:Real},
     E::Real, ν::Real, 
     A::Real, I_zz::Real, I_yy::Real, J::Real, 
     L::Real)::AbstractMatrix{<:Real}
     # Compute the shear modulus:
     G = E / (2 * (1 + ν))
 
-    # Compute the element elastic stiffness matrix:
+    # Construct the upper triangular part of the element elastic stiffness matrix:
     @inbounds k_e_l[ 1,  1] = +E * A / L
     @inbounds k_e_l[ 1,  7] = -E * A / L
     @inbounds k_e_l[ 2,  2] = +12 * E * I_zz / L ^ 3
@@ -158,11 +175,10 @@ end
     @inbounds k_e_l[11, 11] = +4  * E * I_yy / L
     @inbounds k_e_l[12, 12] = +4  * E * I_zz / L
 
+    # Construct the lower triangular part of the element elastic stiffness matrix:
     for i in 1:12, j in (i + 1):12
         @inbounds k_e_l[j, i] = k_e_l[i, j]
     end
-
-    map!(x -> abs(x) ≤ eps() ? zero(eltype(k_e_l)) : x, k_e_l, k_e_l)
 
     # Return the element elastic stiffness matrix:
     return k_e_l
@@ -170,7 +186,8 @@ end
 
 function compute_k_g_l!(k_g_l::AbstractMatrix{<:Real}, element::Element, L::Real, N::Real)::AbstractMatrix{<:Real}
     # Extract the section properties:
-    A, J = element.section.A, element.section.J
+    section = element.section
+    A, J = section.A, section.J
 
     # Compute the element elastic stiffness matrix:
     compute_k_g_l!(k_g_l, A, J, L, N)
@@ -179,11 +196,11 @@ function compute_k_g_l!(k_g_l::AbstractMatrix{<:Real}, element::Element, L::Real
     return k_g_l
 end
 
-@memoize function compute_k_g_l!(k_g_l::AbstractMatrix{<:Real},
+function compute_k_g_l!(k_g_l::AbstractMatrix{<:Real},
     A::Real, J::Real,
     L::Real,
     N::Real)::AbstractMatrix{<:Real}
-    # Compute the element geometric stiffness matrix:
+    # Compute the upper triangular part of the element geometric stiffness matrix:
     @inbounds k_g_l[ 1,  1] = +1 / L
     @inbounds k_g_l[ 1,  7] = -1 / L
     @inbounds k_g_l[ 2,  2] = +6 / (5 * L)
@@ -211,23 +228,22 @@ end
     @inbounds k_g_l[11, 11] = +2 * L / 15
     @inbounds k_g_l[12, 12] = +2 * L / 15
 
+    k_g_l .*= +N
+
+    # Compute the lower triangular part of the element geometric stiffness matrix:
     for i in 1:12, j in (i + 1):12
         @inbounds k_g_l[j, i] = k_g_l[i, j]
     end
-
-    k_g_l .*= N
-
-    map!(x -> abs(x) ≤ eps() ? zero(eltype(k_g_l)) : x, k_g_l, k_g_l)
 
     # Return the element geometric stiffness matrix:
     return k_g_l
 end
 
-@memoize function compute_m_l!(m_l::AbstractMatrix{<:Real},
+function compute_m_l!(m_l::AbstractMatrix{<:Real},
     ρ::Real, 
     A::Real, J::Real, 
     L::Real)::AbstractMatrix{<:Real}
-    # Compute the element mass matrix:
+    # Compute the upper triangular part of the element mass matrix:
     @inbounds m_l[ 1,  1] = +140
     @inbounds m_l[ 1,  7] = +70
     @inbounds m_l[ 2,  2] = +156
@@ -254,18 +270,19 @@ end
     @inbounds m_l[10, 10] = +140 * J / A
     @inbounds m_l[11, 11] = +4 * L ^ 2
     @inbounds m_l[12, 12] = +4 * L ^ 2
-    
+
+    m_l .*= +ρ * A * L / 420
+
+    # Compute the lower triangular part of the element mass matrix:
     for i in 1:12, j in (i + 1):12
         @inbounds m_l[j, i] = m_l[i, j]
     end
-
-    m_l .*= (ρ * A * L) / 420
 
     # Return the element mass matrix:
     return m_l
 end
 
-@memoize function condense!(m::AbstractMatrix{<:Real}, releases_i::Vector{Bool}, releases_j::Vector{Bool})::AbstractMatrix{<:Real}
+function condense!(m::AbstractMatrix{<:Real}, releases_i::Vector{Bool}, releases_j::Vector{Bool})::AbstractMatrix{<:Real}
     # Condense the matrix if end releases are present:
     for i in 1:3
         # Node (i):
@@ -285,12 +302,10 @@ end
     return m
 end
 
-@memoize function transform(m::AbstractMatrix{<:Real}, Γ::AbstractMatrix{<:Real})::AbstractMatrix{<:Real}
+function transform(m::AbstractMatrix{<:Real}, Γ::AbstractMatrix{<:Real})::AbstractMatrix{<:Real}
     # Transform the matrix to the global coordinate system:
     M = transpose(Γ) * m * Γ
 
     # Return the transformed matrix:
     return M
 end
-
-gettype(::Element{NIT, NJT, ST, MT, OAT, ET}) where {NIT, NJT, ST, MT, OAT, ET} = ET

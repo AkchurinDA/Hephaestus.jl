@@ -47,6 +47,6 @@ element!(model, 15, 15, 16, 1, 1)
 # Define the loads:
 concload!(model, 16, -50, -1, 0, 0, 0, 0)
 
-solution = solve(model, NonlinearElasticAnalysis(LCM(1 / 100), 100, 100, 1E-12));
+solution = solve(model, NonlinearElasticAnalysis(LCM(1 / 1000), 1000, 100, :standard, 1E-12));
 
 getnodaldisplacements(model, solution, 16)
