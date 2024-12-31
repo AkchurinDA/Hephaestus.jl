@@ -1,52 +1,47 @@
 using Hephaestus
 
-# Define an empty model:
-model = Model()
+# Define the problem parameters:
+L = 180   # in.
+A = 9.12  # in.²
+I = 110   # in.⁴
+E = 29000 # ksi
+P = 50    # kip
+H = 1     # kip
+t = float.([L, A, I, E, P, H])
 
-# Define the nodes and DOF supports:
-node!(model,  1,   0, 0, 0, u_x = true, u_y = true, θ_z = true)
-node!(model,  2,  12, 0, 0)
-node!(model,  3,  24, 0, 0)
-node!(model,  4,  36, 0, 0)
-node!(model,  5,  48, 0, 0)
-node!(model,  6,  60, 0, 0)
-node!(model,  7,  72, 0, 0)
-node!(model,  8,  84, 0, 0)
-node!(model,  9,  96, 0, 0)
-node!(model, 10, 108, 0, 0)
-node!(model, 11, 120, 0, 0)
-node!(model, 12, 132, 0, 0)
-node!(model, 13, 144, 0, 0)
-node!(model, 14, 156, 0, 0)
-node!(model, 15, 168, 0, 0)
-node!(model, 16, 180, 0, 0)
+function f(t::AbstractVector{<:Real})::Real
+    # Extract the problem parameters:
+    L, A, I, E, P, H = t
 
-# Define the sections:
-section!(model, 1, 9.12, 110, 37.1, 1)
+    # Define an empty model:
+    model = Model()
 
-# Define the materials:
-material!(model, 1, 29000, 0.3, 0)
+    # Define the nodes and DOF supports:
+    for (i, x) in enumerate(range(0, L, 11))
+        if i == 1
+            node!(model, i, x, 0, 0, u_x = true, u_y = true, θ_z = true)
+        else
+            node!(model, i, x, 0, 0)
+        end
+    end
 
-# Define the elements:
-element!(model,  1,  1,  2, 1, 1)
-element!(model,  2,  2,  3, 1, 1)
-element!(model,  3,  3,  4, 1, 1)
-element!(model,  4,  4,  5, 1, 1)
-element!(model,  5,  5,  6, 1, 1)
-element!(model,  6,  6,  7, 1, 1)
-element!(model,  7,  7,  8, 1, 1)
-element!(model,  8,  8,  9, 1, 1)
-element!(model,  9,  9, 10, 1, 1)
-element!(model, 10, 10, 11, 1, 1)
-element!(model, 11, 11, 12, 1, 1)
-element!(model, 12, 12, 13, 1, 1)
-element!(model, 13, 13, 14, 1, 1)
-element!(model, 14, 14, 15, 1, 1)
-element!(model, 15, 15, 16, 1, 1)
+    # Define the sections:
+    section!(model, 1, A, I, 1, 1)
 
-# Define the loads:
-concload!(model, 16, -50, -1, 0, 0, 0, 0)
+    # Define the materials:
+    material!(model, 1, E, 0.3, 0)
 
-solution = solve(model, NonlinearElasticAnalysis(LCM(1 / 1000), 1000, 100, :standard, 1E-12));
+    # Define the elements:
+    for i in 1:10
+        element!(model, i, i, i + 1, 1, 1)
+    end
 
-getnodaldisplacements(model, solution, 16)
+    # Define the loads:
+    concload!(model, 11, -P, -H, 0, 0, 0, 0)
+
+    solution = solve(model, NonlinearElasticAnalysis(LCM(1 / 100), 100, 100, :standard, 1E-12));
+
+    Δ = getnodaldisplacements(model, solution, 11)[2]
+
+    return Δ
+end

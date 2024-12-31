@@ -31,19 +31,21 @@ function solve(model::Model, analysis::LinearElasticAnalysis, partitionindices::
     end
     
     # Assemble the global force vector due to concentrated loads:
-    F_conc = assemble_F_conc(model)
-    F_conc_f = F_conc[partitionindices]
+    F_c = assemble_F_c(model)
+    F_c_f = F_c[partitionindices]
 
     # Assemble the global force vector due to distributed loads:
-    F_dist   = assemble_F_dist(model)
-    F_dist_f = F_dist[  partitionindices]
-    F_dist_s = F_dist[.!partitionindices]
+    F_d   = assemble_F_d(model)
+    F_d_f = F_d[  partitionindices]
+    F_d_s = F_d[.!partitionindices]
 
     # Compute the displacements at the free DOFs:
-    U_f = K_e_ff \ (F_conc_f - F_dist_f)    
+    U_f = K_e_ff \ (F_c_f - F_d_f)    
+
+    # TODO: Update the node and element states using the computed displacements.
 
     # Compute the reaction forces at the support DOFs:
-    R_s = K_e_sf * U_f + F_dist_s
+    R_s = K_e_sf * U_f + F_d_s
 
     # Assemble the global displacement and reaction force vectors:
     U = zeros(eltype(U_f), 6 * length(model.nodes))

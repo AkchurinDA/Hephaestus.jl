@@ -54,6 +54,7 @@ function solve(model::Model, analysis::NonlinearElasticAnalysis, partitionindice
     nonlinearsolver = analysis.nonlinearsolver
     maxnumi         = analysis.maxnumi
     maxnumj         = analysis.maxnumj
+    update          = analysis.update
     ϵ               = analysis.ϵ
 
     # Initialize the increment counter:

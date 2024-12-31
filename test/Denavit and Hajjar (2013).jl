@@ -63,7 +63,7 @@
     @test M_max ≈ +180.0 rtol = 1E-3
 end
 
-@testset "Cantilever under axial and transverse loading: Linear elastic analysis" begin
+@testset "Cantilever under axial and transverse loading: Nonlinear elastic analysis" begin
     # Define an empty model:
     model = Model()
 
