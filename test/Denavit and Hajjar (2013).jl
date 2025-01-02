@@ -55,8 +55,12 @@
     # Extract the vertical displacement of free end of the cantilever beam:
     y_max = getnodaldisplacements(model, 16)[2]
 
+    # Extract the reaction force at the fixed end of the cantilever beam:
+    M_max = getnodalreactions(model, 1)[6]
+
     # Check the result:
     @test y_max ≈ -0.609 rtol = 1E-3
+    @test M_max ≈ +180.0 rtol = 1E-3
 end
 
 @testset "Cantilever under axial and transverse loading: Nonlinear elastic analysis" begin
@@ -113,6 +117,10 @@ end
     # Extract the vertical displacement of free end of the cantilever beam:
     y_max = getnodaldisplacements(model, 16)[2]
 
+    # Extract the reaction force at the fixed end of the cantilever beam:
+    M_max = getnodalreactions(model, 1)[6]
+
     # Check the result:
     @test y_max ≈ -0.765 rtol = 1E-3
+    @test M_max ≈ +218.3 rtol = 1E-3
 end

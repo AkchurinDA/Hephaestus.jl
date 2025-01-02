@@ -10,6 +10,7 @@
 - Better pretty-printing of a model's components.
 - Added automatic report generation that can be invoked by using `generatereport()` function.
 - Added a plotting extension for quick model prototyping. This plotting feature is enabled by having an extension for all `Makie.jl`'s backends.
+- Added more unit tests.
 
 ## Release V0.1.0
 

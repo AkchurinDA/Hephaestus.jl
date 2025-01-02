@@ -1,6 +1,6 @@
 mutable struct NodeState
     "Identification tag"
-    ID ::Int
+    ID::Int
     "Translation along the global ``x``-axis"
     u_x::Real
     "Translation along the global ``y``-axis"
@@ -13,6 +13,18 @@ mutable struct NodeState
     θ_y::Real
     "Rotation about the global ``z``-axis"
     θ_z::Real
+    "Reaction force along the global ``x``-axis"
+    F_r_x::Real
+    "Reaction force along the global ``y``-axis"
+    F_r_y::Real
+    "Reaction force along the global ``z``-axis"
+    F_r_z::Real
+    "Reaction moment about the global ``x``-axis"
+    M_r_x::Real
+    "Reaction moment about the global ``y``-axis"
+    M_r_y::Real
+    "Reaction moment about the global ``z``-axis"
+    M_r_z::Real
     "Has the state been modified?"
     modified::Bool
 
@@ -77,13 +89,19 @@ function initstate!(node::Node)::Node
     node.state.θ_x = 0
     node.state.θ_y = 0
     node.state.θ_z = 0
+    node.state.F_r_x = 0
+    node.state.F_r_y = 0
+    node.state.F_r_z = 0
+    node.state.M_r_x = 0
+    node.state.M_r_y = 0
+    node.state.M_r_z = 0
     node.state.modified = false
 
     # Return the updated node:
     return node
 end
 
-function updatestate!(node::Node, δu::AbstractVector{T})::Node where {T <: Real}
+function updatestate!(node::Node, δu::AbstractVector{T}, δr::AbstractVector{T})::Node where {T <: Real}
     # Update the nodal coordinates:
     node.state.u_x     += δu[1]
     node.state.u_y     += δu[2]
@@ -91,6 +109,12 @@ function updatestate!(node::Node, δu::AbstractVector{T})::Node where {T <: Real
     node.state.θ_x     += δu[4]
     node.state.θ_y     += δu[5]
     node.state.θ_z     += δu[6]
+    node.state.F_r_x   += δr[1]
+    node.state.F_r_y   += δr[2]
+    node.state.F_r_z   += δr[3]
+    node.state.M_r_x   += δr[4]
+    node.state.M_r_y   += δr[5]
+    node.state.M_r_z   += δr[6]
     node.state.modified = true
 
     # Return the updated node:

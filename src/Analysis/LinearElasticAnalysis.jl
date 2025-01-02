@@ -19,7 +19,7 @@ struct LinearElasticAnalysisCache{
     R::AbstractVector{RT}
 end
 
-function solve!(model::Model, analysis::LinearElasticAnalysis, partitionindices::Vector{Bool})::Model
+function solve!(model::Model, ::LinearElasticAnalysis, partitionindices::Vector{Bool})::Model
     # Assemble the global geometric stiffness matrix:
     K_e    = assemble_K_e(model)
     K_e_ff = K_e[  partitionindices, partitionindices]
@@ -42,20 +42,26 @@ function solve!(model::Model, analysis::LinearElasticAnalysis, partitionindices:
     # Compute the displacements at the free DOFs:
     δU_f = K_e_ff \ (F_c_f - F_d_f)
 
+    # Compute the global reaction vector at the supported DOFs:
+    δR_s = K_e_sf * δU_f + F_d_s
+
     # Infer type of the displacement vector:
     T = promote_type(eltype(K_e_ff), eltype(F_c), eltype(F_d))
 
-    # TODO: Update the node and element states using the computed displacements.
-
-    # Assemble the global displacement and reaction force vectors:
+    # Assemble the global displacement vector:
     δU = zeros(T, 6 * length(model.nodes))
     δU[partitionindices] = δU_f
+
+    # Assemble the global reaction vector:
+    δR = zeros(T, 6 * length(model.nodes))
+    δR[.!partitionindices] = δR_s
 
     # Update the state of the nodes:
     for node in model.nodes
         δu = getnodaldisplacements(model, δU, node.ID)
+        δr = getnodalreactions(model, δR, node.ID)
 
-        updatestate!(node, δu)
+        updatestate!(node, δu, δr)
     end
 
     # Update the state of each element:

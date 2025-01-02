@@ -61,8 +61,8 @@
     @test getnodaldisplacements(model, 13) ≈ [7.8367e-01, -1.0999e-01, 0.0000e+00, 0.0000e+00, 0.0000e+00, -4.2555e-03] rtol = 1E-3
 
     # Check the nodal reactions:
-    # @test getnodalreactions(model, solution, 1) ≈ [-1.7587e+01, 3.4257e+02, 0.0000e+00, 0.0000e+00, 0.0000e+00, 2.0950e+03] rtol = 1E-3
-    # @test getnodalreactions(model, solution, 2) ≈ [-1.7262e+01, 3.5440e+02, 0.0000e+00, 0.0000e+00, 0.0000e+00, 2.0486e+03] rtol = 1E-3
+    @test getnodalreactions(model, 1) ≈ [-1.7587e+01, 3.4257e+02, 0.0000e+00, 0.0000e+00, 0.0000e+00, 2.0950e+03] rtol = 1E-3
+    @test getnodalreactions(model, 2) ≈ [-1.7262e+01, 3.5440e+02, 0.0000e+00, 0.0000e+00, 0.0000e+00, 2.0486e+03] rtol = 1E-3
 end
 
 @testset "Frame #05" begin
@@ -186,7 +186,7 @@ end
     @test getnodaldisplacements(model, 29) ≈ [-1.1413e+00, -5.8057e-02, 0.0000e+00, 0.0000e+00, 0.0000e+00,  1.4321e-02] rtol = 1E-3
 
     # Check the nodal reactions:
-    # @test getnodalreactions(model, solution, 1) ≈ [ 4.3419e+00, 7.7776e+01, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00] rtol = 1E-3
-    # @test getnodalreactions(model, solution, 2) ≈ [ 7.8139e+00, 1.4673e+02, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00] rtol = 1E-3
-    # @test getnodalreactions(model, solution, 3) ≈ [-3.9792e+00, 5.1252e+01, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00] rtol = 1E-3
+    @test getnodalreactions(model, 1) ≈ [ 4.3419e+00, 7.7776e+01, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00] rtol = 1E-3
+    @test getnodalreactions(model, 2) ≈ [ 7.8139e+00, 1.4673e+02, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00] rtol = 1E-3
+    @test getnodalreactions(model, 3) ≈ [-3.9792e+00, 5.1252e+01, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00] rtol = 1E-3
 end

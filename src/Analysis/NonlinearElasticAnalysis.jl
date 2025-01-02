@@ -28,7 +28,8 @@ function solve!(model::Model, analysis::NonlinearElasticAnalysis, partitionindic
 
     # Assemble the global force vector due to distributed loads:
     F_d   = assemble_F_d(model)
-    F_d_f = F_d[partitionindices]
+    F_d_f = F_d[  partitionindices]
+    F_d_s = F_d[.!partitionindices]
 
     # Assemble the reference global force vector:
     P̄ = F_c_f - F_d_f
@@ -39,10 +40,12 @@ function solve!(model::Model, analysis::NonlinearElasticAnalysis, partitionindic
     # Preallocate:
     K_e  = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
     K_g  = zeros(T, 6 * length(model.nodes), 6 * length(model.nodes))
-    K_t  = zeros(T, count(partitionindices), count(partitionindices))
+    K_t_ff = zeros(T, count(  partitionindices), count(partitionindices))
+    K_t_sf = zeros(T, count(.!partitionindices), count(partitionindices))
     δu_p = zeros(T, count(partitionindices))
     δu_r = zeros(T, count(partitionindices))
     δU   = zeros(T, 6 * length(model.nodes))
+    δR   = zeros(T, 6 * length(model.nodes))
     U    = zeros(T, 6 * length(model.nodes))
     U_f  = zeros(T, count(partitionindices))
     P_f  = zeros(T, count(partitionindices))
@@ -80,14 +83,15 @@ function solve!(model::Model, analysis::NonlinearElasticAnalysis, partitionindic
                 assemble_K_g!(K_g, model)
 
                 # Assemble the global tangent stiffness matrix and partition it:
-                K_t .= (K_e + K_g)[partitionindices, partitionindices]
+                K_t_ff .= K_e[  partitionindices, partitionindices] + K_g[  partitionindices, partitionindices]
+                K_t_sf .= K_e[.!partitionindices, partitionindices] + K_g[.!partitionindices, partitionindices]
 
                 # Compute the displacement increment vector due to P̄ for the free DOFs:
-                δu_p .= K_t \ P̄
+                δu_p .= K_t_ff \ P̄
             end
 
             # Compute the displacement increment vector due to R for the free DOFs:
-            δu_r .= j == 1 ? 0 : K_t \ R_f
+            δu_r .= j == 1 ? 0 : K_t_ff \ R_f
 
             # Compute the load factor increment:
             a = zeros(T, count(partitionindices))
@@ -109,11 +113,18 @@ function solve!(model::Model, analysis::NonlinearElasticAnalysis, partitionindic
             δU[partitionindices] .= δU_f
             U[partitionindices] .= U_f
 
+            # Comptute the global reaction force vector:
+            δR_s = K_t_sf * δU_f + δλ * F_d_s
+
+            # Assemble the global reaction vector:
+            δR[.!partitionindices] .= δR_s
+
             # Update the state of the nodes:
             for node in model.nodes
                 δu = getnodaldisplacements(model, δU, node.ID)
+                δr = getnodalreactions(model, δR, node.ID)
 
-                updatestate!(node, δu)
+                updatestate!(node, δu, δr)
             end
 
             # Update the state of each element:

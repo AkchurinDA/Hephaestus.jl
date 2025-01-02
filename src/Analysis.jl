@@ -18,10 +18,8 @@ function solve!(model::Model, analysistype::AbstractAnalysisType; continueanalay
     # Extract the partition indices:
     partitionindices = getpartitionindices(model)
 
+    # Reinitialize the state of the model:
     if continueanalaysis ≠ true
-        # Initialize the state of the model:
-        @info "The state of the model has been initialized."
-
         # Return the node states to their initial values:
         for node in model.nodes
             initstate!(node)
