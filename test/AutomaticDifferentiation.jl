@@ -75,6 +75,11 @@
     gradient!(f, ∇f, AutoReverseDiff(), t)
     gradient!(f_exact, ∇f_exact, AutoReverseDiff(), t)
     @test ∇f ≈ ∇f_exact rtol = 1E-3
+
+    # Compute the gradient vector using FiniteDiff.jl:
+    gradient!(f, ∇f, AutoFiniteDiff(), t)
+    gradient!(f_exact, ∇f_exact, AutoFiniteDiff(), t)
+    @test ∇f ≈ ∇f_exact rtol = 1E-3
 end
 
 @testset "Cantilever beam subjected to distributed load: Linear elastic analysis" begin
@@ -155,5 +160,10 @@ end
     # Compute the gradient vector using ReverseDiff.jl:
     gradient!(f, ∇f, AutoReverseDiff(), t)
     gradient!(f_exact, ∇f_exact, AutoReverseDiff(), t)
+    @test ∇f ≈ ∇f_exact rtol = 1E-3
+
+    # Compute the gradient vector using FiniteDiff.jl:
+    gradient!(f, ∇f, AutoFiniteDiff(), t)
+    gradient!(f_exact, ∇f_exact, AutoFiniteDiff(), t)
     @test ∇f ≈ ∇f_exact rtol = 1E-3
 end
