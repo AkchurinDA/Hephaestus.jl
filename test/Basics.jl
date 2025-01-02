@@ -2,7 +2,7 @@
     # Define an empty model:
     model = Model()
 
-    # Define the nodes and DOF supports: 
+    # Define the nodes and DOF supports:
     node!(model, 1,   0, 0, 0)
     node!(model, 2, 120, 0, 0)
 

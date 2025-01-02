@@ -23,7 +23,7 @@ export NonlinearElasticAnalysis, NonlinearElasticAnalysisCache
 export ElasticBucklingAnalysis, ElasticBucklingAnalysisCache
 export FreeVibrationAnalysis, FreeVibrationAnalysisCache
 export LCM, DCM, ALCM, WCM
-export solve
+export solve!
 export getnodaldisplacements, getnodalreactions
 export getelementdisplacements, getelementforces
 export generatereport

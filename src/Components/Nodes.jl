@@ -1,3 +1,25 @@
+mutable struct NodeState
+    "Identification tag"
+    ID ::Int
+    "Translation along the global ``x``-axis"
+    u_x::Real
+    "Translation along the global ``y``-axis"
+    u_y::Real
+    "Translation along the global ``z``-axis"
+    u_z::Real
+    "Rotation about the global ``x``-axis"
+    θ_x::Real
+    "Rotation about the global ``y``-axis"
+    θ_y::Real
+    "Rotation about the global ``z``-axis"
+    θ_z::Real
+    "Has the state been modified?"
+    modified::Bool
+
+    # Constructor:
+    NodeState() = new()
+end
+
 """
     struct Node
 
@@ -26,11 +48,15 @@ struct Node{T <: Real}
     θ_y::Bool
     "Is the node restrained against rotation about the global ``z``-axis?"
     θ_z::Bool
+    "Current state"
+    state::NodeState
 
-    function Node(ID::Int, 
+    # Constructor:
+    function Node(ID::Int,
         x::T1, y::T2, z::T3,
         u_x::Bool, u_y::Bool, u_z::Bool,
-        θ_x::Bool, θ_y::Bool, θ_z::Bool) where {
+        θ_x::Bool, θ_y::Bool, θ_z::Bool,
+        state::NodeState) where {
         T1 <: Real,
         T2 <: Real,
         T3 <: Real}
@@ -38,34 +64,37 @@ struct Node{T <: Real}
         T = float(promote_type(T1, T2, T3))
 
         # Construct a new instance:
-        return new{T}(ID, x, y, z, u_x, u_y, u_z, θ_x, θ_y, θ_z)
+        return new{T}(ID, x, y, z, u_x, u_y, u_z, θ_x, θ_y, θ_z, state)
     end
 end
 
-gettype(::Node{T}) where {T} = T
-
-mutable struct NodeState
-    "Identification tag"
-    ID ::Int
-    "Translation along the global ``x``-axis"
-    u_x::Real
-    "Translation along the global ``y``-axis"
-    u_y::Real
-    "Translation along the global ``z``-axis"
-    u_z::Real
-    "Rotation about the global ``x``-axis"
-    θ_x::Real
-    "Rotation about the global ``y``-axis"
-    θ_y::Real
-    "Rotation about the global ``z``-axis"
-    θ_z::Real
-    modified::Bool
-end
-
-function initnodestate(node::Node)::NodeState
+function initstate!(node::Node)::Node
     # Initialize the state of the node:
-    nodestate = NodeState(node.ID, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false)
+    node.state.ID = node.ID
+    node.state.u_x = 0
+    node.state.u_y = 0
+    node.state.u_z = 0
+    node.state.θ_x = 0
+    node.state.θ_y = 0
+    node.state.θ_z = 0
+    node.state.modified = false
 
-    # Return the state of the node:
-    return nodestate
+    # Return the updated node:
+    return node
 end
+
+function updatestate!(node::Node, δu::AbstractVector{T})::Node where {T <: Real}
+    # Update the nodal coordinates:
+    node.state.u_x     += δu[1]
+    node.state.u_y     += δu[2]
+    node.state.u_z     += δu[3]
+    node.state.θ_x     += δu[4]
+    node.state.θ_y     += δu[5]
+    node.state.θ_z     += δu[6]
+    node.state.modified = true
+
+    # Return the updated node:
+    return node
+end
+
+gettype(::Node{T}) where {T} = T

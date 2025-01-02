@@ -3,16 +3,26 @@
 
 Extracts the displacement vector of a node of interest from the solution cache.
 """
-getnodaldisplacements(model::Model, solution::AbstractSolutionCache, ID::Int) = getnodaldisplacements(model, solution.U, ID)
-function getnodaldisplacements(model::Model, U::AbstractVector{<:Real}, ID::Int)
+function getnodaldisplacements(model::Model, δU::AbstractVector{<:Real}, ID::Int)
     # Find the index of the node in the model:
-    index = findfirst(x -> x.ID == ID, model.nodes) 
+    index = findfirst(x -> x.ID == ID, model.nodes)
 
     # Extract the displacement vector of the node:
-    nodedisp = U[(6 * index - 5):(6 * index)]
+    δu = δU[(6 * index - 5):(6 * index)]
 
     # Return the displacement vector:
-    return nodedisp
+    return δu
+end
+
+function getnodaldisplacements(model::Model, ID::Int)
+    # Find the node in the model:
+    node = model.nodes[findfirst(x -> x.ID == ID, model.nodes)]
+
+    # Extract the displacement vector of the node:
+    δu = [node.state.u_x, node.state.u_y, node.state.u_z, node.state.θ_x, node.state.θ_y, node.state.θ_z]
+
+    # Return the displacement vector:
+    return δu
 end
 
 """
@@ -23,7 +33,7 @@ Extracts the reaction vector of a node of interest from the solution cache.
 getnodalreactions(model::Model, solution::AbstractSolutionCache, ID::Int) = getnodalreactions(model, solution.R, ID)
 function getnodalreactions(model::Model, R::AbstractVector{<:Real}, ID::Int)
     # Find the index of the node in the model:
-    index = findfirst(x -> x.ID == ID, model.nodes) 
+    index = findfirst(x -> x.ID == ID, model.nodes)
 
     # Extract the reaction vector of the node:
     nodereactions = R[(6 * index - 5):(6 * index)]
@@ -91,7 +101,7 @@ function getelementforces(element::Element, elementstate::ElementState)
     elementdisplacements = [elementstate.node_i_coords; elementstate.node_j_coords]
 
     elementdisplacements = elementstate.Γ * elementdisplacements
-    
+
     elementforces = (k_e_l + k_g_l) * elementdisplacements
 
     return elementforces

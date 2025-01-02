@@ -10,10 +10,10 @@ struct LCM <: AbstractNonlinearSolver
     Δλ::Real
 end
 
-function coefficients(nonlinearsolver::LCM, j::Int, partitionindices::Vector{Bool})
+function coefficients(nonlinearsolver::LCM, partitionindices::Vector{Bool})
     a = zeros(length(partitionindices))
     b = 1
-    c = j == 1 ? nonlinearsolver.Δλ : 0
+    c = nonlinearsolver.Δλ
 
     return a, b, c
 end
@@ -49,9 +49,9 @@ struct ALCM <: AbstractNonlinearSolver
 end
 
 function constraintequation(
-    a::AbstractVector{<:Real}, 
-    b::Real, 
-    c::Real, 
+    a   ::AbstractVector{<:Real},
+    b   ::Real,
+    c   ::Real,
     δu_p::AbstractVector{<:Real},
     δu_r::AbstractVector{<:Real})::Real
     # Compute the load paramter increment:

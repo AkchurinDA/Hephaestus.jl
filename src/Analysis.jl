@@ -14,31 +14,28 @@ include("Analysis/Postprocessing.jl")
 
 Solve the model using the specified analysis type.
 """
-function solve(model::Model, analysistype::AbstractAnalysisType)::AbstractSolutionCache
+function solve!(model::Model, analysistype::AbstractAnalysisType; continueanalaysis::Bool = false)::Model
     # Extract the partition indices:
     partitionindices = getpartitionindices(model)
 
-    # Return the node states to their initial values:
-    if any([nodestate.modified for nodestate in model.nodestates]) # If any node state has been modified
-        empty!(model.nodestates)
-        for node in model.nodes
-            push!(model.nodestates, initnodestate(node))
-        end
-        @info "Node states have been reset to their initial values."
-    end
+    if continueanalaysis ≠ true
+        # Initialize the state of the model:
+        @info "The state of the model has been initialized."
 
-    # Return the element states to their initial values:
-    if any([elementstate.modified for elementstate in model.elementstates]) # If any element state has been modified
-        empty!(model.elementstates)
-        for element in model.elements
-            push!(model.elementstates, initelementstate(element))
+        # Return the node states to their initial values:
+        for node in model.nodes
+            initstate!(node)
         end
-        @info "Element states have been reset to their initial values."
+
+        # Return the element states to their initial values:
+        for element in model.elements
+            initstate!(element)
+        end
     end
 
     # Solve the model using the specified analysis type:
-    solution = solve(model, analysistype, partitionindices)
+    solve!(model, analysistype, partitionindices)
 
-    # Return the solution:
-    return solution
+    # Return the updated model:
+    return model
 end

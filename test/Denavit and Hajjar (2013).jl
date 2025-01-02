@@ -50,17 +50,13 @@
     concload!(model, 16, -50, -1, 0, 0, 0, 0)
 
     # Solve the model using a linear elastic analysis:
-    solution = solve(model, LinearElasticAnalysis())
+    solve!(model, LinearElasticAnalysis())
 
     # Extract the vertical displacement of free end of the cantilever beam:
-    y_max = getnodaldisplacements(model, solution, 16)[2]
-
-    # Extract the nodal reactions at the fixed end of the cantilever beam:
-    M_max = getnodalreactions(model, solution, 1)[6]
+    y_max = getnodaldisplacements(model, 16)[2]
 
     # Check the result:
     @test y_max ≈ -0.609 rtol = 1E-3
-    @test M_max ≈ +180.0 rtol = 1E-3
 end
 
 @testset "Cantilever under axial and transverse loading: Nonlinear elastic analysis" begin
@@ -112,15 +108,11 @@ end
     concload!(model, 16, -50, -1, 0, 0, 0, 0)
 
     # Solve the model using a linear elastic analysis:
-    solution = solve(model, NonlinearElasticAnalysis(LCM(1 / 1000), 1000, 1000, :standard, 1E-12))
+    solve!(model, NonlinearElasticAnalysis(LCM(1 / 1000), 1000, 1000, :standard, 1E-12))
 
     # Extract the vertical displacement of free end of the cantilever beam:
-    y_max = getnodaldisplacements(model, solution, 16)[2]
-
-    # Extract the nodal reactions at the fixed end of the cantilever beam:
-    # M_max = getnodalreactions(model, solution, 1)[6]
+    y_max = getnodaldisplacements(model, 16)[2]
 
     # Check the result:
     @test y_max ≈ -0.765 rtol = 1E-3
-    # @test M_max ≈ +180.0 rtol = 1E-3
 end
