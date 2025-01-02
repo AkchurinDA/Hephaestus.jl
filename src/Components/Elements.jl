@@ -1,3 +1,31 @@
+mutable struct ElementState
+    "Identification tag"
+    ID   ::Int
+    "Current length of the element"
+    L    ::Real
+    "Current orientation angle of the element at node (``i``)"
+    ω_i  ::Real
+    "Current orientation angle of the element at node (``j``)"
+    ω_j  ::Real
+    "Current element global-to-local transformation matrix"
+    Γ    ::AbstractMatrix{<:Real}
+    "Current element internal force vector in its local coordinate system"
+    q    ::AbstractVector{<:Real}
+    "Current element elastic stiffness matrix in its local coordinate system"
+    k_e_l::AbstractMatrix{<:Real}
+    "Current element elastic stiffness matrix in the global coordinate system"
+    k_e_g::AbstractMatrix{<:Real}
+    "Current element geometric stiffness matrix in its local coordinate system"
+    k_g_l::AbstractMatrix{<:Real}
+    "Current element geometric stiffness matrix in the global coordinate system"
+    k_g_g::AbstractMatrix{<:Real}
+    "Has the state been modified?"
+    modified::Bool
+
+    # Constructor:
+    ElementState() = new()
+end
+
 """
     struct Element
 
@@ -28,15 +56,19 @@ struct Element{
     releases_i::Vector{Bool}
     "End moment releases at node (``j``) of the element"
     releases_j::Vector{Bool}
+    "Current state"
+    state     ::ElementState
 
-    function Element(ID, 
+    # Constructor:
+    function Element(ID,
         node_i    ::Node{NIT},
         node_j    ::Node{NJT},
         section   ::Section{ST},
         material  ::Material{MT},
         ω         ::OAT,
         releases_i::Vector{<:Bool},
-        releases_j::Vector{<:Bool})::Element where {
+        releases_j::Vector{<:Bool},
+        state     ::ElementState)::Element where {
         NIT <: Real,
         NJT <: Real,
         ST  <: Real,
@@ -46,35 +78,131 @@ struct Element{
         ET = float(promote_type(NIT, NJT, ST, MT, OAT))
 
         # Return the element:
-        return new{NIT, NJT, ST, MT, OAT, ET}(ID, node_i, node_j, section, material, ω, releases_i, releases_j)
+        return new{NIT, NJT, ST, MT, OAT, ET}(ID, node_i, node_j, section, material, ω, releases_i, releases_j, state)
     end
 end
 
-gettype(::Element{NIT, NJT, ST, MT, OAT, ET}) where {NIT, NJT, ST, MT, OAT, ET} = ET
+function initstate!(element::Element)::Element
+    # Compute the length of the element:
+    L = sqrt(
+        (element.node_j.x - element.node_i.x) ^ 2 +
+        (element.node_j.y - element.node_i.y) ^ 2 +
+        (element.node_j.z - element.node_i.z) ^ 2)
 
-mutable struct ElementState
-    "Identification tag"
-    ID   ::Int
-    "Current length of the element"
-    L    ::Real
-    "Current orientation angle of the element at node (``i``)"
-    ω_i  ::Real
-    "Current orientation angle of the element at node (``j``)"
-    ω_j  ::Real
-    "Current element global-to-local transformation matrix"
-    Γ    ::AbstractMatrix{<:Real}
-    "Current element internal force vector in its local coordinate system"
-    q    ::AbstractVector{<:Real}
-    "Current element elastic stiffness matrix in its local coordinate system"
-    k_e_l::AbstractMatrix{<:Real}
-    "Current element elastic stiffness matrix in the global coordinate system"
-    k_e_g::AbstractMatrix{<:Real}
-    "Current element geometric stiffness matrix in its local coordinate system"
-    k_g_l::AbstractMatrix{<:Real}
-    "Current element geometric stiffness matrix in the global coordinate system"
-    k_g_g::AbstractMatrix{<:Real}
-    modified::Bool
+    # Compute the orientation angle of the element:
+    ω_i = element.ω
+    ω_j = element.ω
+
+    # Compute the element global-to-local transformation matrix:
+    Γ = compute_Γ(
+        element.node_i.x, element.node_i.y, element.node_i.z, ω_i,
+        element.node_j.x, element.node_j.y, element.node_j.z, ω_j,
+        L)
+
+    # Infer the type of the element stiffness matrices:
+    T = gettype(element)
+
+    # Initialize the element internal force vector:
+    q = zeros(T, 12)
+
+    # Initialize the element elastic stiffness matrix:
+    k_e_l = zeros(T, 12, 12)
+    compute_k_e_l!(k_e_l, element, L)
+    condense!(k_e_l, element.releases_i, element.releases_j)
+    k_e_g = transform(k_e_l, Γ)
+
+    # Initialize the element geometric stiffness matrix:
+    k_g_l = zeros(T, 12, 12)
+    compute_k_g_l!(k_g_l, element, L, 0)
+    condense!(k_g_l, element.releases_i, element.releases_j)
+    k_g_g = transform(k_g_l, Γ)
+
+    # Initialize the state of the element:
+    element.state.ID       = element.ID
+    element.state.L        = L
+    element.state.ω_i      = ω_i
+    element.state.ω_j      = ω_j
+    element.state.Γ        = Γ
+    element.state.q        = q
+    element.state.k_e_l    = k_e_l
+    element.state.k_e_g    = k_e_g
+    element.state.k_g_l    = k_g_l
+    element.state.k_g_g    = k_g_g
+    element.state.modified = false
+
+    # Return the state of the element:
+    return element
 end
+
+function updatestate!(element::Element, δu_i::AbstractVector{T}, δu_j::AbstractVector{T})::Element where {T<:Real}
+    # Extract the original nodal coordinates:
+    x_i = element.node_i.x
+    y_i = element.node_i.y
+    z_i = element.node_i.z
+    x_j = element.node_j.x
+    y_j = element.node_j.y
+    z_j = element.node_j.z
+
+    # Extract the nodal coordinates:
+    u_x_i = element.node_i.state.u_x
+    u_y_i = element.node_i.state.u_y
+    u_z_i = element.node_i.state.u_z
+    u_x_j = element.node_j.state.u_x
+    u_y_j = element.node_j.state.u_y
+    u_z_j = element.node_j.state.u_z
+
+    # Update the element length:
+    element.state.L = sqrt(
+        (x_j + u_x_i - x_i - u_x_j) ^ 2 +
+        (y_j + u_y_i - y_i - u_y_j) ^ 2 +
+        (z_j + u_z_i - z_i - u_z_j) ^ 2)
+
+    # Update the element orientation angles at its nodes (i) and (j):
+    element.state.ω_i += δu_i[4]
+    element.state.ω_j += δu_j[4]
+
+    # Compute the updated element global-to-local transformation matrix:
+    Γ′ = compute_Γ(
+        x_i + u_x_i, y_i + u_y_i, z_i + u_z_i, element.state.ω_i,
+        x_j + u_x_j, y_j + u_y_j, z_j + u_z_j, element.state.ω_j,
+        element.state.L)
+
+    # Construct the global element displacement increment vector:
+    δu_g = [δu_i; δu_j]
+
+    # Transform the global element displacement increment vector into its previous local coordinate system:
+    δu_l = element.state.Γ * δu_g
+
+    # Compute the element internal force increment vector in its previous local coordinate system:
+    δq_l  = (element.state.k_e_l + element.state.k_g_l) * δu_l
+
+    # Compute the element internal force increment vector in its global coordinate system:
+    q_l   = element.state.q + δq_l
+    q_g   = transpose(element.state.Γ) * q_l
+    q_l′  = Γ′ * q_g
+    element.state.q = q_l′
+
+    element.state.Γ = Γ′
+
+    k_e_l = zeros(T, 12, 12)
+    compute_k_e_l!(k_e_l, element, element.state.L)
+    condense!(k_e_l, element.releases_i, element.releases_j)
+    element.state.k_e_l = k_e_l
+    element.state.k_e_g = transform(k_e_l, Γ′)
+
+    k_g_l = zeros(T, 12, 12)
+    compute_k_g_l!(k_g_l, element, element.state.L, element.state.q[7])
+    condense!(k_g_l, element.releases_i, element.releases_j)
+    element.state.k_g_l = k_g_l
+    element.state.k_g_g = transform(k_g_l, Γ′)
+
+    element.state.modified = true
+
+    # Return the updated element:
+    return element
+end
+
+gettype(::Element{NIT, NJT, ST, MT, OAT, ET}) where {NIT, NJT, ST, MT, OAT, ET} = ET
 
 function compute_γ(ρ::Real, χ::Real, ω::Real)::AbstractMatrix{<:Real}
     # Compute the rotation matrix about the y-axis:
@@ -142,8 +270,8 @@ function compute_k_e_l!(k_e_l::AbstractMatrix{<:Real}, element::Element, L::Real
 end
 
 function compute_k_e_l!(k_e_l::AbstractMatrix{<:Real},
-    E::Real, ν::Real, 
-    A::Real, I_zz::Real, I_yy::Real, J::Real, 
+    E::Real, ν::Real,
+    A::Real, I_zz::Real, I_yy::Real, J::Real,
     L::Real)::AbstractMatrix{<:Real}
     # Compute the shear modulus:
     G = E / (2 * (1 + ν))
@@ -241,8 +369,8 @@ function compute_k_g_l!(k_g_l::AbstractMatrix{<:Real},
 end
 
 function compute_m_l!(m_l::AbstractMatrix{<:Real},
-    ρ::Real, 
-    A::Real, J::Real, 
+    ρ::Real,
+    A::Real, J::Real,
     L::Real)::AbstractMatrix{<:Real}
     # Compute the upper triangular part of the element mass matrix:
     @inbounds m_l[ 1,  1] = +140
@@ -253,11 +381,11 @@ function compute_m_l!(m_l::AbstractMatrix{<:Real},
     @inbounds m_l[ 2, 12] = -13 * L
     @inbounds m_l[ 3,  3] = +156
     @inbounds m_l[ 3,  5] = -22 * L
-    @inbounds m_l[ 3,  9] = +54 
+    @inbounds m_l[ 3,  9] = +54
     @inbounds m_l[ 3, 11] = +13 * L
     @inbounds m_l[ 4,  4] = +140 * J / A
     @inbounds m_l[ 4, 10] = +70  * J / A
-    @inbounds m_l[ 5,  5] = +4 * L ^ 2 
+    @inbounds m_l[ 5,  5] = +4 * L ^ 2
     @inbounds m_l[ 5,  9] = -13 * L
     @inbounds m_l[ 5, 11] = -3 * L ^ 2
     @inbounds m_l[ 6,  6] = +4 * L ^ 2
@@ -309,46 +437,4 @@ function transform(m::AbstractMatrix{<:Real}, Γ::AbstractMatrix{<:Real})::Abstr
 
     # Return the transformed matrix:
     return M
-end
-
-function initelementstate(element::Element)::ElementState
-    # Compute the length of the element:
-    L = sqrt(
-        (element.node_j.x - element.node_i.x) ^ 2 + 
-        (element.node_j.y - element.node_i.y) ^ 2 + 
-        (element.node_j.z - element.node_i.z) ^ 2)
-
-    # Compute the orientation angle of the element:
-    ω_i = element.ω
-    ω_j = element.ω
-
-    # Compute the element global-to-local transformation matrix:
-    Γ = compute_Γ(
-        element.node_i.x, element.node_i.y, element.node_i.z, ω_i, 
-        element.node_j.x, element.node_j.y, element.node_j.z, ω_j, 
-        L)
-
-    # Infer the type of the element stiffness matrices:
-    T = gettype(element)
-
-    # Initialize the element internal force vector:
-    q = zeros(T, 12)
-
-    # Initialize the element elastic stiffness matrix:
-    k_e_l = zeros(T, 12, 12)
-    compute_k_e_l!(k_e_l, element, L)
-    condense!(k_e_l, element.releases_i, element.releases_j)
-    k_e_g = transform(k_e_l, Γ)
-
-    # Initialize the element geometric stiffness matrix:
-    k_g_l = zeros(T, 12, 12)
-    compute_k_g_l!(k_g_l, element, L, 0)
-    condense!(k_g_l, element.releases_i, element.releases_j)
-    k_g_g = transform(k_g_l, Γ)
-
-    # Initialize the state of the element:
-    elementstate = ElementState(element.ID, L, ω_i, ω_j, Γ, q, k_e_l, k_e_g, k_g_l, k_g_g, false)
-
-    # Return the state of the element:
-    return elementstate
 end

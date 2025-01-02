@@ -22,7 +22,7 @@ function getpartitionindices(model::Model)
             # Extract the free DOFs of the node:
             u_x, u_y, u_z = node.u_x, node.u_y, node.u_z
             θ_x, θ_y, θ_z = node.θ_x, node.θ_y, node.θ_z
-    
+
             # Assemble the partition indices for the free DOFs:
             @inbounds partitionindices[6 * i - 5] = !u_x
             @inbounds partitionindices[6 * i - 4] = !u_y
@@ -51,9 +51,9 @@ end
 
 function assemble_K_e!(K_e::AbstractMatrix{<:Real}, model::Model)
     # Assemble the global elastic stiffness matrix:
-    for (element, elementstate) in zip(model.elements, model.elementstates)
+    for element in model.elements
         # Extact the element stiffness matrix in the global coordinate system:
-        k_e_g = elementstate.k_e_g
+        k_e_g = element.state.k_e_g
 
         # Assemble the element stiffness matrix into the global stiffness matrix:
         index_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)
@@ -82,9 +82,9 @@ end
 
 function assemble_K_g!(K_g::AbstractMatrix{<:Real}, model::Model)
     # Assemble the global geometric stiffness matrix:
-    for (element, elementstate) in zip(model.elements, model.elementstates)
+    for element in model.elements
         # Extact the element stiffness matrix in the global coordinate system:
-        k_g_g = elementstate.k_g_g
+        k_g_g = element.state.k_g_g
 
         # Assemble the element stiffness matrix into the global stiffness matrix:
         index_i = findfirst(x -> x.ID == element.node_i.ID, model.nodes)
@@ -201,4 +201,4 @@ function assemble_F_d(model::Model)
 
     # Return the global load vector:
     return F_d
-end 
+end
