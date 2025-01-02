@@ -35,7 +35,7 @@ distload!
 ## Functions Used to Perform Analyses of Different Types and Extract the Results
 
 ```@docs
-solve
+solve!
 getnodaldisplacements
 getnodalreactions
 getelementdisplacements

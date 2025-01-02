@@ -10,7 +10,7 @@ include("Analysis/FreeVibrationAnalysis.jl")
 include("Analysis/Postprocessing.jl")
 
 """
-    solve(model::Model, analysistype::AbstractAnalysisType)
+    solve!(model::Model, analysistype::AbstractAnalysisType; continueanalaysis::Bool = false)
 
 Solve the model using the specified analysis type.
 """

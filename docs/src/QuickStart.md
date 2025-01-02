@@ -13,7 +13,7 @@ using Hephaestus
 To create a new model, use the [`Model()`](@ref) constructor:
 
 ```@example QuickStart
-model = Model(dimentionality = 2)
+model = Model()
 ```
 
 To add nodes to the model, use the [`node!()`](@ref) function:
