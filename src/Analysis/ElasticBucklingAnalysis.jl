@@ -19,23 +19,20 @@ struct ElasticBucklingAnalysisCache{
     Φ::AbstractMatrix{ΦT}
 end
 
-function solve(model::Model, ::ElasticBucklingAnalysis, partitionindices::Vector{Bool})
+function solve(model::Model, ::ElasticBucklingAnalysis, partitionindices::Vector{Bool})::ElasticBucklingAnalysisCache
     # Perform the linear elastic analysis:
-    solution = solve(model, LinearElasticAnalysis(), partitionindices)
+    _ = solve(model, LinearElasticAnalysis(), partitionindices)
 
     # Extract the global elastic stiffness matrix and partition it:
-    K_e = assemble_K_e(model)
+    K_e    = assemble_K_e(model)
     K_e_ff = K_e[partitionindices, partitionindices]
 
-    # Extract the element axial loads and partition them:
-    P = [getelementforces(model, solution, element.ID)[7] for element in model.elements]
-
     # Assemble the global geometric stiffness matrix and partition it:
-    K_g = assemble_K_g(model, P)
+    K_g    = assemble_K_g(model)
     K_g_ff = K_g[partitionindices, partitionindices]
 
     # Solve the generalized eigenvalue problem:
-    Λ, ϕ = eigen(K_e_ff, -K_g_ff)
+    Λ, ϕ = eigen(+K_e_ff, -K_g_ff)
 
     # Take only the real parts:
     Λ = real.(Λ)

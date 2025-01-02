@@ -24,7 +24,7 @@ Makie.@recipe(PlotModel, Model) do scene
         elementcolor     = :black,
         elementlinestyle = :solid,
         elementlinewidth = 1,
-        
+
         # Element labels:
         elementlabelvisible = true,
         elementlabelalign   = (:right, :top),
@@ -39,9 +39,11 @@ end
 
 # Define the preferred axis type for the model plot:
 function Makie.preferred_axis_type(P::PlotModel)
-    if P[:Model][].dimentionality == 2
+    if P[:Model][].dimensionality == 2
         return Makie.Axis
-    elseif P[:Model][].dimentionality == 3
+    end
+
+    if P[:Model][].dimensionality == 3
         return Makie.Axis3
     end
 end
@@ -57,10 +59,10 @@ function Makie.plot!(P::PlotModel)
             for element in values(model[].elements)
                 # Extract the coordinates of the element's nodes:
                 x_i, y_i, z_i = element.node_i.x, element.node_i.y, element.node_i.z
-                x_j, y_j, z_j = element.node_j.x, element.node_j.y, element.node_j.z 
+                x_j, y_j, z_j = element.node_j.x, element.node_j.y, element.node_j.z
 
                 # Plot the element:
-                lines!(P, [x_i, x_j], [y_i, y_j], [z_i, z_j], 
+                lines!(P, [x_i, x_j], [y_i, y_j], [z_i, z_j],
                     color     = P[:elementcolor    ],
                     linestyle = P[:elementlinestyle],
                     linewidth = P[:elementlinewidth])

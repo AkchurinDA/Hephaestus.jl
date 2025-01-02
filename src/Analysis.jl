@@ -14,13 +14,26 @@ include("Analysis/Postprocessing.jl")
 
 Solve the model using the specified analysis type.
 """
-function solve(model::Model, analysistype::AbstractAnalysisType)
+function solve!(model::Model, analysistype::AbstractAnalysisType; continueanalaysis::Bool = false)::Model
     # Extract the partition indices:
     partitionindices = getpartitionindices(model)
 
-    # Solve the model using the specified analysis type:
-    solution = solve(model, analysistype, partitionindices)
+    # Reinitialize the state of the model:
+    if continueanalaysis ≠ true
+        # Return the node states to their initial values:
+        for node in model.nodes
+            initstate!(node)
+        end
 
-    # Return the solution:
-    return solution
+        # Return the element states to their initial values:
+        for element in model.elements
+            initstate!(element)
+        end
+    end
+
+    # Solve the model using the specified analysis type:
+    solve!(model, analysistype, partitionindices)
+
+    # Return the updated model:
+    return model
 end

@@ -1,84 +1,92 @@
 """
-    getnodaldisplacements(model::Model, solution::AbstractSolutionCache, ID::Int)
+    getnodaldisplacements(model::Model, ID::Int)
 
-Extracts the displacement vector of a node of interest from the solution cache.
+Extracts the displacement vector of a node of interest.
 """
-getnodaldisplacements(model::Model, solution::AbstractSolutionCache, ID::Int) = getnodaldisplacements(model, solution.U, ID)
-function getnodaldisplacements(model::Model, U::AbstractVector{<:Real}, ID::Int)
-    # Find the index of the node in the model:
-    index = findfirst(x -> x.ID == ID, model.nodes) 
+function getnodaldisplacements(model::Model, ID::Int)
+    # Find the node in the model:
+    node = model.nodes[findfirst(x -> x.ID == ID, model.nodes)]
 
     # Extract the displacement vector of the node:
-    nodedisp = U[(6 * index - 5):(6 * index)]
+    δu = [node.state.u_x, node.state.u_y, node.state.u_z, node.state.θ_x, node.state.θ_y, node.state.θ_z]
 
     # Return the displacement vector:
-    return nodedisp
+    return δu
+end
+
+function getnodaldisplacements(model::Model, δU::AbstractVector{<:Real}, ID::Int)
+    # Find the index of the node in the model:
+    index = findfirst(x -> x.ID == ID, model.nodes)
+
+    # Extract the displacement vector of the node:
+    δu = δU[(6 * index - 5):(6 * index)]
+
+    # Return the displacement vector:
+    return δu
 end
 
 """
-    getnodalreactions(model::Model, solution::AbstractSolutionCache, ID::Int)
+    getnodalreactions(model::Model, ID::Int)
 
 Extracts the reaction vector of a node of interest from the solution cache.
 """
-getnodalreactions(model::Model, solution::AbstractSolutionCache, ID::Int) = getnodalreactions(model, solution.R, ID)
-function getnodalreactions(model::Model, R::AbstractVector{<:Real}, ID::Int)
+function getnodalreactions(model::Model, ID::Int)
+    # Find the node in the model:
+    node = model.nodes[findfirst(x -> x.ID == ID, model.nodes)]
+
+    # Extract the displacement vector of the node:
+    δr = [node.state.F_r_x, node.state.F_r_y, node.state.F_r_z, node.state.M_r_x, node.state.M_r_y, node.state.M_r_z]
+
+    # Return the displacement vector:
+    return δr
+end
+
+function getnodalreactions(model::Model, δR::AbstractVector{<:Real}, ID::Int)
     # Find the index of the node in the model:
-    index = findfirst(x -> x.ID == ID, model.nodes) 
+    index = findfirst(x -> x.ID == ID, model.nodes)
 
     # Extract the reaction vector of the node:
-    nodereactions = R[(6 * index - 5):(6 * index)]
+    δr = δR[(6 * index - 5):(6 * index)]
 
     # Return the reaction vector:
-    return nodereactions
+    return δr
 end
 
 """
-    getelementdisplacements(model::Model, solution::AbstractSolutionCache, ID::Int)
+    getelementdisplacements(model::Model, ID::Int)
 
-Extracts the displacement vector of an element of interest in its local coordinate system from the solution cache.
+Extracts the displacement vector of an element of interest in its local coordinate system.
 """
-getelementdisplacements(model::Model, solution::AbstractSolutionCache, ID::Int) = getelementdisplacements(model, solution.U, ID)
-function getelementdisplacements(model::Model, U::AbstractVector{<:Real}, ID::Int)
+function getelementdisplacements(model::Model, ID::Int)
     # Find the element in the model:
     element = model.elements[findfirst(x -> x.ID == ID, model.elements)]
 
     # Extract the displacements of the nodes of the element:
-    nodeidisplacements = getnodaldisplacements(model, U, element.node_i.ID)
-    nodejdisplacements = getnodaldisplacements(model, U, element.node_j.ID)
+    δu_i_g = getnodaldisplacements(model, element.node_i.ID)
+    δu_j_g = getnodaldisplacements(model, element.node_j.ID)
 
     # Combine the displacements of the nodes into the displacement vector of the element:
-    elementdisplacements = [nodeidisplacements; nodejdisplacements]
+    δu_g = [δu_i_g; δu_j_g]
 
     # Transform the displacement vector of the element to the local coordinate system:
-    elementdisplacements = element.Γ * elementdisplacements
+    δu_l = element.state.Γ * δu_g
 
     # Return the displacement vector of the element:
-    return elementdisplacements
+    return δu_l
 end
 
 """
-    getelementforces(model::Model, solution::AbstractSolutionCache, ID::Int)
+    getelementforces(model::Model, ID::Int)
 
-Extracts the internal forces of an element of interest in its local coordinate system from the solution cache.
+Extracts the internal force vector of an element of interest in its local coordinate system.
 """
-getelementforces(model::Model, solution::AbstractSolutionCache, ID::Int) = getelementforces(model, solution.U, ID)
-function getelementforces(model::Model, U::AbstractVector{<:Real}, ID::Int)
+function getelementforces(model::Model, ID::Int)
     # Find the element in the model:
     element = model.elements[findfirst(x -> x.ID == ID, model.elements)]
 
-    # Extract the displacements of the nodes of the element:
-    nodeidisp = getnodaldisplacements(model, U, element.node_i.ID)
-    nodejdisp = getnodaldisplacements(model, U, element.node_j.ID)
-
-    # Combine the displacements of the nodes into the displacement vector of the element:
-    elementdisplacements = [nodeidisp; nodejdisp]
-
-    # Transform the displacement vector of the element to the local coordinate system:
-    elementdisplacements = element.Γ * elementdisplacements
-
-    # Compute the internal forces of the element:
-    elementforces = element.k_e_l * elementdisplacements
+    # Extract the internal forces of the element:
+    q = element.state.q
 
     # Return the internal forces of the element:
-    return elementforces
+    return q
 end
