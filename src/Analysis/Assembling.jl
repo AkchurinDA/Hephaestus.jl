@@ -1,9 +1,9 @@
-function getpartitionindices(model::Model)
+function getpartitionindices(model::Model{D}) where {D}
     # Initialize the partition indices:
     partitionindices = fill(false, 6 * length(model.nodes))
 
-    # Assemble the partition indices:
-    if model.dimensionality == 2
+    # Assemble the partition indices for a 2D model:
+    if D == 2
         for (i, node) in enumerate(model.nodes)
             # Extract the free DOFs of the node:
             u_x, u_y = node.u_x, node.u_y
@@ -17,7 +17,10 @@ function getpartitionindices(model::Model)
             @inbounds partitionindices[6 * i - 1] = false
             @inbounds partitionindices[6 * i    ] = !θ_z
         end
-    elseif model.dimensionality == 3
+    end
+
+    # Assemble the partition indices for a 3D model:
+    if D == 3
         for (i, node) in enumerate(model.nodes)
             # Extract the free DOFs of the node:
             u_x, u_y, u_z = node.u_x, node.u_y, node.u_z

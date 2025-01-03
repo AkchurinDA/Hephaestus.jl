@@ -1,4 +1,4 @@
-# Element Library
+# Element library
 
 ## Euler-Bernoulli beam-column element
 

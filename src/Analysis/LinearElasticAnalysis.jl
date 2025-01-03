@@ -1,22 +1,10 @@
 """
-    struct LinearElasticAnalysis
+    struct LinearElasticAnalysis <: AbstractAnalysisType
 
-A type representing the (geometrically) linear (materially) elastic analysis.
+A type representing (geometrically) linear (materially) elastic analysis.
 """
 struct LinearElasticAnalysis <: AbstractAnalysisType
 
-end
-
-"""
-    struct LinearElasticAnalysisCache
-
-A type used to store the results of linear elastic analysis.
-"""
-struct LinearElasticAnalysisCache{
-    UT <: Real,
-    RT <: Real} <: AbstractSolutionCache
-    U::AbstractVector{UT}
-    R::AbstractVector{RT}
 end
 
 function solve!(model::Model, ::LinearElasticAnalysis, partitionindices::Vector{Bool})::Model

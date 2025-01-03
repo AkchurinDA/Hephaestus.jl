@@ -1,14 +1,19 @@
 """
-    struct ElasticBucklingAnalysis
+    struct ElasticBucklingAnalysis <: AbstractAnalysisType
 
 A type representing the elastic buckling analysis.
-"""
-struct ElasticBucklingAnalysis <: AbstractAnalysisType
 
+To perform an elastic buckling analysis, use the following command:
+```julia
+solution = solve(model, ElasticBucklingAnalysis())
+```
+"""
+@kwdef struct ElasticBucklingAnalysis <: AbstractAnalysisType
+    nummodes::Int = 10
 end
 
 """
-    struct ElasticBucklingAnalysisCache
+    struct ElasticBucklingAnalysisCache <: AbstractSolutionCache
 
 A type used to store the results of elastic buckling analysis.
 """
@@ -21,7 +26,7 @@ end
 
 function solve(model::Model, ::ElasticBucklingAnalysis, partitionindices::Vector{Bool})::ElasticBucklingAnalysisCache
     # Perform the linear elastic analysis:
-    _ = solve(model, LinearElasticAnalysis(), partitionindices)
+    solve!(model, LinearElasticAnalysis(), partitionindices)
 
     # Extract the global elastic stiffness matrix and partition it:
     K_e    = assemble_K_e(model)

@@ -1,6 +1,6 @@
 @testset "Frame #01" begin
     # Define an empty model:
-    model = Model()
+    model = Model(2)
 
     # Define the nodes and DOF supports:
     node!(model,  1, 0.0000e+00, 0.0000e+00, 0.0000e+00, u_x = true, u_y = true, θ_z = true)
@@ -67,7 +67,7 @@ end
 
 @testset "Frame #05" begin
     # Define an empty model:
-    model = Model()
+    model = Model(2)
 
     # Define the nodes and DOF supports:
     node!(model,  1, 0.0000e+00, 0.0000e+00, 0.0000e+00, u_x = true, u_y = true)

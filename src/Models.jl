@@ -5,22 +5,28 @@ A type representing the finite element model of a structure of interest.
 
 $(FIELDS)
 """
-@kwdef struct Model
-    "Dimensionality of the model"
-    dimensionality::Int = 2
-
+struct Model{D}
     "Nodes of the model"
-    nodes::Vector{Node} = Vector{Node}()
+    nodes::Vector{Node}
     "Sections of the model"
-    sections::Vector{Section} = Vector{Section}()
+    sections::Vector{Section}
     "Materials of the model"
-    materials::Vector{Material} = Vector{Material}()
+    materials::Vector{Material}
     "Elements of the model"
-    elements::Vector{Element} = Vector{Element}()
+    elements::Vector{Element}
     "Concentrated loads of the model"
-    concloads::Vector{ConcentratedLoad} = Vector{ConcentratedLoad}()
+    concloads::Vector{ConcentratedLoad}
     "Distribution loads of the model"
-    distloads::Vector{DistributedLoad} = Vector{DistributedLoad}()
+    distloads::Vector{DistributedLoad}
+
+    # Constructor:
+    Model(D::Int) = new{D}(
+        Vector{Node}(),
+        Vector{Section}(),
+        Vector{Material}(),
+        Vector{Element}(),
+        Vector{ConcentratedLoad}(),
+        Vector{DistributedLoad}())
 end
 
 """

@@ -1,6 +1,6 @@
 @testset "Model building" begin
     # Define an empty model:
-    model = Model()
+    model = Model(2)
 
     # Define the nodes and DOF supports:
     node!(model, 1,   0, 0, 0)

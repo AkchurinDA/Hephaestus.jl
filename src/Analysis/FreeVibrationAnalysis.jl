@@ -1,14 +1,19 @@
 """
-    struct LinearElasticAnalysis
+    struct FreeVibrationAnalysis <: AbstractAnalysisType
 
 A type representing the free vibration analysis.
-"""
-struct FreeVibrationAnalysis <: AbstractAnalysisType
 
+To perform an free vibration analysis, use the following command:
+```julia
+solution = solve(model, FreeVibrationAnalysis())
+```
+"""
+@kwdef struct FreeVibrationAnalysis <: AbstractAnalysisType
+    nummodes::Int = 10
 end
 
 """
-    struct LinearElasticAnalysisCache
+    struct FreeVibrationAnalysisCache <: AbstractSolutionCache
 
 A type used to store the results of free vibration analysis.
 """

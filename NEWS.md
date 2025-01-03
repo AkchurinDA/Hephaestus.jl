@@ -1,5 +1,9 @@
 # News
 
+## Release V0.3.0
+
+- Dimensionality of a model is now carried as a parameter of `Model()` type.
+
 ## Release V0.2.0
 
 - A completely new internal design of the package.

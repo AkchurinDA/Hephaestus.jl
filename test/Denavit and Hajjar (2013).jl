@@ -3,7 +3,7 @@
 
 @testset "Cantilever under axial and transverse loading: Linear elastic analysis" begin
     # Define an empty model:
-    model = Model()
+    model = Model(2)
 
     # Define the nodes and DOF supports:
     node!(model,  1,   0, 0, 0, u_x = true, u_y = true, θ_z = true)
@@ -65,7 +65,7 @@ end
 
 @testset "Cantilever under axial and transverse loading: Nonlinear elastic analysis" begin
     # Define an empty model:
-    model = Model()
+    model = Model(2)
 
     # Define the nodes and DOF supports:
     node!(model,  1,   0, 0, 0, u_x = true, u_y = true, θ_z = true)

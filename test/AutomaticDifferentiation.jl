@@ -12,7 +12,7 @@
         L, I, E, P = t
 
         # Define an empty model:
-        model = Model()
+        model = Model(2)
 
         # Define the nodes and DOF supports:
         for (i, x) in enumerate(range(0, L, 11))
@@ -96,7 +96,7 @@ end
         L, I, E, w = t
 
         # Define an empty model:
-        model = Model()
+        model = Model(2)
 
         # Define the nodes and DOF supports:
         for (ID, x) in enumerate(range(0, L, 11))

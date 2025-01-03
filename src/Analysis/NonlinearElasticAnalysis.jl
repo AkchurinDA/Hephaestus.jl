@@ -3,19 +3,17 @@
 # “A Unified Library of Nonlinear Solution Schemes,”
 # Applied Mechanics Reviews, vol. 64, no. 4, p. 040803, Jul. 2011, DOI: 10.1115/1.4006992.
 
+"""
+    struct NonlinearElasticAnalysis <: AbstractAnalysisType
+
+A type representing (geometrically) nonlinear (materially) elastic analysis.
+"""
 struct NonlinearElasticAnalysis <: AbstractAnalysisType
     nonlinearsolver::AbstractNonlinearSolver
     maxnumi::Int
     maxnumj::Int
     update::Symbol
     ϵ::Real
-end
-
-struct NonlinearElasticAnalysisCache{
-    UT <: Real,
-    RT <: Real} <: AbstractSolutionCache
-    U::AbstractVector{UT}
-    R::AbstractVector{RT}
 end
 
 function solve!(model::Model, analysis::NonlinearElasticAnalysis, partitionindices::Vector{Bool})::Model
@@ -167,8 +165,6 @@ function solve!(model::Model, analysis::NonlinearElasticAnalysis, partitionindic
         # Update the increment counter:
         i += 1
     end
-
-    # Compute the nodal reactions:
 
     # Return the solution cache:
     return model

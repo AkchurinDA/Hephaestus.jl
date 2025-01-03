@@ -1,6 +1,6 @@
 using Test
 using Hephaestus
-using DifferentiationInterface, ForwardDiff, ReverseDiff
+using DifferentiationInterface, ForwardDiff, ReverseDiff, FiniteDiff
 
 @testset verbose = true "Basics"                     include("Basics.jl")
 @testset verbose = true "Automatic differentiation"  include("AutomaticDifferentiation.jl")
