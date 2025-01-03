@@ -39,11 +39,11 @@ end
 
 # Define the preferred axis type for the model plot:
 function Makie.preferred_axis_type(P::PlotModel)
-    if P[:Model][].dimensionality == 2
+    if dimensionality(P[:Model][]) == 2
         return Makie.Axis
     end
 
-    if P[:Model][].dimensionality == 3
+    if dimensionality(P[:Model][]) == 3
         return Makie.Axis3
     end
 end
