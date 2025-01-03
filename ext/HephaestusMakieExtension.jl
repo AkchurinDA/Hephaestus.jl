@@ -38,6 +38,7 @@ Makie.@recipe(PlotModel, Model) do scene
 end
 
 # Define the preferred axis type for the model plot:
+dimensionality(::Model{D}) where {D} = D
 function Makie.preferred_axis_type(P::PlotModel)
     if dimensionality(P[:Model][]) == 2
         return Makie.Axis
