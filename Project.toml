@@ -1,7 +1,7 @@
 name = "Hephaestus"
 uuid = "88b3b2ed-56ea-4eac-b1de-e42ac45953c8"
 authors = ["Damir Akchurin <AkchurinDA@gmail.com>"]
-version = "0.2.0"
+version = "0.3.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"

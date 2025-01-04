@@ -20,13 +20,19 @@ struct Model{D}
     distloads::Vector{DistributedLoad}
 
     # Constructor:
-    Model(D::Int) = new{D}(
+    function Model(D::Int)
+        # Check the dimension of the model:
+        @assert D ∈ [2, 3] "Invalid model dimensionality. The model dimensional must be either 2 or 3."
+
+        # Initialize the model:
+        new{D}(
         Vector{Node}(),
         Vector{Section}(),
         Vector{Material}(),
         Vector{Element}(),
         Vector{ConcentratedLoad}(),
         Vector{DistributedLoad}())
+    end
 end
 
 """
