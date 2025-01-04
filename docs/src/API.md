@@ -1,21 +1,26 @@
 # API
 
+## Types
+
 ```@docs
 Model
 Node
 Material
 Section
 Element
-```
-
-```@docs
 LinearElasticAnalysis
 NonlinearElasticAnalysis
 ElasticBucklingAnalysis
 ElasticBucklingAnalysisCache
 FreeVibrationAnalysis
 FreeVibrationAnalysisCache
+LCM
+DCM
+WCM
+ALCM
 ```
+
+## Constructing a model
 
 ```@docs
 node!
@@ -26,12 +31,14 @@ concload!
 distload!
 ```
 
+## Analyzing a model
+
 ```@docs
 solve!
 solve
 ```
 
-## Postprocessing functions
+## Postprocessing results
 
 ```@docs
 getnodaldisplacements
@@ -40,7 +47,7 @@ getelementdisplacements
 getelementforces
 ```
 
-## Plotting functions
+## Plotting a model
 
 ```@docs
 plotmodel
