@@ -21,16 +21,16 @@ Dates = "1.11.0"
 DocStringExtensions = "0.9.3"
 FiniteDiff = "2.26.2"
 LinearAlgebra = "1.11.0"
-Makie = "0.21"
+Makie = "0.21, 0.22"
 Printf = "1.11.0"
 StyledStrings = "1.11.0, 1"
 julia = "1.9.0"
 
 [extras]
 DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
-FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
